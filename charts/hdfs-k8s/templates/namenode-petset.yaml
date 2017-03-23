@@ -1,0 +1,55 @@
+# A headless service to create DNS records.
+apiVersion: v1
+kind: Service
+metadata:
+  name: hdfs-namenode
+  namespace: kube-system
+  labels:
+    app: hdfs-namenode
+spec:
+  ports:
+  - port: 8020
+    name: fs
+  clusterIP: None
+  selector:
+    app: hdfs-namenode
+---
+apiVersion: apps/v1alpha1
+kind: PetSet
+metadata:
+  name: hdfs-namenode
+  namespace: kube-system
+spec:
+  serviceName: "hdfs-namenode"
+  # Create a size-1 petset. The namenode DNS name will be
+  # hdfs-namenode-0.hdfs-namenode.kube-system.svc.{{ .Values.clusterDomain }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: hdfs-namenode
+      annotations:
+        pod.alpha.kubernetes.io/initialized: "true"
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: hdfs-namenode
+          image: uhopper/hadoop-namenode:2.7.2
+          env:
+            - name: CLUSTER_NAME
+              value: hdfs-k8s
+          ports:
+          - containerPort: 8020
+            name: fs
+          volumeMounts:
+            - name: hdfs-name
+              mountPath: /hadoop/dfs/name
+      # Pin the pod to a node. You can label your node like below:
+      #   $ kubectl label nodes YOUR-NODE hdfs-namenode-selector=hdfs-namenode-0
+      nodeSelector:
+        hdfs-namenode-selector: hdfs-namenode-0
+      restartPolicy: Always
+      volumes:
+        - name: hdfs-name
+          hostPath:
+            path: {{ .Values.nameNodeHostPath }}
