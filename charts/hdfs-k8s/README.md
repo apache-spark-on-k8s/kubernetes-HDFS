@@ -2,9 +2,8 @@ HDFS `namenode` and `datanodes` running inside a kubernetes cluster.
 
 ### Prerequisite
 
-  This currently works only for kubernetes version 1.4, because the namenode
-  is using the legacy `PetSet`. We plan to switch to `StatefulSet` soon so it
-  can run on version 1.5 and beyond.
+  Requires Kubernetes version 1.5 and beyond, because `namenode` is using
+  `StatefulSet`, which is available only in version 1.5 and later.
 
 ### Usage
 

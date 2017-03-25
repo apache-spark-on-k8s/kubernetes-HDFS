@@ -29,22 +29,20 @@ spec:
   selector:
     app: hdfs-namenode
 ---
-apiVersion: apps/v1alpha1
-kind: PetSet
+apiVersion: apps/v1beta1
+kind: StatefulSet
 metadata:
   name: hdfs-namenode
   namespace: kube-system
 spec:
   serviceName: "hdfs-namenode"
-  # Create a size-1 petset. The namenode DNS name will be
+  # Create a size-1 set. The namenode DNS name will be
   # hdfs-namenode-0.hdfs-namenode.kube-system.svc.{{ .Values.clusterDomain }}
   replicas: 1
   template:
     metadata:
       labels:
         app: hdfs-namenode
-      annotations:
-        pod.alpha.kubernetes.io/initialized: "true"
     spec:
       terminationGracePeriodSeconds: 0
       containers:
