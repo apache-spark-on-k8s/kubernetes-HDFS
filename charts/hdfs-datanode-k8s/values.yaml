@@ -12,6 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-name: hdfs-k8s
-version: 0.1
-description: Hadoop Distributed File System (HDFS) hosted by Kubernetes.
+
+# Default values for template variables.
+
+# Set this to the IP of your kube-dns name server that resolv POD host names.
+# This is used by datanode daemons when they connect to namenode using
+# the host name.
+clusterDnsIP: 10.96.0.10
+
+# Set this to the domain name of your cluster that become part of POD and service
+# host names.
+clusterDomain: cluster.local
+
+# Path of the local disk directory on cluster nodes that will contain the datanode
+# blocks. This will be mounted to the namenode as a k8s HostPath volume.
+dataNodeHostPath: /hdfs-data
