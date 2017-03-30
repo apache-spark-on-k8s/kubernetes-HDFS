@@ -9,7 +9,9 @@ HDFS `namenode` running inside a kubernetes cluster. See the other chart for
 ### Usage
 
   1. Attach a label to one of your k8s cluster host that will run the `namenode`
-     daemon.
+     daemon. (This is required as `namenode` currently mounts a local disk
+     `hostPath` volume. We will switch to persistent volume in the future, so
+     we can skip this step.)
 
   ```
   $ kubectl label nodes YOUR-HOST hdfs-namenode-selector=hdfs-namenode-0

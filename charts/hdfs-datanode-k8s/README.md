@@ -11,14 +11,12 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
 
 ### Usage
 
-  1. Find the IP of your `kube-dns` name server that resolves pod and service
-     host names in your k8s cluster. Default is 10.96.0.10. It will be supplied
-     below as the `clusterDnsIP` parameter. Try this command and find the IP
-     value in the output:
+  1. Find the service IP of your `kube-dns` of your k8s cluster.
+     Default is 10.96.0.10. It will be supplied below as the `clusterDnsIP`
+     parameter. Try this command and find the IP value in the output:
 
   ```
-  $ kubectl get services --all-namespaces | grep kube-dns
-  kube-system   kube-dns 10.96.0.10 <none> 53/UDP,53/TCP 117d
+  $ kubectl get svc --all-namespaces | grep dns
   ```
 
   2. Optionally, find the domain name of your k8s cluster that become part of
