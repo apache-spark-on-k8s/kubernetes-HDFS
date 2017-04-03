@@ -1,0 +1,72 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# A headless service to create DNS records.
+apiVersion: v1
+kind: Service
+metadata:
+  name: hdfs-namenode
+  namespace: kube-system
+  labels:
+    app: hdfs-namenode
+spec:
+  ports:
+  - port: 8020
+    name: fs
+  clusterIP: None
+  selector:
+    app: hdfs-namenode
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: hdfs-namenode
+  namespace: kube-system
+spec:
+  serviceName: "hdfs-namenode"
+  # Create a size-1 set. The namenode DNS name will be
+  # hdfs-namenode-0.hdfs-namenode.kube-system.svc.YOUR-CLUSTER-DOMAIN
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: hdfs-namenode
+    spec:
+      # Use hostNetwork so datanodes connect to namenode without going through an overlay network
+      # like weave. Otherwise, namenode fails to see physical IP address of datanodes.
+      hostNetwork: true
+      hostPID: true
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: hdfs-namenode
+          image: uhopper/hadoop-namenode:2.7.2
+          env:
+            - name: CLUSTER_NAME
+              value: hdfs-k8s
+          ports:
+          - containerPort: 8020
+            name: fs
+          volumeMounts:
+            - name: hdfs-name
+              mountPath: /hadoop/dfs/name
+      # Pin the pod to a node. You can label your node like below:
+      #   $ kubectl label nodes YOUR-NODE hdfs-namenode-selector=hdfs-namenode-0
+      nodeSelector:
+        hdfs-namenode-selector: hdfs-namenode-0
+      restartPolicy: Always
+      volumes:
+        - name: hdfs-name
+          hostPath:
+            path: {{ .Values.nameNodeHostPath }}

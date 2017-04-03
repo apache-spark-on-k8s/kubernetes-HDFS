@@ -1,0 +1,75 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: resolv-conf-datanode
+  namespace: kube-system
+data:
+  resolv.conf: |
+    search kube-system.svc.{{ .Values.clusterDomain }} svc.{{ .Values.clusterDomain }} {{ .Values.clusterDomain }}
+    nameserver {{ .Values.clusterDnsIP }}
+    options ndots:5
+---
+# Deleting a daemonset may need some trick. See
+# https://github.com/kubernetes/kubernetes/issues/33245#issuecomment-261250489
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: hdfs-datanode
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        name: hdfs-datanode
+    spec:
+      hostNetwork: true
+      hostPID: true
+      containers:
+        - name: datanode
+          image: uhopper/hadoop-datanode:2.7.2
+          env:
+            # This works only with /etc/resolv.conf mounted from the config map.
+            # K8s version 1.6 will fix this, per https://github.com/kubernetes/kubernetes/pull/29378.
+            - name: CORE_CONF_fs_defaultFS
+              value: hdfs://hdfs-namenode-0.hdfs-namenode.kube-system.svc.{{ .Values.clusterDomain }}:8020
+          livenessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              host: 127.0.0.1
+              path: /
+              port: 50075
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: hdfs-data
+              mountPath: /hadoop/dfs/data
+            # Use subPath below to mount only a single file.
+            # See https://github.com/dshulyak/kubernetes.github.io/commit/d58ba7b075bb4848349a2c920caaa08ff3773d70
+            - name: resolv-conf-volume
+              mountPath: /etc/resolv.conf
+              subPath: resolv.conf
+      restartPolicy: Always
+      volumes:
+        - name: hdfs-data
+          hostPath:
+            path: {{ .Values.dataNodeHostPath }}
+        - configMap:
+            name: resolv-conf-datanode
+            items:
+            - key: resolv.conf
+              path: resolv.conf
+          name: resolv-conf-volume
