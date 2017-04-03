@@ -35,16 +35,6 @@ spec:
     metadata:
       labels:
         name: hdfs-datanode
-      annotations:
-        scheduler.alpha.kubernetes.io/tolerations: |
-          [
-            {
-              "key": "dedicated",
-              "operator": "Equal",
-              "value": "master",
-              "effect": "NoSchedule"
-            }
-          ]
     spec:
       hostNetwork: true
       hostPID: true
