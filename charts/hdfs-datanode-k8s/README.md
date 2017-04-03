@@ -12,11 +12,11 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
 ### Usage
 
   1. Find the service IP of your `kube-dns` of your k8s cluster.
-     Default is 10.96.0.10. It will be supplied below as the `clusterDnsIP`
-     parameter. Try this command and find the IP value in the output:
+     Try the following command and find the IP value in the output.
+     It will be supplied below as the `clusterDnsIP` parameter.
 
   ```
-  $ kubectl get svc --all-namespaces | grep dns
+  $ kubectl get svc --all-namespaces | grep kube-dns
   ```
 
   2. Optionally, find the domain name of your k8s cluster that become part of
@@ -30,7 +30,7 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
 
   ```
   $ helm install -n my-hdfs-datanode --namespace kube-system  \
-      --set clusterDnsIP=10.96.0.10 hdfs-datanode-k8s
+      --set clusterDnsIP=YOUR-KUBE-DNS-IP hdfs-datanode-k8s
   ```
 
   5. Confirm the daemons are launched.
