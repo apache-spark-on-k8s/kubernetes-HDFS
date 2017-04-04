@@ -20,7 +20,7 @@ HDFS `namenode` running inside a kubernetes cluster. See the other chart for
   2. Launch this helm chart, `hdfs-namenode-k8s`.
 
   ```
-  $ helm install -n my-hdfs-namenode --namespace kube-system hdfs-k8s
+  $ helm install -n my-hdfs-namenode --namespace kube-system hdfs-k8s-namenode
   ```
 
   3. Confirm the daemon is launched.
