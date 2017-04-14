@@ -46,7 +46,6 @@ spec:
       # like weave. Otherwise, namenode fails to see physical IP address of datanodes.
       hostNetwork: true
       hostPID: true
-      terminationGracePeriodSeconds: 0
       containers:
         - name: hdfs-namenode
           image: uhopper/hadoop-namenode:2.7.2

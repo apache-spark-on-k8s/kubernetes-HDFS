@@ -20,14 +20,14 @@ HDFS `namenode` running inside a kubernetes cluster. See the other chart for
   2. Launch this helm chart, `hdfs-namenode-k8s`.
 
   ```
-  $ helm install -n my-hdfs-namenode --namespace kube-system hdfs-k8s
+  $ helm install -n my-hdfs-namenode hdfs-k8s
   ```
 
   3. Confirm the daemon is launched.
 
   ```
-  $ kubectl get pods --all-namespaces | grep hdfs-namenode
-  kube-system   hdfs-namenode-0 1/1 Running   0 7m
+  $ kubectl get pods | grep hdfs-namenode
+  default   hdfs-namenode-0 1/1 Running   0 7m
   ```
 
 There will be only one `namenode` instance. i.e. High Availability (HA) is not
@@ -37,8 +37,6 @@ mount a local disk directory using k8s `hostPath` volume.
 
 `namenode` is using `hostNetwork` so it can see physical IPs of datanodes
 without an overlay network such as weave-net mask them.
-
-Note it runs under the `kube-system` namespace.
 
 ###Credits
 

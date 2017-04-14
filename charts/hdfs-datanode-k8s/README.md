@@ -16,7 +16,7 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
      It will be supplied below as the `clusterDnsIP` parameter.
 
   ```
-  $ kubectl get svc --all-namespaces | grep kube-dns
+  $ kubectl get svc | grep kube-dns
   ```
 
   2. Optionally, find the domain name of your k8s cluster that become part of
@@ -29,14 +29,14 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
      of them below in --set as comma-separated entries)
 
   ```
-  $ helm install -n my-hdfs-datanode --namespace kube-system  \
+  $ helm install -n my-hdfs-datanode \
       --set clusterDnsIP=YOUR-KUBE-DNS-IP hdfs-datanode-k8s
   ```
 
   5. Confirm the daemons are launched.
 
   ```
-  $ kubectl get pods --all-namespaces | grep hdfs-datanode-
+  $ kubectl get pods | grep hdfs-datanode-
   kube-system   hdfs-datanode-ajdcz 1/1 Running 0 7m
   kube-system   hdfs-datanode-f1w24 1/1 Running 0 7m
   ```
@@ -47,7 +47,7 @@ local disk volumes.
 `Datanodes` are using `hostNetwork` to register to `namenode` using
 physical IPs.
 
-Note they run under the `kube-system` namespace.
+Note they run under the `default` namespace.
 
 ###Credits
 
