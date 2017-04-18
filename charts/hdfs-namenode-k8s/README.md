@@ -27,7 +27,7 @@ HDFS `namenode` running inside a kubernetes cluster. See the other chart for
 
   ```
   $ kubectl get pods | grep hdfs-namenode
-  default   hdfs-namenode-0 1/1 Running   0 7m
+  hdfs-namenode-0 1/1 Running   0 7m
   ```
 
 There will be only one `namenode` instance. i.e. High Availability (HA) is not

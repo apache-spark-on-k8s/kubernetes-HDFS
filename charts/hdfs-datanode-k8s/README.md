@@ -37,8 +37,8 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
 
   ```
   $ kubectl get pods | grep hdfs-datanode-
-  kube-system   hdfs-datanode-ajdcz 1/1 Running 0 7m
-  kube-system   hdfs-datanode-f1w24 1/1 Running 0 7m
+  hdfs-datanode-ajdcz 1/1 Running 0 7m
+  hdfs-datanode-f1w24 1/1 Running 0 7m
   ```
 
 `Datanode` daemons run on every cluster node. They also mount k8s `hostPath`
