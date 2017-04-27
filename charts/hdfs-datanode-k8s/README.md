@@ -16,7 +16,7 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
      It will be supplied below as the `clusterDnsIP` parameter.
 
   ```
-  $ kubectl get svc | grep kube-dns
+  $ kubectl get svc --all-namespaces | grep kube-dns
   ```
 
   2. Optionally, find the domain name of your k8s cluster that become part of
