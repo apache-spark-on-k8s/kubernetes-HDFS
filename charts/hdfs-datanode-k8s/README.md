@@ -29,16 +29,16 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
      of them below in --set as comma-separated entries)
 
   ```
-  $ helm install -n my-hdfs-datanode --namespace kube-system  \
+  $ helm install -n my-hdfs-datanode \
       --set clusterDnsIP=YOUR-KUBE-DNS-IP hdfs-datanode-k8s
   ```
 
   5. Confirm the daemons are launched.
 
   ```
-  $ kubectl get pods --all-namespaces | grep hdfs-datanode-
-  kube-system   hdfs-datanode-ajdcz 1/1 Running 0 7m
-  kube-system   hdfs-datanode-f1w24 1/1 Running 0 7m
+  $ kubectl get pods | grep hdfs-datanode-
+  hdfs-datanode-ajdcz 1/1 Running 0 7m
+  hdfs-datanode-f1w24 1/1 Running 0 7m
   ```
 
 `Datanode` daemons run on every cluster node. They also mount k8s `hostPath`
@@ -47,7 +47,7 @@ local disk volumes.
 `Datanodes` are using `hostNetwork` to register to `namenode` using
 physical IPs.
 
-Note they run under the `kube-system` namespace.
+Note they run under the `default` namespace.
 
 ###Credits
 
