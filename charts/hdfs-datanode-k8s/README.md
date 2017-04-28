@@ -6,34 +6,24 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
   Requires Kubernetes version 1.5 and beyond, because `namenode` is using
   `StatefulSet`, which is available only in version 1.5 and later.
 
-  Make sure `namenode` is fully launched using the other chart. `Datanodes` rely
+  Make sure the `hdfs-resolv-conf` chart is launched. Also ensure `namenode` is
+  fully launched using the corresponding chart. `Datanodes` rely
   on DNS to resolve the hostname of the namenode when they start up.
 
 ### Usage
 
-  1. Find the service IP of your `kube-dns` of your k8s cluster.
-     Try the following command and find the IP value in the output.
-     It will be supplied below as the `clusterDnsIP` parameter.
-
-  ```
-  $ kubectl get svc --all-namespaces | grep kube-dns
-  ```
-
-  2. Optionally, find the domain name of your k8s cluster that become part of
+  1. Optionally, find the domain name of your k8s cluster that become part of
      pod and service host names. Default is `cluster.local`. See `values.yaml`
      for additional parameters to change. You can add them below in `--set`,
      as comma-separated entries.
 
-  3. Launch this helm chart, `hdfs-datanode-k8s`, while specifying
-     the kube-dns name server IP and other parameters. (You can add multiple
-     of them below in --set as comma-separated entries)
+  2. Launch this helm chart, `hdfs-datanode-k8s`.
 
   ```
-  $ helm install -n my-hdfs-datanode \
-      --set clusterDnsIP=YOUR-KUBE-DNS-IP hdfs-datanode-k8s
+  $ helm install -n my-hdfs-datanode hdfs-datanode-k8s
   ```
 
-  5. Confirm the daemons are launched.
+  3. Confirm the daemons are launched.
 
   ```
   $ kubectl get pods | grep hdfs-datanode-

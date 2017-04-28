@@ -12,16 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# Default values for template variables.
-
-# Set this to the domain name of your cluster that become part of POD and service
-# host names.
-clusterDomain: cluster.local
-
-# A list of the local disk directories on cluster nodes that will contain the datanode
-# blocks. These paths will be mounted to the datanode as K8s HostPath volumes.
-# In a command line, the list should be enclosed in '{' and '}'.
-# e.g. --set "dataNodeHostPath={/hdfs-data,/hdfs-data1}"
-dataNodeHostPath:
-  - /hdfs-data
+name: hdfs-resolv-conf
+version: 0.1
+description: ConfigMap entry containing resolv.conf used by HDFS daemons.

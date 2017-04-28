@@ -15,13 +15,17 @@
 
 # Default values for template variables.
 
+# Set this to the IP of your kube-dns name server that resolv POD host names.
+# This is used by datanode daemons when they connect to namenode using
+# the host name.
+clusterDnsIP: 10.96.0.10
+
+# Set this to the domain name of your host network that becomes part of cluster node
+# host names.  e.g. MYCOMPANY.COM in kube-n1.MYCOMPANY.COM.
+# If there are multiple names, then put them inside the quote separted by
+# spaces.
+hostNetworkDomains: ""
+
 # Set this to the domain name of your cluster that become part of POD and service
 # host names.
 clusterDomain: cluster.local
-
-# A list of the local disk directories on cluster nodes that will contain the datanode
-# blocks. These paths will be mounted to the datanode as K8s HostPath volumes.
-# In a command line, the list should be enclosed in '{' and '}'.
-# e.g. --set "dataNodeHostPath={/hdfs-data,/hdfs-data1}"
-dataNodeHostPath:
-  - /hdfs-data
