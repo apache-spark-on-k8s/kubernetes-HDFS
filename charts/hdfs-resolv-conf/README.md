@@ -26,7 +26,7 @@ and `datanode` pods.
      of them below in --set as comma-separated entries)
 
   ```
-  $ helm install -n my-hdfs-resolv-conf --namespace kube-system  \
+  $ helm install -n my-hdfs-resolv-conf \
       --set clusterDnsIP=MY-KUBE-DNS-IP,hostNetworkDomains=MYCOMPANY.COM  \
       hdfs-resolv-conf
   ```
