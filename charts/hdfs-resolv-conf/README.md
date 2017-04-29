@@ -14,14 +14,22 @@ and `datanode` pods.
   2. Find the domain name of your cluster that is part of
      cluster node host names. e.g. MYCOMPANY.COM in kube-n1.MYCOMPANY.COM.
      Default is "".  This will be supplied below as
-     the `hostNetworkDomains` parameter.
+     the `hostNetworkDomains` parameter.  You can find these from the `search`
+     line in the following `kubectl run` output. `hostNetworkDomains` comes
+     after the pod and service domain name such as `cluster.local`.
 
-  3. Optionally, find the domain name of pod and service host names.
-     Default is `cluster.local`. See `values.yaml`
-     for additional parameters to change. You can add them below in `--set`,
-     as comma-separated entries.
+  ```
+  $ kubectl run -i -t --rm busybox --image=busybox --restart=Never  \
+      --command -- cat /etc/resolv.conf
+  ...
+  search default.svc.cluster.local svc.cluster.local cluster.local MYCOMPANY.COM
+  ...
+  ```
 
-  4. Launch this helm chart, `hdfs-resolv-conf`, while specifying
+     See `values.yaml`
+     for additional parameters to change.
+
+  3. Launch this helm chart, `hdfs-resolv-conf`, while specifying
      the kube-dns name server IP and other parameters. (You can add multiple
      of them below in --set as comma-separated entries)
 
