@@ -26,6 +26,6 @@ clusterDnsIP: 10.96.0.10
 # spaces.
 hostNetworkDomains: ""
 
-# Set this to the domain name of your cluster that become part of POD and service
+# Set this to the domain name of your cluster that becomes part of POD and service
 # host names.
 clusterDomain: cluster.local

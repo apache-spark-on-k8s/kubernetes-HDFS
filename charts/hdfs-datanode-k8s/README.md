@@ -12,7 +12,7 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
 
 ### Usage
 
-  1. Optionally, find the domain name of your k8s cluster that become part of
+  1. Optionally, find the domain name of your k8s cluster that becomes part of
      pod and service host names. Default is `cluster.local`. See `values.yaml`
      for additional parameters to change. You can add them below in `--set`,
      as comma-separated entries.
