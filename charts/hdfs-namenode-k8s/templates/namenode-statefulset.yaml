@@ -35,7 +35,7 @@ metadata:
 spec:
   serviceName: "hdfs-namenode"
   # Create a size-1 set. The namenode DNS name will be
-  # hdfs-namenode-0.hdfs-namenode.kube-system.svc.YOUR-CLUSTER-DOMAIN
+  # hdfs-namenode-0.hdfs-namenode.default.svc.YOUR-CLUSTER-DOMAIN
   replicas: 1
   template:
     metadata:
@@ -58,6 +58,11 @@ spec:
           volumeMounts:
             - name: hdfs-name
               mountPath: /hadoop/dfs/name
+            # Use subPath below to mount only a single file.
+            # See https://github.com/dshulyak/kubernetes.github.io/commit/d58ba7b075bb4848349a2c920caaa08ff3773d70
+            - name: resolv-conf-volume
+              mountPath: /etc/resolv.conf
+              subPath: resolv.conf
       # Pin the pod to a node. You can label your node like below:
       #   $ kubectl label nodes YOUR-NODE hdfs-namenode-selector=hdfs-namenode-0
       nodeSelector:
@@ -67,3 +72,9 @@ spec:
         - name: hdfs-name
           hostPath:
             path: {{ .Values.nameNodeHostPath }}
+        - configMap:
+            name: hdfs-resolv-conf
+            items:
+            - key: resolv.conf
+              path: resolv.conf
+          name: resolv-conf-volume

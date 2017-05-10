@@ -12,16 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: resolv-conf-datanode
-data:
-  resolv.conf: |
-    search kube-system.svc.{{ .Values.clusterDomain }} svc.{{ .Values.clusterDomain }} {{ .Values.clusterDomain }}
-    nameserver {{ .Values.clusterDnsIP }}
-    options ndots:5
----
+
 # Deleting a daemonset may need some trick. See
 # https://github.com/kubernetes/kubernetes/issues/33245#issuecomment-261250489
 apiVersion: extensions/v1beta1
@@ -40,10 +31,24 @@ spec:
         - name: datanode
           image: uhopper/hadoop-datanode:2.7.2
           env:
+            # The below uses two loops to make sure the last item does not have comma. It uses index 0
+            # for the last item since that is the only special index that helm template gives us.
+            - name: HDFS_CONF_dfs_datanode_data_dir
+              value: |-
+              {{- range $index, $path := .Values.dataNodeHostPath }}
+                {{- if ne $index 0 }}
+                  /hadoop/dfs/data/{{ $index }},
+                {{- end }}
+              {{- end }}
+              {{- range $index, $path := .Values.dataNodeHostPath }}
+                {{- if eq $index 0 }}
+                  /hadoop/dfs/data/{{ $index }}
+                {{- end }}
+              {{- end }}
             # This works only with /etc/resolv.conf mounted from the config map.
             # K8s version 1.6 will fix this, per https://github.com/kubernetes/kubernetes/pull/29378.
             - name: CORE_CONF_fs_defaultFS
-              value: hdfs://hdfs-namenode-0.hdfs-namenode.kube-system.svc.{{ .Values.clusterDomain }}:8020
+              value: hdfs://hdfs-namenode-0.hdfs-namenode.default.svc.{{ .Values.clusterDomain }}:8020
           livenessProbe:
             initialDelaySeconds: 30
             httpGet:
@@ -53,8 +58,10 @@ spec:
           securityContext:
             privileged: true
           volumeMounts:
-            - name: hdfs-data
-              mountPath: /hadoop/dfs/data
+            {{- range $index, $path := .Values.dataNodeHostPath }}
+            - name: hdfs-data-{{ $index }}
+              mountPath: /hadoop/dfs/data/{{ $index }}
+            {{- end }}
             # Use subPath below to mount only a single file.
             # See https://github.com/dshulyak/kubernetes.github.io/commit/d58ba7b075bb4848349a2c920caaa08ff3773d70
             - name: resolv-conf-volume
@@ -62,11 +69,13 @@ spec:
               subPath: resolv.conf
       restartPolicy: Always
       volumes:
-        - name: hdfs-data
+        {{- range $index, $path := .Values.dataNodeHostPath }}
+        - name: hdfs-data-{{ $index }}
           hostPath:
-            path: {{ .Values.dataNodeHostPath }}
+            path: {{ $path }}
+        {{- end }}
         - configMap:
-            name: resolv-conf-datanode
+            name: hdfs-resolv-conf
             items:
             - key: resolv.conf
               path: resolv.conf
