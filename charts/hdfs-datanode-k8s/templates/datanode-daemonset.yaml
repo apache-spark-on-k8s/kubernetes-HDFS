@@ -24,6 +24,28 @@ spec:
     metadata:
       labels:
         name: hdfs-datanode
+      annotations:
+        # TODO: The following uses annotation to express affinity
+        # because Kubernetes 1.5 supports affinity only in annotation as alpha
+        # feature. In Kubernetes 1.6, this is now beta and supports regular
+        # YAML construct. Switch to the official syntax when we support 1.6.
+        scheduler.alpha.kubernetes.io/affinity: >
+          {
+            "nodeAffinity": {
+              "requiredDuringSchedulingIgnoredDuringExecution": {
+                "nodeSelectorTerms": [
+                  {
+                    "matchExpressions": [
+                      {
+                        "key": "hdfs-datanode-exclude",
+                        "operator": "DoesNotExist"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
     spec:
       hostNetwork: true
       hostPID: true
