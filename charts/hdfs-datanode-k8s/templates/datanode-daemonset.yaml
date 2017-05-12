@@ -70,7 +70,7 @@ spec:
             # This works only with /etc/resolv.conf mounted from the config map.
             # K8s version 1.6 will fix this, per https://github.com/kubernetes/kubernetes/pull/29378.
             - name: CORE_CONF_fs_defaultFS
-              value: hdfs://hdfs-namenode-0.hdfs-namenode.default.svc.{{ .Values.clusterDomain }}:8020
+              value: hdfs://hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020
           livenessProbe:
             initialDelaySeconds: 30
             httpGet:

@@ -25,7 +25,3 @@ clusterDnsIP: 10.96.0.10
 # If there are multiple names, then put them inside the quote separted by
 # spaces.
 hostNetworkDomains: ""
-
-# Set this to the domain name of your cluster that becomes part of POD and service
-# host names.
-clusterDomain: cluster.local

@@ -18,18 +18,13 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
   $ kubectl label node YOUR-MASTER-NAME hdfs-datanode-exclude=yes
   ```
 
-  2. Optionally, find the domain name of your k8s cluster that become part of
-     pod and service host names. Default is `cluster.local`. See `values.yaml`
-     for additional parameters to change. You can add them below in `--set`,
-     as comma-separated entries.
-
-  3. Launch this helm chart, `hdfs-datanode-k8s`.
+  2. Launch this helm chart, `hdfs-datanode-k8s`.
 
   ```
   $ helm install -n my-hdfs-datanode hdfs-datanode-k8s
   ```
 
-  4. Confirm the daemons are launched.
+  3. Confirm the daemons are launched.
 
   ```
   $ kubectl get pods | grep hdfs-datanode-
