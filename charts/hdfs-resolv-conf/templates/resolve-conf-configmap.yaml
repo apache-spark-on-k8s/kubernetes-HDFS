@@ -22,6 +22,6 @@ metadata:
   name: hdfs-resolv-conf
 data:
   resolv.conf: |
-    search default.svc.{{ .Values.clusterDomain }} svc.{{ .Values.clusterDomain }} {{ .Values.clusterDomain }} {{ .Values.hostNetworkDomains }}
+    search default.svc.cluster.local svc.cluster.local cluster.local {{ .Values.hostNetworkDomains }}
     nameserver {{ .Values.clusterDnsIP }}
     options ndots:5

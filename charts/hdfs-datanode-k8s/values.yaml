@@ -15,10 +15,6 @@
 
 # Default values for template variables.
 
-# Set this to the domain name of your cluster that become part of POD and service
-# host names.
-clusterDomain: cluster.local
-
 # A list of the local disk directories on cluster nodes that will contain the datanode
 # blocks. These paths will be mounted to the datanode as K8s HostPath volumes.
 # In a command line, the list should be enclosed in '{' and '}'.
