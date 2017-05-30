@@ -5,7 +5,7 @@ addresses of clients from the remote endpoints of RPC connections.
 In Kubernetes, HDFS clients may run inside pods. The client IP addresses can
 be virtual pod IP addresses. This can confuse the namenode when it runs
 the data locality optimization code, which requires the comparison of client
-IP addresses against the IP addresses associated with datanodes. The latters
+IP addresses against the IP addresses associated with datanodes. The latter
 are physical IP addresses of cluster nodes that datanodes are running on.
 The client pod virtual IP addresses would not match any datanode IP addresses.
 
@@ -17,7 +17,8 @@ GKE uses the native `kubenet` network provider.
 
   - TODO: Currently, there is no easy way to launch the namenode helm chart
     with a topology plugins configured. Build a new Docker image with
-    topology plugins and support the configuration.
+    topology plugins and support the configuration. See plugin README
+    for installation/configuration instructions.
 
 Many K8s network providers do not need any topology plugins.  Most K8s network
 providers conduct IP masquerading or Network Address Translation (NAT), when pod
@@ -49,7 +50,7 @@ Here is the list of network providers that conduct NAT:
     --non-masquerade-cidr, 10.0.0.0/8, which covers both pod IP and node IP
     subnets. GKE does not expose any way to override this value)
 
-Over time, we will also check the hehaviors of other network providers and
+Over time, we will also check the behaviors of other network providers and
 document them here.
 
 Here's how one can check if data locality in the namenode works.

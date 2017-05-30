@@ -73,27 +73,7 @@ import org.apache.log4j.Logger;
  * The resolve method below only returns the first parts for input entries.
  *
  * Note this three level hierarchy requires NetworkTopologyWithNodeGroup to be used in namenode.
- * To use this plugin, add the followings to the hdfs-site.xml:
- * <pre>
- * {@code
- * <property>
- *   <name>net.topology.node.switch.mapping.impl</name>
- *   <value>org.apache.hadoop.net.PodCIDRToNodeMapping</value>
- * </property>
- * <property>
- *   <name>net.topology.impl</name>
- *   <value>org.apache.hadoop.net.NetworkTopologyWithNodeGroup</value>
- * </property>
- * <property>
- *   <name>net.topology.nodegroup.aware</name>
- *   <value>true</value>
- * </property>
- * <property>
- *   <name>dfs.block.replicator.classname</name>
- *   <value>org.apache.hadoop.hdfs.server.blockmanagement.BlockPlacementPolicyWithNodeGroup</value>
- * </property>
- * }
- * </pre>
+ * For details on installation instruction, see README.md at the project directory.
  */
 @SuppressWarnings("unused")
 public class PodCIDRToNodeMapping extends AbstractDNSToSwitchMapping {
@@ -119,6 +99,7 @@ public class PodCIDRToNodeMapping extends AbstractDNSToSwitchMapping {
     super(conf);
   }
 
+  @Override
   public List<String> resolve(List<String> names) {
     List<String> networkPathDirList = Lists.newArrayList();
     for (String name : names) {
@@ -131,10 +112,12 @@ public class PodCIDRToNodeMapping extends AbstractDNSToSwitchMapping {
     return ImmutableList.copyOf(networkPathDirList);
   }
 
+  @Override
   public void reloadCachedMappings() {
     // Do nothing.
   }
 
+  @Override
   public void reloadCachedMappings(List<String> list) {
     // Do nothing.
   }
