@@ -17,7 +17,6 @@
  */
 package org.apache.hadoop.net;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +25,8 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -46,6 +47,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.util.SubnetUtils;
@@ -82,7 +84,6 @@ public class PodCIDRToNodeMapping extends AbstractDNSToSwitchMapping {
       NetworkTopologyWithNodeGroup.DEFAULT_NODEGROUP;
 
   private static Log log = LogFactory.getLog(PodCIDRToNodeMapping.class);
-  private static Option nameOption = new Option("n", true, "Name to resolve");
 
   @GuardedBy("this")
   @Nullable private KubernetesClient kubernetesClient;
@@ -192,22 +193,40 @@ public class PodCIDRToNodeMapping extends AbstractDNSToSwitchMapping {
     return kubernetesClient;
   }
 
+  /**
+   * Looks up a node that runs the pod with a given pod IP address.
+   *
+   * Each K8s node runs a number of pods. K8s pods have unique virtual IP addresses. In kubenet,
+   * each node is assigned a pod IP subnet distinct from other nodes, which can be denoted by
+   * a pod CIDR. For instance, node A can be assigned 10.0.0.0/24 while node B gets 10.0.1.0/24.
+   * When a pod has an IP value, say 10.0.1.10, it should match node B.
+   *
+   * The key lookup data structure is the podSubnetToNode list below. The list contains 2-entry
+   * tuples.
+   *  - The first entry is netmask values of pod subnets. e.g. ff.ff.ff.00 for /24.
+   *    (We expect only one netmask key for now, but the list can have multiple entries to support
+   *    general cases)
+   *  - The second entry is a map of a pod network address, associated with the netmask, to the
+   *    cluster node. e.g. 10.0.0.0 -> node A and 10.0.1.0 -> node B.
+   */
   private static class PodCIDRLookup {
 
+    // See the class comment above.
+    private final ImmutableList<ImmutablePair<Netmask,
+        ImmutableMap<NetworkAddress, String>>> podSubnetToNode;
     // K8s cluster node names.
-    private final Set<String> nodeNames;
-    // K8s cluster node names indexed by pod subnet information. The top level map contains
-    // netmask strings as keys. The second level map contains network addresses as keys.
-    private final Map<String, Map<String, String>> nodeNameBySubnet;
+    private final ImmutableSet<String> nodeNames;
 
     PodCIDRLookup() {
-      this(Collections.<String>emptySet(), Collections.<String, Map<String, String>>emptyMap());
+      this(ImmutableList.<ImmutablePair<Netmask, ImmutableMap<NetworkAddress, String>>>of(),
+          ImmutableSet.<String>of());
     }
 
-    private PodCIDRLookup(Set<String> nodeNames,
-        Map<String, Map<String, String>> nodeNameBySubnet) {
+    private PodCIDRLookup(
+        ImmutableList<ImmutablePair<Netmask, ImmutableMap<NetworkAddress, String>>> podSubnetToNode,
+        ImmutableSet<String> nodeNames) {
       this.nodeNames = nodeNames;
-      this.nodeNameBySubnet = nodeNameBySubnet;
+      this.podSubnetToNode = podSubnetToNode;
     }
 
     boolean containsNode(String nodeName) {
@@ -215,19 +234,20 @@ public class PodCIDRToNodeMapping extends AbstractDNSToSwitchMapping {
     }
 
     String findNodeByPodIP(String podIP) {
-      for (Map.Entry<String, Map<String, String>> entry : nodeNameBySubnet.entrySet()) {
-        String netmask = entry.getKey();
-        SubnetInfo subnetInfo;
+      for (ImmutablePair<Netmask, ImmutableMap<NetworkAddress, String>> entry : podSubnetToNode) {
+        Netmask netmask = entry.getLeft();
+        ImmutableMap<NetworkAddress, String> networkToNode = entry.getRight();
+        // Computes the subnet that results from the netmask applied to the pod IP.
+        SubnetInfo podSubnetToCheck;
         try {
-          subnetInfo = new SubnetUtils(podIP, netmask).getInfo();
+          podSubnetToCheck = new SubnetUtils(podIP, netmask.getValue()).getInfo();
         } catch (IllegalArgumentException e) {
           log.warn(e);
           continue;
         }
-        String networkAddress = subnetInfo.getNetworkAddress();
-        Map<String, String> nodeNameByNetworkAddress = entry.getValue();
-        String nodeName = nodeNameByNetworkAddress.get(networkAddress);
-        if (nodeName != null) {
+        String networkAddress = podSubnetToCheck.getNetworkAddress();
+        String nodeName = networkToNode.get(new NetworkAddress(networkAddress));
+        if (nodeName != null) {  // The cluster node is in charge of this pod IP subnet.
           return nodeName;
         }
       }
@@ -236,7 +256,7 @@ public class PodCIDRToNodeMapping extends AbstractDNSToSwitchMapping {
 
     static PodCIDRLookup fetchPodCIDR(KubernetesClient kubernetesClient) {
       Set<String> nodeNames = Sets.newHashSet();
-      Map<String, Map<String, String>> nodeNameBySubnetInfo = Maps.newHashMap();
+      Map<String, Map<String, String>> netmaskToNetworkToNode = Maps.newHashMap();
       NodeList nodes = kubernetesClient.nodes().list();
       for (Node node : nodes.getItems()) {
         String nodeName = node.getMetadata().getName();
@@ -258,20 +278,101 @@ public class PodCIDRToNodeMapping extends AbstractDNSToSwitchMapping {
         }
         String netmask = subnetInfo.getNetmask();
         String networkAddress = subnetInfo.getNetworkAddress();
-        Map<String, String> nodeNameByNetworkAddress = nodeNameBySubnetInfo.get(netmask);
-        if (nodeNameByNetworkAddress == null) {
-          nodeNameByNetworkAddress = Maps.newHashMap();
-          nodeNameBySubnetInfo.put(netmask, nodeNameByNetworkAddress);
+        Map<String, String> networkToNode = netmaskToNetworkToNode.get(netmask);
+        if (networkToNode == null) {
+          networkToNode = Maps.newHashMap();
+          netmaskToNetworkToNode.put(netmask, networkToNode);
         }
-        nodeNameByNetworkAddress.put(networkAddress, nodeName);
+        networkToNode.put(networkAddress, nodeName);
       }
-      return new PodCIDRLookup(nodeNames, nodeNameBySubnetInfo);
+      return buildLookup(nodeNames, netmaskToNetworkToNode);
+    }
+
+    private static PodCIDRLookup buildLookup(Set<String> nodeNames,
+        Map<String, Map<String, String>> netmaskToNetworkToNode) {
+      ImmutableList.Builder<ImmutablePair<Netmask, ImmutableMap<NetworkAddress, String>>> builder =
+          ImmutableList.builder();
+      for (Map.Entry<String, Map<String, String>> entry : netmaskToNetworkToNode.entrySet()) {
+        Netmask netmask = new Netmask(entry.getKey());
+        ImmutableMap.Builder<NetworkAddress, String> networkToNodeBuilder = ImmutableMap.builder();
+        for (Map.Entry<String, String> networkToNode : entry.getValue().entrySet()) {
+          networkToNodeBuilder.put(new NetworkAddress(networkToNode.getKey()),
+              networkToNode.getValue());
+        }
+        builder.add(ImmutablePair.of(netmask, networkToNodeBuilder.build()));
+      }
+      return new PodCIDRLookup(builder.build(), ImmutableSet.copyOf(nodeNames));
+    }
+  }
+
+  private static class Netmask {
+
+    private final String netmask;
+
+    Netmask(String netmask) {
+      this.netmask = netmask;
+    }
+
+    String getValue() {
+      return netmask;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      Netmask netmask1 = (Netmask)o;
+
+      return netmask.equals(netmask1.netmask);
+    }
+
+    @Override
+    public int hashCode() {
+      return netmask.hashCode();
+    }
+  }
+
+  private static class NetworkAddress {
+
+    private final String networkAddress;
+
+    NetworkAddress(String networkAddress) {
+      this.networkAddress = networkAddress;
+    }
+
+    String getValue() {
+      return networkAddress;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      NetworkAddress that = (NetworkAddress)o;
+
+      return networkAddress.equals(that.networkAddress);
+    }
+
+    @Override
+    public int hashCode() {
+      return networkAddress.hashCode();
     }
   }
 
   // For debugging purpose.
   public static void main(String[] args) throws ParseException {
     Options options = new Options();
+    Option nameOption = new Option("n", true, "Name to resolve");
     nameOption.setRequired(true);
     options.addOption(nameOption);
     CommandLineParser parser = new BasicParser();
