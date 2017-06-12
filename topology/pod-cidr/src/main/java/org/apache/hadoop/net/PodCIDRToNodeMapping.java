@@ -325,9 +325,7 @@ public class PodCIDRToNodeMapping extends AbstractDNSToSwitchMapping {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-
       Netmask netmask1 = (Netmask)o;
-
       return netmask.equals(netmask1.netmask);
     }
 
@@ -357,9 +355,7 @@ public class PodCIDRToNodeMapping extends AbstractDNSToSwitchMapping {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-
       NetworkAddress that = (NetworkAddress)o;
-
       return networkAddress.equals(that.networkAddress);
     }
 
