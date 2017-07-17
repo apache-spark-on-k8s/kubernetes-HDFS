@@ -52,6 +52,13 @@ spec:
           env:
             - name: CLUSTER_NAME
               value: hdfs-k8s
+            # Custom hadoop_env config
+            {{- range $key, $value := .Values.hadoop_env }}
+            {{- if ne $key "CLUSTER_NAME" }}
+            - name: {{ $key | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
           ports:
           - containerPort: 8020
             name: fs
