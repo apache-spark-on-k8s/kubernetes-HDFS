@@ -49,6 +49,7 @@ spec:
     spec:
       hostNetwork: true
       hostPID: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: datanode
           image: uhopper/hadoop-datanode:2.7.2
@@ -84,11 +85,6 @@ spec:
             - name: hdfs-data-{{ $index }}
               mountPath: /hadoop/dfs/data/{{ $index }}
             {{- end }}
-            # Use subPath below to mount only a single file.
-            # See https://github.com/dshulyak/kubernetes.github.io/commit/d58ba7b075bb4848349a2c920caaa08ff3773d70
-            - name: resolv-conf-volume
-              mountPath: /etc/resolv.conf
-              subPath: resolv.conf
       restartPolicy: Always
       volumes:
         {{- range $index, $path := .Values.dataNodeHostPath }}
@@ -96,9 +92,3 @@ spec:
           hostPath:
             path: {{ $path }}
         {{- end }}
-        - configMap:
-            name: hdfs-resolv-conf
-            items:
-            - key: resolv.conf
-              path: resolv.conf
-          name: resolv-conf-volume
