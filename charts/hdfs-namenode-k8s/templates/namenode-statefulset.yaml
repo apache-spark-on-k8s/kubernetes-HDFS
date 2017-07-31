@@ -46,6 +46,7 @@ spec:
       # like weave. Otherwise, namenode fails to see physical IP address of datanodes.
       hostNetwork: true
       hostPID: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: hdfs-namenode
           image: uhopper/hadoop-namenode:2.7.2
@@ -58,11 +59,6 @@ spec:
           volumeMounts:
             - name: hdfs-name
               mountPath: /hadoop/dfs/name
-            # Use subPath below to mount only a single file.
-            # See https://github.com/dshulyak/kubernetes.github.io/commit/d58ba7b075bb4848349a2c920caaa08ff3773d70
-            - name: resolv-conf-volume
-              mountPath: /etc/resolv.conf
-              subPath: resolv.conf
       # Pin the pod to a node. You can label your node like below:
       #   $ kubectl label nodes YOUR-NODE hdfs-namenode-selector=hdfs-namenode-0
       nodeSelector:
@@ -72,9 +68,3 @@ spec:
         - name: hdfs-name
           hostPath:
             path: {{ .Values.nameNodeHostPath }}
-        - configMap:
-            name: hdfs-resolv-conf
-            items:
-            - key: resolv.conf
-              path: resolv.conf
-          name: resolv-conf-volume
