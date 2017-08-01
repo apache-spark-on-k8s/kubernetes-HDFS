@@ -50,6 +50,13 @@ spec:
             # K8s version 1.6 will fix this, per https://github.com/kubernetes/kubernetes/pull/29378.
             - name: CORE_CONF_fs_defaultFS
               value: hdfs://hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020
+            # We now add custom hadoop configuration provided
+            {{- range $key, $value := .Values.customHadoopConfig }}
+            {{- if and (ne $key "HDFS_CONF_dfs_datanode_data_dir") (ne $key "CORE_CONF_fs_defaultFS") }}
+            - name: {{ $key | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
           livenessProbe:
             initialDelaySeconds: 30
             httpGet:

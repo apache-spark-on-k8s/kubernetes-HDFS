@@ -19,3 +19,13 @@
 # fsimage and edit logs. This will be mounted to the namenode as a k8s HostPath
 # volume.
 nameNodeHostPath: /hdfs-name
+
+# Custom hadoop config keys passed through env variables to hadoop uhopper images.
+# See https://hub.docker.com/r/uhopper/hadoop/ to get more details
+# Please note that these are not hadoop env variables, but docker env variables that
+# will be transformed into hadoop config keys
+# CLUSTER_NAME is already set by the chart so any value coming from below config
+# will be ignored
+customHadoopConfig: {}
+  # Set variables through a hash where env variable is the key, e.g.
+  # HDFS_CONF_dfs_datanode_use_datanode_hostname: "false"
