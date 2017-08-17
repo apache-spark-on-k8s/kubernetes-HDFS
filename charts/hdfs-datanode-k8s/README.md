@@ -1,15 +1,6 @@
 HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
 `namenode`.
 
-### Prerequisite
-
-  Requires Kubernetes version 1.5 and beyond, because `namenode` is using
-  `StatefulSet`, which is available only in version 1.5 and later.
-
-  Make sure the `hdfs-resolv-conf` chart is launched. Also ensure `namenode` is
-  fully launched using the corresponding chart. `Datanodes` rely
-  on DNS to resolve the hostname of the namenode when they start up.
-
 ### Usage
 
   1. In some setup, the master node may launch a datanode. To prevent this,
