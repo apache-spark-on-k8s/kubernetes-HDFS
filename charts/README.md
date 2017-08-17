@@ -1,3 +1,9 @@
+### Prerequisite
+
+Requires Kubernetes 1.6 as the `namenode` and `datanodes` are using `ClusterFirstWithHostNet`, which was introduced in Kubernetes 1.6
+
+### Usage
+
 Helm charts for launching HDFS in a K8s cluster. They should be launched in
 the following order.
 

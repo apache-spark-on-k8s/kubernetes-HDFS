@@ -1,11 +1,6 @@
 HDFS `namenode` running inside a kubernetes cluster. See the other chart for
 `datanodes`.
 
-### Prerequisite
-
-  Requires Kubernetes version 1.5 and beyond, because `namenode` is using
-  `StatefulSet`, which is available only in version 1.5 and later.
-
 ### Usage
 
   1. Attach a label to one of your k8s cluster host that will run the `namenode`
