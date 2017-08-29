@@ -11,3 +11,6 @@ the following order.
      `hdfs-namenode-k8s/README.md` for how to launch.
   2. `hdfs-datanode-k8s`: Launches the hdfs datanode daemons. See
      `hdfs-datanode-k8s/README.md` for how to launch.
+
+Kerberos is supported. See the `kerberosEnabled` option in the namenode and
+datanode charts.

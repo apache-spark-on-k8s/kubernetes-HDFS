@@ -32,6 +32,46 @@ spec:
         - name: datanode
           image: uhopper/hadoop-datanode:2.7.2
           env:
+            # The following env vars are listed according to low-to-high precendence order.
+            # i.e. Whoever comes last will override the earlier value of the same variable.
+            {{- if .Values.kerberosEnabled }}
+            - name: CORE_CONF_hadoop_security_authentication
+              value: kerberos
+            - name: CORE_CONF_hadoop_security_authorization
+              value: "true"
+            - name: CORE_CONF_hadoop_rpc_protection
+              value: privacy
+            - name: HDFS_CONF_dfs_block_access_token_enable
+              value: "true"
+            - name: HDFS_CONF_dfs_encrypt_data_transfer
+              value: "true"
+            - name: HDFS_CONF_dfs_datanode_kerberos_principal
+              value: hdfs/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
+            - name:  HDFS_CONF_dfs_datanode_kerberos_https_principal
+              value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
+            - name: HDFS_CONF_dfs_web_authentication_kerberos_principal
+              value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
+            - name: HDFS_CONF_dfs_datanode_keytab_file
+              value: /etc/security/hdfs.keytab
+            {{- if .Values.jsvcEnabled }}
+            - name: HDFS_CONF_dfs_datanode_address
+              value: 0.0.0.0:1004
+            - name: HDFS_CONF_dfs_datanode_http_address
+              value: 0.0.0.0:1006
+            - name: HADOOP_SECURE_DN_USER
+              value: root
+            - name: JSVC_OUTFILE
+              value: /dev/stdout
+            - name: JSVC_ERRFILE
+              value: /dev/stderr
+            - name: JSVC_HOME
+              value: /jsvc-home
+            {{- end }}
+            {{- end }}
+            {{- range $key, $value := .Values.customHadoopConfig }}
+            - name: {{ $key | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
             - name: CORE_CONF_fs_defaultFS
               value: hdfs://hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020
             # The below uses two loops to make sure the last item does not have comma. It uses index 0
@@ -48,19 +88,16 @@ spec:
                   /hadoop/dfs/data/{{ $index }}
                 {{- end }}
               {{- end }}
-            # We now add custom hadoop configuration provided
-            {{- range $key, $value := .Values.customHadoopConfig }}
-            {{- if and (ne $key "HDFS_CONF_dfs_datanode_data_dir") (ne $key "CORE_CONF_fs_defaultFS") }}
-            - name: {{ $key | quote }}
-              value: {{ $value | quote }}
-            {{- end }}
-            {{- end }}
           livenessProbe:
             initialDelaySeconds: 30
             httpGet:
               host: 127.0.0.1
               path: /
+              {{- if and .Values.kerberosEnabled .Values.jsvcEnabled }}
+              port: 1006
+              {{- else }}
               port: 50075
+              {{- end }}
           securityContext:
             privileged: true
           volumeMounts:
@@ -68,6 +105,29 @@ spec:
             - name: hdfs-data-{{ $index }}
               mountPath: /hadoop/dfs/data/{{ $index }}
             {{- end }}
+            {{- if .Values.kerberosEnabled }}
+            - name: kerberos-config
+              mountPath: /etc/krb5.conf
+              subPath: {{ .Values.kerberosConfigFileName }}
+              readOnly: true
+            - name: kerberos-keytab
+              mountPath: /etc/security/hdfs.keytab
+              readOnly: true
+            {{- if .Values.jsvcEnabled }}
+            - name: jsvc-home
+              mountPath: /jsvc-home
+            {{- end }}
+            {{- end }}
+      {{- if and .Values.kerberosEnabled .Values.jsvcEnabled }}
+      initContainers:
+        - name: copy-jsvc
+          # Pull by digest because the image doesn't have tags to pin.
+          image: mschlimb/jsvc@sha256:bf20eb9a319e9a2f87473d8da7418d21503a97528b932800b6b8417cd31e30ef
+          command: ['sh', '-c', 'cp /usr/bin/jsvc /jsvc-home/jsvc']
+          volumeMounts:
+            - name: jsvc-home
+              mountPath: /jsvc-home
+      {{- end }}
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -81,4 +141,16 @@ spec:
         - name: hdfs-data-{{ $index }}
           hostPath:
             path: {{ $path }}
+        {{- end }}
+        {{- if .Values.kerberosEnabled }}
+        - name: kerberos-config
+          configMap:
+            name: {{ .Values.kerberosConfigMap }}
+        - name: kerberos-keytab
+          hostPath:
+            path: {{ .Values.kerberosKeytabHostPath }}
+        {{- if .Values.jsvcEnabled }}
+        - name: jsvc-home
+          emptyDir: {}
+        {{- end }}
         {{- end }}

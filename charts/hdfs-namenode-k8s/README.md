@@ -12,13 +12,54 @@ HDFS `namenode` running inside a kubernetes cluster. See the other chart for
   $ kubectl label nodes YOUR-HOST hdfs-namenode-selector=hdfs-namenode-0
   ```
 
-  2. Launch this helm chart, `hdfs-namenode-k8s`.
+  2. (Skip this if you do not plan to enable Kerberos)
+     Prepare Kerberos setup, following the steps below.
+
+     - Create a config map containg your Kerberos config file. This will be
+       mounted onto the namenode and datanode pods.
+
+     ```
+      $ kubectl create configmap kerberos-config --from-file=/etc/krb5.conf
+     ```
+
+     - Generate the principal account and password keytab file for the namenode
+       daemon. This is typically done in your Kerberos KDC host. For example,
+       if the namenode will run on the k8s cluster node kube-n1.mycompany.com,
+       and your Kerberos realm is MYCOMPANY.COM, then
+
+     ```
+      $ kadmin.local -q "addprinc -randkey hdfs/kube-n1.mycompany.com@MYCOMPANY.COM"
+      $ kadmin.local -q "addprinc -randkey http/kube-n1.mycompany.com@MYCOMPANY.COM"
+      $ kadmin.local -q "ktadd -norandkey -k kube-n1.hdfs.keytab  \
+                hdfs/kube-n1.mycompany.com@MYCOMPANY.COM  \
+                http/kube-n1.mycompany.com@MYCOMPANY.COM"
+     ```
+
+     - Copy the keytab file to the k8s cluster node. This will be mounted
+       onto the namenode pod as `hostPath`. (You may want to restrict which
+       pods can use `hostPath` using k8s `PodSecurityPolicy` and `RBAC`
+       to minimize exposure of the keytab files. See [reference](
+       https://github.com/kubernetes/examples/blob/master/staging/podsecuritypolicy/rbac/README.md))
+     ```
+      $ ssh root@kube-n1.mycompany.com mkdir /hdfs-credentials
+      $ scp root@kube-n1.hdfs.keytab kube-n1.mycompany.com:/hdfs-credentials/hdfs.keytab
+      $ ssh root@kube-n1.mycompany.com chmod 0600 /hdfs-credentials/hdfs.keytab
+     ```
+
+  3. Launch this namenode helm chart, `hdfs-namenode-k8s`.
 
   ```
   $ helm install -n my-hdfs-namenode hdfs-namenode-k8s
   ```
 
-  3. Confirm the daemon is launched.
+  If enabling Kerberos, specify necessary options. For instance,
+  ```
+  $ helm install -n my-hdfs-namenode  \
+      --set kerberosEnabled=true,kerberosRealm=MYCOMPANY.COM hdfs-namenode-k8s
+  ```
+  The two variables above are required. For other variables, see values.yaml.
+
+  4. Confirm the daemon is launched.
 
   ```
   $ kubectl get pods | grep hdfs-namenode
