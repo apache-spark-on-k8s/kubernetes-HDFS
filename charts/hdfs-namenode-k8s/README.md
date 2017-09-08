@@ -22,28 +22,40 @@ HDFS `namenode` running inside a kubernetes cluster. See the other chart for
       $ kubectl create configmap kerberos-config --from-file=/etc/krb5.conf
      ```
 
-     - Generate the principal account and password keytab file for the namenode
-       daemon. This is typically done in your Kerberos KDC host. For example,
-       if the namenode will run on the k8s cluster node kube-n1.mycompany.com,
-       and your Kerberos realm is MYCOMPANY.COM, then
+     - Generate per-host principal accounts and password keytab files for the namenode
+       and datanode daemons. This is typically done in your Kerberos KDC host. For example,
+       suppose the namenode will run on the k8s cluster node kube-n1.mycompany.com,
+       and your datanodes will run on kube-n1.mycompany.com and kube-n2.mycompany.com.
+       And your Kerberos realm is MYCOMPANY.COM, then
 
      ```
       $ kadmin.local -q "addprinc -randkey hdfs/kube-n1.mycompany.com@MYCOMPANY.COM"
       $ kadmin.local -q "addprinc -randkey http/kube-n1.mycompany.com@MYCOMPANY.COM"
-      $ kadmin.local -q "ktadd -norandkey -k kube-n1.hdfs.keytab  \
+      $ mkdir hdfs-keytabs
+      $ kadmin.local -q "ktadd -norandkey  \
+                -k hdfs-keytabs/kube-n1.mycompany.com.keytab  \
                 hdfs/kube-n1.mycompany.com@MYCOMPANY.COM  \
                 http/kube-n1.mycompany.com@MYCOMPANY.COM"
+
+      $ kadmin.local -q "addprinc -randkey hdfs/kube-n2.mycompany.com@MYCOMPANY.COM"
+      $ kadmin.local -q "addprinc -randkey http/kube-n2.mycompany.com@MYCOMPANY.COM"
+      $ kadmin.local -q "ktadd -norandkey  \
+                -k hdfs-keytabs/kube-n2.mycompany.com.keytab  \
+                hdfs/kube-n2.mycompany.com@MYCOMPANY.COM  \
+                http/kube-n2.mycompany.com@MYCOMPANY.COM"
+      $ kadmin.local -q "ktadd -norandkey  \
+                -k hdfs-keytabs/kube-n2.mycompany.com.keytab  \
+                hdfs/kube-n2.mycompany.com@MYCOMPANY.COM  \
+                http/kube-n2.mycompany.com@MYCOMPANY.COM"
      ```
 
-     - Copy the keytab file to the k8s cluster node. This will be mounted
-       onto the namenode pod as `hostPath`. (You may want to restrict which
-       pods can use `hostPath` using k8s `PodSecurityPolicy` and `RBAC`
-       to minimize exposure of the keytab files. See [reference](
-       https://github.com/kubernetes/examples/blob/master/staging/podsecuritypolicy/rbac/README.md))
+     - Create a k8s secret containing all the keytab files. This will be mounted
+       onto the namenode and datanode pods. (You may want to restrict access to
+       this secret using k8s RBAC, to minimize exposure of the keytab files.
      ```
-      $ ssh root@kube-n1.mycompany.com mkdir /hdfs-credentials
-      $ scp root@kube-n1.hdfs.keytab kube-n1.mycompany.com:/hdfs-credentials/hdfs.keytab
-      $ ssh root@kube-n1.mycompany.com chmod 0600 /hdfs-credentials/hdfs.keytab
+      $ kubectl create secret generic hdfs-kerberos-keytabs  \
+            --from-file=kube-n1.mycompany.com.keytab  \
+            --from-file=kube-n2.mycompany.com.keytab
      ```
 
   3. Launch this namenode helm chart, `hdfs-namenode-k8s`.
@@ -69,10 +81,12 @@ HDFS `namenode` running inside a kubernetes cluster. See the other chart for
 There will be only one `namenode` instance. i.e. High Availability (HA) is not
 supported at the moment. The `namenode` instance is supposed to be pinned to
 a cluster host using a node label, as shown in the usage above. `Namenode`
-mount a local disk directory using k8s `hostPath` volume.
+mount a local disk directory using k8s `hostPath` volume. You may want to
+restrict access of `hostPath` using `pod security policy`.
+See [reference](https://github.com/kubernetes/examples/blob/master/staging/podsecuritypolicy/rbac/README.md))
 
 `namenode` is using `hostNetwork` so it can see physical IPs of datanodes
-without an overlay network such as weave-net mask them.
+without an overlay network such as weave-net masking them.
 
 ###Credits
 

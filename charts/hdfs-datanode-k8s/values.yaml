@@ -47,9 +47,13 @@ kerberosConfigMap: kerberos-config
 # the config map.
 kerberosConfigFileName: krb5.conf
 
-# Effective only if Kerberos is enabled. Path of the kerberos keytab file on
-# k8s cluster nodes.
-kerberosKeytabHostPath: /hdfs-credentials/hdfs.keytab
+# Effective only if Kerberos is enabled. Name of the k8s secret containing
+# the kerberos keytab files of per-host hdfs principals. The secret should
+# have multiple data items. Each data item name should be formatted as:
+#    `HOST-NAME.keytab`
+# where HOST-NAME should match the cluster node
+# host name that each per-host HDFS principal is associated with.
+kerberosKeytabsSecret: hdfs-kerberos-keytabs
 
 # Effective only if Kerberos is enabled. Enable protection of datanodes using
 # the jsvc utility. See the reference doc at

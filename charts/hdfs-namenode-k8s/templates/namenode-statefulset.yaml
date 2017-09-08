@@ -90,10 +90,28 @@ spec:
               mountPath: /etc/krb5.conf
               subPath: {{ .Values.kerberosConfigFileName }}
               readOnly: true
-            - name: kerberos-keytab
-              mountPath: /etc/security/hdfs.keytab
+            - name: kerberos-keytab-copy
+              mountPath: /etc/security/
               readOnly: true
             {{- end }}
+      {{- if .Values.kerberosEnabled }}
+      initContainers:
+        - name: copy-kerberos-keytab
+          image: busybox:1.27.1
+          command: ['sh', '-c']
+          args:
+            - cp /kerberos-keytabs/$MY_NODE_NAME.keytab /kerberos-keytab-copy/hdfs.keytab
+          env:
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: kerberos-keytabs
+              mountPath: /kerberos-keytabs
+            - name: kerberos-keytab-copy
+              mountPath: /kerberos-keytab-copy
+      {{- end }}
       # Pin the pod to a node. You can label your node like below:
       #   $ kubectl label nodes YOUR-NODE hdfs-namenode-selector=hdfs-namenode-0
       nodeSelector:
@@ -107,7 +125,9 @@ spec:
         - name: kerberos-config
           configMap:
             name: {{ .Values.kerberosConfigMap }}
-        - name: kerberos-keytab
-          hostPath:
-            path: {{ .Values.kerberosKeytabHostPath }}
+        - name: kerberos-keytabs
+          secret:
+            secretName: {{ .Values.kerberosKeytabsSecret }}
+        - name: kerberos-keytab-copy
+          emptyDir: {}
         {{- end }}
