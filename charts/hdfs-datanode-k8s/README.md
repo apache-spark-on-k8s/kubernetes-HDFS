@@ -10,8 +10,9 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
   ```
 
   2. (Skip this if you do not plan to enable Kerberos)
-     Conduct the Kerberos setups described in the namenode README.md, if you
-     have not done that already.
+     Conduct the Kerberos setups described in the namenode
+     [README.md](../hdfs-namenode-k8s/README.md), if you have not done that
+     already.
 
   3. Launch this helm chart, `hdfs-datanode-k8s`.
 

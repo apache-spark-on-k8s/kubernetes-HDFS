@@ -85,7 +85,7 @@ supported at the moment. The `namenode` instance is supposed to be pinned to
 a cluster host using a node label, as shown in the usage above. `Namenode`
 mount a local disk directory using k8s `hostPath` volume. You may want to
 restrict access of `hostPath` using `pod security policy`.
-See [reference](https://github.com/kubernetes/examples/blob/master/staging/podsecuritypolicy/rbac/README.md))
+See [reference](https://github.com/kubernetes/examples/blob/master/staging/podsecuritypolicy/rbac/README.md)
 
 `namenode` is using `hostNetwork` so it can see physical IPs of datanodes
 without an overlay network such as weave-net masking them.
