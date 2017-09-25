@@ -15,7 +15,7 @@ HDFS `namenode` running inside a kubernetes cluster. See the other chart for
   2. (Skip this if you do not plan to enable Kerberos)
      Prepare Kerberos setup, following the steps below.
 
-     - Create a config map containg your Kerberos config file. This will be
+     - Create a config map containing your Kerberos config file. This will be
        mounted onto the namenode and datanode pods.
 
      ```
@@ -51,7 +51,9 @@ HDFS `namenode` running inside a kubernetes cluster. See the other chart for
 
      - Create a k8s secret containing all the keytab files. This will be mounted
        onto the namenode and datanode pods. (You may want to restrict access to
-       this secret using k8s RBAC, to minimize exposure of the keytab files.
+       this secret using k8s
+       [RBAC](https://kubernetes.io/docs/admin/authorization/rbac/),
+       to minimize exposure of the keytab files.
      ```
       $ kubectl create secret generic hdfs-kerberos-keytabs  \
             --from-file=kube-n1.mycompany.com.keytab  \

@@ -32,7 +32,7 @@ spec:
         - name: datanode
           image: uhopper/hadoop-datanode:2.7.2
           env:
-            # The following env vars are listed according to low-to-high precendence order.
+            # The following env vars are listed according to low-to-high precedence order.
             # i.e. Whoever comes last will override the earlier value of the same variable.
             {{- if .Values.kerberosEnabled }}
             - name: CORE_CONF_hadoop_security_authentication
