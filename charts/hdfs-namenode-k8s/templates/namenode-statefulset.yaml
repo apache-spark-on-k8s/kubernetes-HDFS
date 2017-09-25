@@ -51,21 +51,67 @@ spec:
         - name: hdfs-namenode
           image: uhopper/hadoop-namenode:2.7.2
           env:
-            - name: CLUSTER_NAME
-              value: hdfs-k8s
-            # We now add custom hadoop configuration provided
+            # The following env vars are listed according to low-to-high precedence order.
+            # i.e. Whoever comes last will override the earlier value of the same variable.
+            {{- if .Values.kerberosEnabled }}
+            - name: CORE_CONF_hadoop_security_authentication
+              value: kerberos
+            - name: CORE_CONF_hadoop_security_authorization
+              value: "true"
+            - name: CORE_CONF_hadoop_rpc_protection
+              value: privacy
+            - name:   HDFS_CONF_dfs_block_access_token_enable
+              value: "true"
+            - name:   HDFS_CONF_dfs_encrypt_data_transfer
+              value: "true"
+            - name: HDFS_CONF_dfs_namenode_kerberos_principal
+              value: hdfs/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
+            - name:  HDFS_CONF_dfs_namenode_kerberos_https_principal
+              value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
+            - name: HDFS_CONF_dfs_web_authentication_kerberos_principal
+              value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
+            - name: HDFS_CONF_dfs_namenode_keytab_file
+              value: /etc/security/hdfs.keytab
+            {{- end }}
             {{- range $key, $value := .Values.customHadoopConfig }}
-            {{- if ne $key "CLUSTER_NAME" }}
             - name: {{ $key | quote }}
               value: {{ $value | quote }}
             {{- end }}
-            {{- end }}
+            - name: CLUSTER_NAME
+              value: hdfs-k8s
           ports:
           - containerPort: 8020
             name: fs
           volumeMounts:
             - name: hdfs-name
               mountPath: /hadoop/dfs/name
+            {{- if .Values.kerberosEnabled }}
+            - name: kerberos-config
+              mountPath: /etc/krb5.conf
+              subPath: {{ .Values.kerberosConfigFileName }}
+              readOnly: true
+            - name: kerberos-keytab-copy
+              mountPath: /etc/security/
+              readOnly: true
+            {{- end }}
+      {{- if .Values.kerberosEnabled }}
+      initContainers:
+        - name: copy-kerberos-keytab
+          image: busybox:1.27.1
+          command: ['sh', '-c']
+          args:
+            - cp /kerberos-keytabs/$MY_NODE_NAME.keytab /kerberos-keytab-copy/hdfs.keytab
+          env:
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: kerberos-keytabs
+              mountPath: /kerberos-keytabs
+            - name: kerberos-keytab-copy
+              mountPath: /kerberos-keytab-copy
+      {{- end }}
       # Pin the pod to a node. You can label your node like below:
       #   $ kubectl label nodes YOUR-NODE hdfs-namenode-selector=hdfs-namenode-0
       nodeSelector:
@@ -75,3 +121,13 @@ spec:
         - name: hdfs-name
           hostPath:
             path: {{ .Values.nameNodeHostPath }}
+        {{- if .Values.kerberosEnabled }}
+        - name: kerberos-config
+          configMap:
+            name: {{ .Values.kerberosConfigMap }}
+        - name: kerberos-keytabs
+          secret:
+            secretName: {{ .Values.kerberosKeytabsSecret }}
+        - name: kerberos-keytab-copy
+          emptyDir: {}
+        {{- end }}
