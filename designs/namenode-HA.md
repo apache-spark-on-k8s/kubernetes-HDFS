@@ -44,7 +44,7 @@ There are two disk files that NN writes:
 
 The editlog is later merged into a new fsimage snapshot, starting a new cycle.
 
-![namenode metadata](namenode-metadata.tif)
+![namenode metadata](namenode-metadata.png)
 
 Another important piece of metadata, the mapping of which datanodes have which
 file blocks, is *not* written to disk. After restart, NN rebuilds this mapping
@@ -93,7 +93,7 @@ http://johnjianfang.blogspot.com/2015/02/quorum-journal-manager-part-i-protocol.
 
 For HDFS on K8s, we are leaning toward the journal manager approach.
 
-![journal-approach](journal-approach.tif)
+![journal-approach](journal-approach.png)
 
 
 ### Other HA aspects
