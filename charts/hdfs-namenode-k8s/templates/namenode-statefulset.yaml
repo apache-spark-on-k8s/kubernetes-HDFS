@@ -206,6 +206,7 @@ spec:
       {{- if not .Values.namenodeHAEnabled }}
       # Pin the pod to a node. You can label your node like below:
       #   $ kubectl label nodes YOUR-NODE hdfs-namenode-selector=hdfs-namenode-0
+      # FIXME: Find a way to ping the two HA namenodes to two cluster nodes.
       nodeSelector:
         hdfs-namenode-selector: hdfs-namenode-0
       {{- end }}
