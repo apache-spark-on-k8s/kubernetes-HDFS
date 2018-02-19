@@ -96,6 +96,8 @@ spec:
               value: "false"
             - name: HDFS_CONF_dfs_ha_fencing_methods
               value: "shell(/bin/true)"
+            - name: HDFS_CONF_dfs_client_failover_proxy_provider_hdfs-k8s
+              value: org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider
             {{- end }}
             {{- if .Values.kerberosEnabled }}
             - name: CORE_CONF_hadoop_security_authentication
@@ -191,6 +193,7 @@ spec:
       {{- end }}
       restartPolicy: Always
       volumes:
+        # FIXME: Use PVs in case of HA.
         - name: hdfs-name
           hostPath:
             path: {{ .Values.nameNodeHostPath }}
