@@ -163,7 +163,7 @@ spec:
           image: busybox:1.27.1
           command: ['sh', '-c']
           args:
-            - if [ "$(echo $MY_POD | cut -c 1-15)" == "hdfs-namenode-0" ]; then (echo 'if [ ! -d /hadoop/dfs/name/current ]; then $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -format hdfs-k8s; $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR zkfc -formatZK; fi' >> /nn-start-script/run.sh); else (echo 'if [ ! -d /hadoop/dfs/name/current ]; then $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -bootstrapStandby; fi' >> /nn-start-script/run.sh); fi
+            - if [ "$(echo $MY_POD | cut -c 1-15)" == "hdfs-namenode-0" ]; then (echo 'if [ ! -d /hadoop/dfs/name/current ]; then $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -format -force -nonInteractive hdfs-k8s; $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR zkfc -formatZK -force -nonInteractive; fi' >> /nn-start-script/run.sh); else (echo 'if [ ! -d /hadoop/dfs/name/current ]; then $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -bootstrapStandby -force -nonInteractive; fi' >> /nn-start-script/run.sh); fi
           env:
             - name: MY_POD
               valueFrom:
