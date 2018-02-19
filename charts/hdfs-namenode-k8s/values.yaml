@@ -52,3 +52,6 @@ kerberosConfigFileName: krb5.conf
 # where HOST-NAME should match the cluster node
 # host name that each per-host hdfs principal is associated with.
 kerberosKeytabsSecret: hdfs-kerberos-keytabs
+
+# Whether or not namenode HA is enabled.
+namenodeHAEnabled: false
