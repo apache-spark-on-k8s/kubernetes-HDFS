@@ -75,7 +75,7 @@ spec:
               value: hdfs://hdfs-k8s
             # FIXME. Use all three zk-svc members.
             - name: CORE_CONF_ha_zookeeper_quorum
-              value: zk-0.zk-svc.default.svc.cluster.local:2888
+              value: zk-0.zk-svc.default.svc.cluster.local:2181
             - name: HDFS_CONF_dfs_nameservices
               value: hdfs-k8s
             - name: HDFS_CONF_dfs_ha_namenodes_hdfs___k8s
@@ -91,9 +91,8 @@ spec:
             # FIXME. Use all three hdfs-journalnode members.
             - name: HDFS_CONF_dfs_namenode_shared_edits_dir
               value: qjournal://hdfs-journalnode-0.hdfs-journalnode.default.svc.cluster.local:8485/hdfs-k8s
-            # FIXME. Enable automatic-failover.
             - name: HDFS_CONF_dfs_ha_automatic___failover_enabled
-              value: "false"
+              value: "true"
             - name: HDFS_CONF_dfs_ha_fencing_methods
               value: "shell(/bin/true)"
             - name: HDFS_CONF_dfs_client_failover_proxy_provider_hdfs___k8s
@@ -128,7 +127,7 @@ spec:
           {{- if .Values.namenodeHAEnabled }}
           command: ['/bin/sh', '-c']
           args:
-            - if [ -x /standby-script/run.sh ]; then (/entrypoint.sh /standby-script/run.sh); else (/entrypoint.sh /run.sh); fi
+            - cat /nn-start-script/run.sh; /entrypoint.sh /nn-start-script/run.sh
           {{- end }}
           ports:
           - containerPort: 8020
@@ -137,8 +136,8 @@ spec:
             - name: hdfs-name
               mountPath: /hadoop/dfs/name
             {{- if .Values.namenodeHAEnabled }}
-            - name: standby-script
-              mountPath: /standby-script
+            - name: nn-start-script
+              mountPath: /nn-start-script
               readOnly: true
             {{- end }}
             {{- if .Values.kerberosEnabled }}
@@ -152,21 +151,37 @@ spec:
             {{- end }}
       initContainers:
       {{- if .Values.namenodeHAEnabled }}
-        - name: write-standby-script
+        - name: create-nn-start-script
           image: busybox:1.27.1
           command: ['sh', '-c']
           args:
-            - if [ "$(echo $MY_POD_NAME | cut -c 1-15)" == "hdfs-namenode-1" ]; then (echo '#!/bin/bash' > /standby-script/run.sh); (echo 'if [ "`ls -A /hadoop/dfs/name`" == "" ]; then $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -bootstrapStandby; fi' >> /standby-script/run.sh); (echo '$HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode' >> /standby-script/run.sh); (chmod +x /standby-script/run.sh); fi
+            - (echo '#!/bin/bash' > /nn-start-script/run.sh)
+          volumeMounts:
+            - name: nn-start-script
+              mountPath: /nn-start-script/
+        - name: write-nn-format-in-start-script
+          image: busybox:1.27.1
+          command: ['sh', '-c']
+          args:
+            - if [ "$(echo $MY_POD | cut -c 1-15)" == "hdfs-namenode-0" ]; then (echo 'if [ ! -d /hadoop/dfs/name/current ]; then $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -format hdfs-k8s; $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR zkfc -formatZK; fi' >> /nn-start-script/run.sh); else (echo 'if [ ! -d /hadoop/dfs/name/current ]; then $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -bootstrapStandby; fi' >> /nn-start-script/run.sh); fi
           env:
-            - name: MY_POD_NAME
+            - name: MY_POD
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
           volumeMounts:
             - name: hdfs-name
               mountPath: /hadoop/dfs/name
-            - name: standby-script
-              mountPath: /standby-script/
+            - name: nn-start-script
+              mountPath: /nn-start-script/
+        - name: wrap-up-nn-start-script
+          image: busybox:1.27.1
+          command: ['sh', '-c']
+          args:
+            - (echo '$HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start zkfc' >> /nn-start-script/run.sh); (echo '$HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode' >> /nn-start-script/run.sh); chmod +x /nn-start-script/run.sh
+          volumeMounts:
+            - name: nn-start-script
+              mountPath: /nn-start-script/
       {{- end }}
       {{- if .Values.kerberosEnabled }}
         - name: copy-kerberos-keytab
@@ -198,7 +213,7 @@ spec:
           hostPath:
             path: {{ .Values.nameNodeHostPath }}
         {{- if .Values.namenodeHAEnabled }}
-        - name: standby-script
+        - name: nn-start-script
           emptyDir: {}
         {{- end }}
         {{- if .Values.kerberosEnabled }}

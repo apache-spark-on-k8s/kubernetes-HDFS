@@ -37,9 +37,6 @@ spec:
             {{- if .Values.namenodeHAEnabled }}
             - name: CORE_CONF_fs_defaultFS
               value: hdfs://hdfs-k8s
-            # FIXME. Use all three zk-svc members.
-            - name: CORE_CONF_ha_zookeeper_quorum
-              value: zk-0.zk-svc.default.svc.cluster.local:2888
             - name: HDFS_CONF_dfs_nameservices
               value: hdfs-k8s
             - name: HDFS_CONF_dfs_ha_namenodes_hdfs___k8s
@@ -52,14 +49,6 @@ spec:
               value: hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:50070
             - name: HDFS_CONF_dfs_namenode_http___address_hdfs___k8s_nn1
               value: hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:50070
-            # FIXME. Use all three hdfs-journalnode members.
-            - name: HDFS_CONF_dfs_namenode_shared_edits_dir
-              value: qjournal://hdfs-journalnode-0.hdfs-journalnode.default.svc.cluster.local:8485/hdfs-k8s
-            # FIXME. Enable automatic-failover.
-            - name: HDFS_CONF_dfs_ha_automatic___failover_enabled
-              value: "false"
-            - name: HDFS_CONF_dfs_ha_fencing_methods
-              value: "shell(/bin/true)"
             - name: HDFS_CONF_dfs_client_failover_proxy_provider_hdfs___k8s
               value: org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider
             {{- else }}
