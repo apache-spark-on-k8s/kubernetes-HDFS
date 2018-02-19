@@ -126,7 +126,7 @@ spec:
           {{- if .Values.namenodeHAEnabled }}
           command: ['/bin/sh', '-c']
           args:
-            - if [ -x /standby-script/run.sh ]; then (cat /standby-script/run.sh); else (/entrypoint.sh /run.sh); fi
+            - if [ -x /standby-script/run.sh ]; then (/entrypoint.sh /standby-script/run.sh); else (/entrypoint.sh /run.sh); fi
           {{- end }}
           ports:
           - containerPort: 8020
@@ -154,7 +154,7 @@ spec:
           image: busybox:1.27.1
           command: ['sh', '-c']
           args:
-            - if [ "$(echo $MY_POD_NAME | cut -c 1-15)" == "hdfs-namenode-1" ]; then (echo '#!/bin/bash' > /standby-script/run.sh); (if [ "`ls -A /hadoop/dfs/name`" == ""]; then echo 'Boostrapping standby'; echo '$HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -bootstrapStandby' > /standby-script/run.sh; fi); (echo '$HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode' >> /standby-script/run.sh); (chmod +x /standby-script/run.sh); fi
+            - if [ "$(echo $MY_POD_NAME | cut -c 1-15)" == "hdfs-namenode-1" ]; then (echo '#!/bin/bash' > /standby-script/run.sh); (echo 'if [ "`ls -A /hadoop/dfs/name`" == "" ]; then $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -bootstrapStandby; fi' >> /standby-script/run.sh); (echo '$HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode' >> /standby-script/run.sh); (chmod +x /standby-script/run.sh); fi
           env:
             - name: MY_POD_NAME
               valueFrom:
