@@ -103,6 +103,8 @@ spec:
             - name: {{ $key | quote }}
               value: {{ $value | quote }}
             {{- end }}
+            - name: MULTIHOMED_NETWORK
+              value: "0"
             # The below uses two loops to make sure the last item does not have comma. It uses index 0
             # for the last item since that is the only special index that helm template gives us.
             - name: HDFS_CONF_dfs_datanode_data_dir

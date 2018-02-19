@@ -97,6 +97,9 @@ spec:
               value: "shell(/bin/true)"
             - name: HDFS_CONF_dfs_client_failover_proxy_provider_hdfs___k8s
               value: org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider
+            {{- else }}
+            - name: CLUSTER_NAME
+              value: hdfs-k8s
             {{- end }}
             {{- if .Values.kerberosEnabled }}
             - name: CORE_CONF_hadoop_security_authentication
@@ -122,12 +125,12 @@ spec:
             - name: {{ $key | quote }}
               value: {{ $value | quote }}
             {{- end }}
-            - name: CLUSTER_NAME
-              value: hdfs-k8s
+            - name: MULTIHOMED_NETWORK
+              value: "0"
           {{- if .Values.namenodeHAEnabled }}
           command: ['/bin/sh', '-c']
           args:
-            - cat /nn-start-script/run.sh; /entrypoint.sh /nn-start-script/run.sh
+            - /entrypoint.sh /nn-start-script/run.sh
           {{- end }}
           ports:
           - containerPort: 8020
