@@ -15,6 +15,9 @@
 
 # Default values for template variables.
 
+# Whether or not namenode HA is enabled.
+namenodeHAEnabled: false
+
 # Path of the local disk directory on a cluster node that will contain the namenode
 # fsimage and edit logs. This will be mounted to the namenode as a k8s HostPath
 # volume.
@@ -52,6 +55,3 @@ kerberosConfigFileName: krb5.conf
 # where HOST-NAME should match the cluster node
 # host name that each per-host hdfs principal is associated with.
 kerberosKeytabsSecret: hdfs-kerberos-keytabs
-
-# Whether or not namenode HA is enabled.
-namenodeHAEnabled: false
