@@ -36,12 +36,12 @@ spec:
   serviceName: "hdfs-namenode"
   {{- if .Values.namenodeHAEnabled }}
   # Create a size-2 set. The namenode DNS names will be
-  # hdfs-namenode-0.hdfs-namenode.default.svc.YOUR-CLUSTER-DOMAIN
-  # and hdfs-namenode-1.hdfs-namenode.default.svc.YOUR-CLUSTER-DOMAIN
+  # hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local
+  # and hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local
   replicas: 2
   {{ else }}
   # Create a size-1 set. The namenode DNS name will be
-  # hdfs-namenode-0.hdfs-namenode.default.svc.YOUR-CLUSTER-DOMAIN
+  # hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local
   replicas: 1
   {{ end }}
   template:
@@ -75,22 +75,22 @@ spec:
               value: hdfs://hdfs-k8s
             # FIXME. Use all three zk-svc members.
             - name: CORE_CONF_ha_zookeeper_quorum
-              value: zk-0.zk-svc:2888
+              value: zk-0.zk-svc.default.svc.cluster.local:2888
             - name: HDFS_CONF_dfs_nameservices
               value: hdfs-k8s
             - name: HDFS_CONF_dfs_ha_namenodes_hdfs___k8s
               value: nn0,nn1
             - name: HDFS_CONF_dfs_namenode_rpc___address_hdfs___k8s_nn0
-              value: hdfs-namenode-0.hdfs-namenode:8020
+              value: hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020
             - name: HDFS_CONF_dfs_namenode_rpc___address_hdfs___k8s_nn1
-              value: hdfs-namenode-1.hdfs-namenode:8020
+              value: hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:8020
             - name: HDFS_CONF_dfs_namenode_http___address_hdfs___k8s_nn0
-              value: hdfs-namenode-0.hdfs-namenode:50070
+              value: hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:50070
             - name: HDFS_CONF_dfs_namenode_http___address_hdfs___k8s_nn1
-              value: hdfs-namenode-1.hdfs-namenode:50070
+              value: hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:50070
             # FIXME. Use all three hdfs-journalnode members.
             - name: HDFS_CONF_dfs_namenode_shared_edits_dir
-              value: qjournal://hdfs-journalnode-0.hdfs-journalnode:8485/hdfs-k8s
+              value: qjournal://hdfs-journalnode-0.hdfs-journalnode.default.svc.cluster.local:8485/hdfs-k8s
             # FIXME. Enable automatic-failover.
             - name: HDFS_CONF_dfs_ha_automatic___failover_enabled
               value: "false"
