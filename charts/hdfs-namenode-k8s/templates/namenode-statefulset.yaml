@@ -40,7 +40,6 @@ spec:
   # hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local
   # and hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local
   replicas: 2
-  {{ end }}
   template:
     metadata:
       labels:
@@ -133,7 +132,7 @@ spec:
           - containerPort: 50070
             name: http
           volumeMounts:
-            - name: hdfs-name
+            - name: metadatadir
               mountPath: /hadoop/dfs/name
             - name: nn-start
               mountPath: /nn-start
@@ -157,11 +156,11 @@ spec:
               (echo '#!/bin/bash -x' > $OUT);
               (echo 'if [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-0 ]]' >> $OUT);
               (echo 'then' >> $OUT);
-              (echo ' $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -format -force -nonInteractive hdfs-k8s' >> $OUT);
-              (echo ' $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR zkfc -formatZK -force -nonInteractive' >> $OUT);
+              (echo ' $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -format -force -nonInteractive hdfs-k8s || exit 1' >> $OUT);
+              (echo ' $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR zkfc -formatZK -force -nonInteractive || exit 1' >> $OUT);
               (echo 'elif [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-1 ]]' >> $OUT);
               (echo 'then' >> $OUT);
-              (echo ' $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -bootstrapStandby -force -nonInteractive' >> $OUT);
+              (echo ' $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -bootstrapStandby -force -nonInteractive || exit 1' >> $OUT);
               (echo 'fi' >> $OUT);
               (echo '$HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start zkfc' >> $OUT);
               (echo '$HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode' >> $OUT);
@@ -197,8 +196,6 @@ spec:
       {{- end }}
       restartPolicy: Always
       volumes:
-        - name: metadatadir
-          mountPath: /hadoop/dfs/name
         - name: nn-start
           emptyDir: {}
         {{- if .Values.kerberosEnabled }}
@@ -218,4 +215,4 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 10Gi
+          storage: {{ .Values.metadataVolumeSize }}

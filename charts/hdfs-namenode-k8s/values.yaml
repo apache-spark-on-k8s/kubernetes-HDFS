@@ -15,6 +15,9 @@
 
 # Default values for template variables.
 
+# Size of metadata persistent volume per namenode instance.
+metadataVolumeSize: 100Gi
+
 # Whether or not to enable pinning of namenode pods to labeled k8s cluster nodes.
 namenodePinningEnabled: false
 
