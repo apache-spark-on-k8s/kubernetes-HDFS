@@ -36,15 +36,10 @@ metadata:
   name: hdfs-namenode
 spec:
   serviceName: "hdfs-namenode"
-  {{- if .Values.namenodeHAEnabled }}
   # Create a size-2 set. The namenode DNS names will be
   # hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local
   # and hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local
   replicas: 2
-  {{ else }}
-  # Create a size-1 set. The namenode DNS name will be
-  # hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local
-  replicas: 1
   {{ end }}
   template:
     metadata:
@@ -72,7 +67,30 @@ spec:
           env:
             # The following env vars are listed according to low-to-high precedence order.
             # i.e. Whoever comes last will override the earlier value of the same variable.
-            {{- if .Values.namenodeHAEnabled }}
+            {{- if .Values.kerberosEnabled }}
+            - name: CORE_CONF_hadoop_security_authentication
+              value: kerberos
+            - name: CORE_CONF_hadoop_security_authorization
+              value: "true"
+            - name: CORE_CONF_hadoop_rpc_protection
+              value: privacy
+            - name: HDFS_CONF_dfs_block_access_token_enable
+              value: "true"
+            - name: HDFS_CONF_dfs_encrypt_data_transfer
+              value: "true"
+            - name: HDFS_CONF_dfs_namenode_kerberos_principal
+              value: hdfs/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
+            - name: HDFS_CONF_dfs_namenode_kerberos_https_principal
+              value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
+            - name: HDFS_CONF_dfs_web_authentication_kerberos_principal
+              value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
+            - name: HDFS_CONF_dfs_namenode_keytab_file
+              value: /etc/security/hdfs.keytab
+            {{- end }}
+            {{- range $key, $value := .Values.customHadoopConfig }}
+            - name: {{ $key | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
             - name: CORE_CONF_fs_defaultFS
               value: hdfs://hdfs-k8s
             # FIXME. Use all three zk-svc members.
@@ -99,45 +117,16 @@ spec:
               value: "shell(/bin/true)"
             - name: HDFS_CONF_dfs_client_failover_proxy_provider_hdfs___k8s
               value: org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider
-            {{- else }}
-            - name: CLUSTER_NAME
-              value: hdfs-k8s
-            {{- end }}
-            {{- if .Values.kerberosEnabled }}
-            - name: CORE_CONF_hadoop_security_authentication
-              value: kerberos
-            - name: CORE_CONF_hadoop_security_authorization
-              value: "true"
-            - name: CORE_CONF_hadoop_rpc_protection
-              value: privacy
-            - name: HDFS_CONF_dfs_block_access_token_enable
-              value: "true"
-            - name: HDFS_CONF_dfs_encrypt_data_transfer
-              value: "true"
-            - name: HDFS_CONF_dfs_namenode_kerberos_principal
-              value: hdfs/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
-            - name: HDFS_CONF_dfs_namenode_kerberos_https_principal
-              value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
-            - name: HDFS_CONF_dfs_web_authentication_kerberos_principal
-              value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
-            - name: HDFS_CONF_dfs_namenode_keytab_file
-              value: /etc/security/hdfs.keytab
-            {{- end }}
-            {{- range $key, $value := .Values.customHadoopConfig }}
-            - name: {{ $key | quote }}
-              value: {{ $value | quote }}
-            {{- end }}
             - name: MULTIHOMED_NETWORK
               value: "0"
             - name: MY_POD
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-          {{- if .Values.namenodeHAEnabled }}
           command: ['/bin/sh', '-c']
+          # The run.sh script is generated below by a init-container.
           args:
             - /entrypoint.sh /nn-start/run.sh
-          {{- end }}
           ports:
           - containerPort: 8020
             name: fs
@@ -146,11 +135,9 @@ spec:
           volumeMounts:
             - name: hdfs-name
               mountPath: /hadoop/dfs/name
-            {{- if .Values.namenodeHAEnabled }}
             - name: nn-start
               mountPath: /nn-start
               readOnly: true
-            {{- end }}
             {{- if .Values.kerberosEnabled }}
             - name: kerberos-config
               mountPath: /etc/krb5.conf
@@ -161,7 +148,7 @@ spec:
               readOnly: true
             {{- end }}
       initContainers:
-      {{- if .Values.namenodeHAEnabled }}
+        # TODO: Support upgrade of metadata in case a new Hadoop version requires it.
         - name: write-start-script
           image: busybox:1.27.1
           command: ['sh', '-c']
@@ -185,7 +172,6 @@ spec:
           volumeMounts:
             - name: nn-start
               mountPath: /nn-start/
-      {{- end }}
       {{- if .Values.kerberosEnabled }}
         - name: copy-kerberos-keytab
           image: busybox:1.27.1
@@ -213,10 +199,8 @@ spec:
       volumes:
         - name: metadatadir
           mountPath: /hadoop/dfs/name
-        {{- if .Values.namenodeHAEnabled }}
         - name: nn-start
           emptyDir: {}
-        {{- end }}
         {{- if .Values.kerberosEnabled }}
         - name: kerberos-config
           configMap:

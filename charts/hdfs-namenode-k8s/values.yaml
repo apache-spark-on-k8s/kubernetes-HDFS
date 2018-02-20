@@ -15,10 +15,7 @@
 
 # Default values for template variables.
 
-# Whether or not namenode HA is enabled.
-namenodeHAEnabled: false
-
-# Whether or not pinning namenode pods to labeled nodes is enabled.
+# Whether or not to enable pinning of namenode pods to labeled k8s cluster nodes.
 namenodePinningEnabled: false
 
 # Custom hadoop config keys passed through env variables to hadoop uhopper images.
