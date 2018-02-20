@@ -129,10 +129,14 @@ spec:
             {{- end }}
             - name: MULTIHOMED_NETWORK
               value: "0"
+            - name: MY_POD
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
           {{- if .Values.namenodeHAEnabled }}
           command: ['/bin/sh', '-c']
           args:
-            - /entrypoint.sh /nn-start-script/run.sh
+            - /entrypoint.sh /nn-start/run.sh
           {{- end }}
           ports:
           - containerPort: 8020
@@ -143,8 +147,8 @@ spec:
             - name: hdfs-name
               mountPath: /hadoop/dfs/name
             {{- if .Values.namenodeHAEnabled }}
-            - name: nn-start-script
-              mountPath: /nn-start-script
+            - name: nn-start
+              mountPath: /nn-start
               readOnly: true
             {{- end }}
             {{- if .Values.kerberosEnabled }}
@@ -158,37 +162,29 @@ spec:
             {{- end }}
       initContainers:
       {{- if .Values.namenodeHAEnabled }}
-        - name: create-nn-start-script
+        - name: write-start-script
           image: busybox:1.27.1
           command: ['sh', '-c']
           args:
-            - (echo '#!/bin/bash' > /nn-start-script/run.sh)
-          volumeMounts:
-            - name: nn-start-script
-              mountPath: /nn-start-script/
-        - name: write-nn-format-in-start-script
-          image: busybox:1.27.1
-          command: ['sh', '-c']
-          args:
-            - if [ "$(echo $MY_POD | cut -c 1-15)" == "hdfs-namenode-0" ]; then (echo 'if [ ! -d /hadoop/dfs/name/current ]; then $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -format -force -nonInteractive hdfs-k8s; $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR zkfc -formatZK -force -nonInteractive; fi' >> /nn-start-script/run.sh); else (echo 'if [ ! -d /hadoop/dfs/name/current ]; then $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -bootstrapStandby -force -nonInteractive; fi' >> /nn-start-script/run.sh); fi
+            - >-
+              (echo '#!/bin/bash -x' > $OUT);
+              (echo 'if [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-0 ]]' >> $OUT);
+              (echo 'then' >> $OUT);
+              (echo ' $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -format -force -nonInteractive hdfs-k8s' >> $OUT);
+              (echo ' $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR zkfc -formatZK -force -nonInteractive' >> $OUT);
+              (echo 'elif [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-1 ]]' >> $OUT);
+              (echo 'then' >> $OUT);
+              (echo ' $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -bootstrapStandby -force -nonInteractive' >> $OUT);
+              (echo 'fi' >> $OUT);
+              (echo '$HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start zkfc' >> $OUT);
+              (echo '$HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode' >> $OUT);
+              chmod +x $OUT
           env:
-            - name: MY_POD
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
+            - name: OUT
+              value: /nn-start/run.sh
           volumeMounts:
-            - name: hdfs-name
-              mountPath: /hadoop/dfs/name
-            - name: nn-start-script
-              mountPath: /nn-start-script/
-        - name: wrap-up-nn-start-script
-          image: busybox:1.27.1
-          command: ['sh', '-c']
-          args:
-            - (echo '$HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start zkfc' >> /nn-start-script/run.sh); (echo '$HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode' >> /nn-start-script/run.sh); chmod +x /nn-start-script/run.sh
-          volumeMounts:
-            - name: nn-start-script
-              mountPath: /nn-start-script/
+            - name: nn-start
+              mountPath: /nn-start/
       {{- end }}
       {{- if .Values.kerberosEnabled }}
         - name: copy-kerberos-keytab
@@ -221,7 +217,7 @@ spec:
           hostPath:
             path: {{ .Values.nameNodeHostPath }}
         {{- if .Values.namenodeHAEnabled }}
-        - name: nn-start-script
+        - name: nn-start
           emptyDir: {}
         {{- end }}
         {{- if .Values.kerberosEnabled }}
