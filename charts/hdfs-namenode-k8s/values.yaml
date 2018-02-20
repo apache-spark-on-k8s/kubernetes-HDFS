@@ -18,6 +18,15 @@
 # Size of metadata persistent volume per namenode instance.
 metadataVolumeSize: 100Gi
 
+# Zookeeper quorum to use for determining which namenode instance is active.
+# Separated by the comma character.
+zookeeperQuorum: zk-0.zk-svc.default.svc.cluster.local:2181,zk-1.zk-svc.default.svc.cluster.local:2181,zk-2.zk-svc.default.svc.cluster.local:2181
+
+
+# Journal nodes quorum to use for sharing editlogs from an active namenode to
+# a standby namenode. Separated by the semicolon character.
+journalQuorum: hdfs-journalnode-0.hdfs-journalnode.default.svc.cluster.local:8485;hdfs-journalnode-1.hdfs-journalnode.default.svc.cluster.local:8485;hdfs-journalnode-2.hdfs-journalnode.default.svc.cluster.local:8485
+
 # Whether or not to enable pinning of namenode pods to labeled k8s cluster nodes.
 namenodePinningEnabled: false
 
