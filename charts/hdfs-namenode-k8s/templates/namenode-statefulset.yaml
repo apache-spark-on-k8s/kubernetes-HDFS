@@ -24,6 +24,8 @@ spec:
   ports:
   - port: 8020
     name: fs
+  - port: 50070
+    name: http
   clusterIP: None
   selector:
     app: hdfs-namenode
@@ -135,6 +137,8 @@ spec:
           ports:
           - containerPort: 8020
             name: fs
+          - containerPort: 50070
+            name: http
           volumeMounts:
             - name: hdfs-name
               mountPath: /hadoop/dfs/name
