@@ -36,10 +36,11 @@ metadata:
   name: hdfs-journalnode
 spec:
   serviceName: "hdfs-journalnode"
-  # Create a StatefulSet. The journalnode DNS name will be
-  # hdfs-journalnode-0.hdfs-journalnode.default.svc.YOUR-CLUSTER-DOMAIN
-  # FIXME: Set the size to 3.
-  replicas: 1
+  # Create a StatefulSet. The journalnode DNS names will be like
+  # hdfs-journalnode-0.hdfs-journalnode.default.svc.cluster.local,
+  # hdfs-journalnode-1.hdfs-journalnode.default.svc.cluster.local,
+  # hdfs-journalnode-2.hdfs-journalnode.default.svc.cluster.local
+  replicas: {{ .Values.quorumSize }}
   template:
     metadata:
       labels:

@@ -15,3 +15,5 @@
 
 # Default values for template variables.
 
+# How many journal nodes to launch as a quorum.
+quorumSize: 3
