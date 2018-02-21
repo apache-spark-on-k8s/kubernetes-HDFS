@@ -1,0 +1,31 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Default values for template variables.
+
+# Path of the local disk directory on a cluster node that will contain the namenode
+# fsimage and edit logs. This will be mounted to the namenode as a k8s HostPath
+# volume.
+nameNodeHostPath: /hdfs-name
+
+# Custom hadoop config keys passed through env variables to hadoop uhopper images.
+# See https://hub.docker.com/r/uhopper/hadoop/ to get more details
+# Please note that these are not hadoop env variables, but docker env variables that
+# will be transformed into hadoop config keys
+# CLUSTER_NAME is already set by the chart so any value coming from below config
+# will be ignored
+customHadoopConfig: {}
+  # Set variables through a hash where env variable is the key, e.g.
+  # HDFS_CONF_dfs_datanode_use_datanode_hostname: "false"

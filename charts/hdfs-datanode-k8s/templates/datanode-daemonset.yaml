@@ -72,6 +72,7 @@ spec:
             - name: {{ $key | quote }}
               value: {{ $value | quote }}
             {{- end }}
+            {{- if .Values.namenodeHAEnabled }}
             - name: CORE_CONF_fs_defaultFS
               value: hdfs://hdfs-k8s
             - name: HDFS_CONF_dfs_nameservices
@@ -86,6 +87,10 @@ spec:
               value: hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:50070
             - name: HDFS_CONF_dfs_namenode_http___address_hdfs___k8s_nn1
               value: hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:50070
+            {{- else }}
+            - name: CORE_CONF_fs_defaultFS
+              value: hdfs://hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020
+            {{- end }}
             - name: MULTIHOMED_NETWORK
               value: "0"
             # The below uses two loops to make sure the last item does not have comma. It uses index 0
