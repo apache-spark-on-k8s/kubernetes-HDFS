@@ -10,7 +10,7 @@ See the other chart for `datanodes`.
      we can skip this step.)
 
   ```
-  $ kubectl label nodes YOUR-HOST hdfs-namenode-selector=hdfs-namenode
+  $ kubectl label nodes YOUR-HOST hdfs-namenode-selector=hdfs-namenode-0
   ```
 
   2. Launch this namenode helm chart, `hdfs-simple-namenode-k8s`.
