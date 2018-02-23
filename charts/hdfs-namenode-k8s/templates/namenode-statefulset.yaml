@@ -208,6 +208,11 @@ spec:
         - name: kerberos-keytab-copy
           emptyDir: {}
         {{- end }}
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        runAsUser: {{ .Values.podSecurityContext.runAsUser }}
+        fsGroup: {{ .Values.podSecurityContext.fsGroup }}
+      {{- end }}
   volumeClaimTemplates:
   - metadata:
       name: metadatadir

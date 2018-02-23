@@ -40,6 +40,13 @@ customHadoopConfig: {}
   # Set variables through a hash where env variable is the key, e.g.
   # HDFS_CONF_dfs_datanode_use_datanode_hostname: "false"
 
+# Parameters for determining which Unix user and group IDs to use in pods.
+# Persistent volume permission may need to match these.
+podSecurityContext:
+  enabled: false
+  runAsUser: 0
+  fsGroup: 1000
+
 # Whether or not Kerberos support is enabled.
 kerberosEnabled: false
 

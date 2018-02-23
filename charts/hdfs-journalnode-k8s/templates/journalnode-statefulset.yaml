@@ -81,6 +81,11 @@ spec:
             - name: editdir
               mountPath: /hadoop/dfs/journal
       restartPolicy: Always
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        runAsUser: {{ .Values.podSecurityContext.runAsUser }}
+        fsGroup: {{ .Values.podSecurityContext.fsGroup }}
+      {{- end }}
   volumeClaimTemplates:
   - metadata:
       name: editdir
