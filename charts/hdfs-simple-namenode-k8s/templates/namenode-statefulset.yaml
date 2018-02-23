@@ -57,6 +57,8 @@ spec:
             - name: {{ $key | quote }}
               value: {{ $value | quote }}
             {{- end }}
+            - name: HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check
+              value: "false"
             - name: CLUSTER_NAME
               value: hdfs-k8s
           ports:

@@ -114,6 +114,8 @@ spec:
               value: "shell(/bin/true)"
             - name: HDFS_CONF_dfs_client_failover_proxy_provider_hdfs___k8s
               value: org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider
+            - name: HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check
+              value: "false"
             - name: MULTIHOMED_NETWORK
               value: "0"
             - name: MY_POD
