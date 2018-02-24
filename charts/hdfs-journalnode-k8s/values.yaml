@@ -18,6 +18,9 @@
 # How many journal nodes to launch as a quorum.
 quorumSize: 3
 
+# Size of editata persistent volume per journalnode instance.
+editdataVolumeSize: 20Gi
+
 # Parameters for determining which Unix user and group IDs to use in pods.
 # Persistent volume permission may need to match these.
 podSecurityContext:
