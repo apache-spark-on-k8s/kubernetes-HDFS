@@ -1,0 +1,90 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: hdfs-client
+  labels:
+    app: hdfs-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hdfs-client
+  template:
+    metadata:
+      labels:
+        app: hdfs-client
+    spec:
+      containers:
+        - name: hdfs-client
+          image: uhopper/hadoop:2.7.2
+          env:
+            # The following env vars are listed according to low-to-high precedence order.
+            # i.e. Whoever comes last will override the earlier value of the same variable.
+            {{- if .Values.kerberosEnabled }}
+            - name: CORE_CONF_hadoop_security_authentication
+              value: kerberos
+            - name: CORE_CONF_hadoop_security_authorization
+              value: "true"
+            - name: CORE_CONF_hadoop_rpc_protection
+              value: privacy
+            {{- end }}
+            {{- range $key, $value := .Values.customHadoopConfig }}
+            - name: {{ $key | quote }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- if .Values.namenodeHAEnabled }}
+            - name: CORE_CONF_fs_defaultFS
+              value: hdfs://hdfs-k8s
+            - name: HDFS_CONF_dfs_nameservices
+              value: hdfs-k8s
+            - name: HDFS_CONF_dfs_ha_namenodes_hdfs___k8s
+              value: nn0,nn1
+            - name: HDFS_CONF_dfs_namenode_rpc___address_hdfs___k8s_nn0
+              value: hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020
+            - name: HDFS_CONF_dfs_namenode_rpc___address_hdfs___k8s_nn1
+              value: hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:8020
+            - name: HDFS_CONF_dfs_namenode_http___address_hdfs___k8s_nn0
+              value: hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:50070
+            - name: HDFS_CONF_dfs_namenode_http___address_hdfs___k8s_nn1
+              value: hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:50070
+            - name: HDFS_CONF_dfs_client_failover_proxy_provider_hdfs___k8s
+              value: org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider
+            {{- else }}
+            - name: CORE_CONF_fs_defaultFS
+              value: hdfs://hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020
+            {{- end }}
+            - name: MULTIHOMED_NETWORK
+              value: "0"
+          command: ['/bin/sh', '-c']
+          args:
+            - /entrypoint.sh /usr/bin/tail -f /var/log/dmesg
+          volumeMounts:
+            {{- if .Values.kerberosEnabled }}
+            - name: kerberos-config
+              mountPath: /etc/krb5.conf
+              subPath: {{ .Values.kerberosConfigFileName }}
+              readOnly: true
+            {{- end }}
+      restartPolicy: Always
+      volumes:
+        {{- if .Values.kerberosEnabled }}
+        - name: kerberos-config
+          configMap:
+            name: {{ .Values.kerberosConfigMap }}
+        {{- end }}
