@@ -32,6 +32,16 @@ spec:
   selector:
     app: hdfs-journalnode
 ---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: hdfs-journalnode
+spec:
+  selector:
+    matchLabels:
+      app: hdfs-journalnode
+  minAvailable: {{ div .Values.quorumSize 2 | add1 }}
+---
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:

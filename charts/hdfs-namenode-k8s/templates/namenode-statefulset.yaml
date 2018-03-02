@@ -30,6 +30,16 @@ spec:
   selector:
     app: hdfs-namenode
 ---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: hdfs-namenode
+spec:
+  selector:
+    matchLabels:
+      app: hdfs-namenode
+  minAvailable: 1
+---
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
