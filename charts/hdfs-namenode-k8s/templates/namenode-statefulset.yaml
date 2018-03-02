@@ -20,6 +20,10 @@ metadata:
   name: hdfs-namenode
   labels:
     app: hdfs-namenode
+  annotations:
+    # TODO: Deprecated. Replace tolerate-unready-endpoints with
+    # v1.Service.PublishNotReadyAddresses.
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
 spec:
   ports:
   - port: 8020
