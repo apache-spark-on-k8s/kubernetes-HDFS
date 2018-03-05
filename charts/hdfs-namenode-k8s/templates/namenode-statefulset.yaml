@@ -75,6 +75,7 @@ spec:
                     - hfds-namenode
               topologyKey: "kubernetes.io/hostname"
       containers:
+        # TODO: Support hadoop version as option.
         - name: hdfs-namenode
           image: uhopper/hadoop-namenode:2.7.2
           env:
@@ -93,6 +94,8 @@ spec:
               value: "true"
             - name: HDFS_CONF_dfs_namenode_kerberos_principal
               value: hdfs/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
+            # TODO: Check if the https principal is no longer needed in newer
+            # Hadoop version.
             - name: HDFS_CONF_dfs_namenode_kerberos_https_principal
               value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
             - name: HDFS_CONF_dfs_web_authentication_kerberos_principal
@@ -161,6 +164,18 @@ spec:
               readOnly: true
             {{- end }}
       initContainers:
+        # Write the namenode bootstrap script which will start namenode daemons
+        # after conducting optional metadata initialization steps. The metadata
+        # initialization steps will take place in case the metadata dir is empty,
+        # which will be the case only for the very first run. The specific steps
+        # will differ depending on whether the namenode is active or standby.
+        # We also assume, for the very first run, namenode-0 will be active and
+        # namenode-1 will be standby as StatefulSet will launch namenode-0 first
+        # and zookeeper will determine the sole namenode to be the active one.
+        # For active namenode, the initialization steps will format the metadata,
+        # zookeeper dir and journal node data entries.
+        # For standby namenode, the initialization steps will simply receieve
+        # the first batch of metadata updates from the journal node.
         # TODO: Support upgrade of metadata in case a new Hadoop version requires it.
         - name: write-start-script
           image: busybox:1.27.1

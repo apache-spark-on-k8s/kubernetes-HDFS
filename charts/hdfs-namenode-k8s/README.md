@@ -1,4 +1,4 @@
-HDFS `namenode`s in HA setup running inside a Kubernetes cluster.
+HDFS `namenodes` in HA setup running inside a Kubernetes cluster.
 See the other chart for `datanodes`.
 
 ### Usage
@@ -67,7 +67,7 @@ See the other chart for `datanodes`.
      Optionally, attach a label to some of your k8s cluster hosts that will
      run the `namenode` daemons. This can allow your HDFS client outside
      the Kubernetes cluster to expect stable IP addresses. When used by
-     those outside clients, Kerberos expect the namenode addresses to be
+     those outside clients, Kerberos expects the namenode addresses to be
      stable.
     ```
     $ kubectl label nodes YOUR-HOST-1 hdfs-namenode-selector=hdfs-namenode
