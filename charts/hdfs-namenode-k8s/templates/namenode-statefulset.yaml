@@ -44,6 +44,52 @@ spec:
       app: hdfs-namenode
   minAvailable: 1
 ---
+# Provides a number of namenode start scripts that meet different needs.
+# TODO: Support upgrade of metadata in case a new Hadoop version requires it.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hdfs-namenode-start-scripts
+data:
+  # A bootstrap script which will start namenode daemons after conducting
+  # optional metadata initialization steps. The metadata initialization
+  # steps will take place in case the metadata dir is empty,
+  # which will be the case only for the very first run. The specific steps
+  # will differ depending on whether the namenode is active or standby.
+  # We also assume, for the very first run, namenode-0 will be active and
+  # namenode-1 will be standby as StatefulSet will launch namenode-0 first
+  # and zookeeper will determine the sole namenode to be the active one.
+  # For active namenode, the initialization steps will format the metadata,
+  # zookeeper dir and journal node data entries.
+  # For standby namenode, the initialization steps will simply receieve
+  # the first batch of metadata updates from the journal node.
+  format-and-run.sh: |
+    #!/bin/bash -x
+    _HDFS_BIN=$HADOOP_PREFIX/bin/hdfs
+    if [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-0 ]]
+    then
+      $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -format  \
+          -nonInteractive hdfs-k8s || exit 1
+      $_HDFS_BIN --config $HADOOP_CONF_DIR zkfc -formatZK  \
+          -nonInteractive || exit 1
+    elif [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-1 ]]
+    then
+      $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -bootstrapStandby  \
+          -nonInteractive || exit 1
+    fi
+    $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start zkfc
+    $_HDFS_BIN --config $HADOOP_CONF_DIR namenode
+
+  # A start script that will just hang indefinitely. A user can then get
+  # inside the pod and debug. Or a user can conduct a custom manual operations.
+  do-nothing.sh: |
+    #!/bin/bash -x
+    /usr/bin/tail -f /var/log/dmesg
+
+  # A start script that has user specified content. Can be used to conduct
+  # ad-hoc operation as specified by a user.
+  custom-run.sh: {{ .Values.customRunScript | quote }}
+---
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
@@ -135,14 +181,15 @@ spec:
               value: "false"
             - name: MULTIHOMED_NETWORK
               value: "0"
+            # Used by the start script below.
             - name: MY_POD
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
           command: ['/bin/sh', '-c']
-          # The run.sh script is generated below by a init-container.
+          # The start script is provided by a config map.
           args:
-            - /entrypoint.sh /nn-start/run.sh
+            - /entrypoint.sh "/nn-start/{{ .Values.namenodeStartScript }}"
           ports:
           - containerPort: 8020
             name: fs
@@ -163,44 +210,8 @@ spec:
               mountPath: /etc/security/
               readOnly: true
             {{- end }}
-      initContainers:
-        # Write the namenode bootstrap script which will start namenode daemons
-        # after conducting optional metadata initialization steps. The metadata
-        # initialization steps will take place in case the metadata dir is empty,
-        # which will be the case only for the very first run. The specific steps
-        # will differ depending on whether the namenode is active or standby.
-        # We also assume, for the very first run, namenode-0 will be active and
-        # namenode-1 will be standby as StatefulSet will launch namenode-0 first
-        # and zookeeper will determine the sole namenode to be the active one.
-        # For active namenode, the initialization steps will format the metadata,
-        # zookeeper dir and journal node data entries.
-        # For standby namenode, the initialization steps will simply receieve
-        # the first batch of metadata updates from the journal node.
-        # TODO: Support upgrade of metadata in case a new Hadoop version requires it.
-        - name: write-start-script
-          image: busybox:1.27.1
-          command: ['sh', '-c']
-          args:
-            - >-
-              (echo '#!/bin/bash -x' > $OUT);
-              (echo 'if [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-0 ]]' >> $OUT);
-              (echo 'then' >> $OUT);
-              (echo ' $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -format -force -nonInteractive hdfs-k8s || exit 1' >> $OUT);
-              (echo ' $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR zkfc -formatZK -force -nonInteractive || exit 1' >> $OUT);
-              (echo 'elif [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-1 ]]' >> $OUT);
-              (echo 'then' >> $OUT);
-              (echo ' $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode -bootstrapStandby -force -nonInteractive || exit 1' >> $OUT);
-              (echo 'fi' >> $OUT);
-              (echo '$HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start zkfc' >> $OUT);
-              (echo '$HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode' >> $OUT);
-              chmod +x $OUT
-          env:
-            - name: OUT
-              value: /nn-start/run.sh
-          volumeMounts:
-            - name: nn-start
-              mountPath: /nn-start/
       {{- if .Values.kerberosEnabled }}
+      initContainers:
         - name: copy-kerberos-keytab
           image: busybox:1.27.1
           command: ['sh', '-c']
@@ -226,7 +237,9 @@ spec:
       restartPolicy: Always
       volumes:
         - name: nn-start
-          emptyDir: {}
+          configMap:
+            name: hdfs-namenode-start-scripts
+            defaultMode: 0744
         {{- if .Values.kerberosEnabled }}
         - name: kerberos-config
           configMap:

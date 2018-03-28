@@ -15,6 +15,19 @@
 
 # Default values for template variables.
 
+# Name of the namenode start script in the config map.
+namenodeStartScript: format-and-run.sh
+
+# A namenode start script that can have user specified content.
+# Can be used to conduct ad-hoc operation as specified by a user.
+# To use this, also set the namenodeStartScript variable above
+# to custom-run.sh.
+customRunScript: |
+  #!/bin/bash -x
+  echo Write your own script content!
+  echo This message will disappear in 10 seconds.
+  sleep 10
+
 # Size of metadata persistent volume per namenode instance.
 metadataVolumeSize: 100Gi
 
