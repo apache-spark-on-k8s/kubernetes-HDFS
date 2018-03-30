@@ -1,15 +1,19 @@
-HDFS `namenode` running inside a kubernetes cluster. See the other chart for
-`datanodes`.
+HDFS `namenodes` in HA setup running inside a Kubernetes cluster.
+See the other chart for `datanodes`.
 
 ### Usage
 
-  1. Attach a label to one of your k8s cluster host that will run the `namenode`
-     daemon. (This is required as `namenode` currently mounts a local disk
-     `hostPath` volume. We will switch to persistent volume in the future, so
-     we can skip this step.)
+  1. Launch zookeeper and journal node quorum. Zookeeper is needed to decide
+     which namenode instance is active. Journal node quorum is needed to
+     synchronize metadata updates from the active namenode to the standby
+     namenode. You would need to provide persistent volumes for zookeeper and
+     journal node quorums. If each quorum is size 3, you need 6 volumes in
+     total.
 
   ```
-  $ kubectl label nodes YOUR-HOST hdfs-namenode-selector=hdfs-namenode-0
+  $ kubectl create -f  \
+      https://raw.githubusercontent.com/kubernetes/contrib/master/statefulsets/zookeeper/zookeeper.yaml
+  $ helm install -n my-hdfs-journalnode hdfs-namenode-journalnode
   ```
 
   2. (Skip this if you do not plan to enable Kerberos)
@@ -60,7 +64,22 @@ HDFS `namenode` running inside a kubernetes cluster. See the other chart for
             --from-file=kube-n2.mycompany.com.keytab
      ```
 
-  3. Launch this namenode helm chart, `hdfs-namenode-k8s`.
+     Optionally, attach a label to some of your k8s cluster hosts that will
+     run the `namenode` daemons. This can allow your HDFS client outside
+     the Kubernetes cluster to expect stable IP addresses. When used by
+     those outside clients, Kerberos expects the namenode addresses to be
+     stable.
+    ```
+    $ kubectl label nodes YOUR-HOST-1 hdfs-namenode-selector=hdfs-namenode
+    $ kubectl label nodes YOUR-HOST-2 hdfs-namenode-selector=hdfs-namenode
+    ```
+
+  3. Now it's time to launch namenodes using the helm chart, `hdfs-namenode-k8s`.
+     But, you need to first provide two persistent volumes for storing
+     metadata. Each volume should have at least 100 GB. (Can be overriden by
+     the metadataVolumeSize helm option).
+
+     With the volumes provided, you can launch the namenode HA with:
 
   ```
   $ helm install -n my-hdfs-namenode hdfs-namenode-k8s
@@ -73,19 +92,21 @@ HDFS `namenode` running inside a kubernetes cluster. See the other chart for
   ```
   The two variables above are required. For other variables, see values.yaml.
 
-  4. Confirm the daemon is launched.
+  If also using namenode labels for Kerberos, add
+  the namenodePinningEnabled option:
+  ```
+  $ helm install -n my-hdfs-namenode  \
+      --set kerberosEnabled=true,kerberosRealm=MYCOMPANY.COM,namenodePinningEnabled=true \
+      hdfs-namenode-k8s
+  ```
+
+  4. Confirm the daemons are launched.
 
   ```
   $ kubectl get pods | grep hdfs-namenode
   hdfs-namenode-0 1/1 Running   0 7m
+  hdfs-namenode-1 1/1 Running   0 7m
   ```
-
-There will be only one `namenode` instance. i.e. High Availability (HA) is not
-supported at the moment. The `namenode` instance is supposed to be pinned to
-a cluster host using a node label, as shown in the usage above. `Namenode`
-mount a local disk directory using k8s `hostPath` volume. You may want to
-restrict access of `hostPath` using `pod security policy`.
-See [reference](https://github.com/kubernetes/examples/blob/master/staging/podsecuritypolicy/rbac/README.md)
 
 `namenode` is using `hostNetwork` so it can see physical IPs of datanodes
 without an overlay network such as weave-net masking them.

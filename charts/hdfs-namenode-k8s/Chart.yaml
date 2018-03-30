@@ -13,5 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 name: hdfs-namenode-k8s
-version: 0.1
+version: 0.2
 description: Hadoop Distributed File System (HDFS) hosted by Kubernetes.

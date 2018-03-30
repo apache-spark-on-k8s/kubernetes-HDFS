@@ -12,6 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-name: hdfs-datanode-k8s
-version: 0.2
-description: Hadoop Distributed File System (HDFS) hosted by Kubernetes.
+
+# Default values for template variables.
+
+# How many journal nodes to launch as a quorum.
+quorumSize: 3
+
+# Size of editata persistent volume per journalnode instance.
+editdataVolumeSize: 20Gi
+
+# Parameters for determining which Unix user and group IDs to use in pods.
+# Persistent volume permission may need to match these.
+podSecurityContext:
+  enabled: false
+  runAsUser: 0
+  fsGroup: 1000
