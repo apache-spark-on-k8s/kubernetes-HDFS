@@ -20,13 +20,75 @@ metadata:
   name: hdfs-namenode
   labels:
     app: hdfs-namenode
+  annotations:
+    # TODO: Deprecated. Replace tolerate-unready-endpoints with
+    # v1.Service.PublishNotReadyAddresses.
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
 spec:
   ports:
   - port: 8020
     name: fs
+  - port: 50070
+    name: http
   clusterIP: None
   selector:
     app: hdfs-namenode
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: hdfs-namenode
+spec:
+  selector:
+    matchLabels:
+      app: hdfs-namenode
+  minAvailable: 1
+---
+# Provides a number of namenode start scripts that meet different needs.
+# TODO: Support upgrade of metadata in case a new Hadoop version requires it.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hdfs-namenode-start-scripts
+data:
+  # A bootstrap script which will start namenode daemons after conducting
+  # optional metadata initialization steps. The metadata initialization
+  # steps will take place in case the metadata dir is empty,
+  # which will be the case only for the very first run. The specific steps
+  # will differ depending on whether the namenode is active or standby.
+  # We also assume, for the very first run, namenode-0 will be active and
+  # namenode-1 will be standby as StatefulSet will launch namenode-0 first
+  # and zookeeper will determine the sole namenode to be the active one.
+  # For active namenode, the initialization steps will format the metadata,
+  # zookeeper dir and journal node data entries.
+  # For standby namenode, the initialization steps will simply receieve
+  # the first batch of metadata updates from the journal node.
+  format-and-run.sh: |
+    #!/bin/bash -x
+    _HDFS_BIN=$HADOOP_PREFIX/bin/hdfs
+    if [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-0 ]]
+    then
+      $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -format  \
+          -nonInteractive hdfs-k8s || exit 1
+      $_HDFS_BIN --config $HADOOP_CONF_DIR zkfc -formatZK  \
+          -nonInteractive || exit 1
+    elif [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-1 ]]
+    then
+      $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -bootstrapStandby  \
+          -nonInteractive || exit 1
+    fi
+    $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start zkfc
+    $_HDFS_BIN --config $HADOOP_CONF_DIR namenode
+
+  # A start script that will just hang indefinitely. A user can then get
+  # inside the pod and debug. Or a user can conduct a custom manual operations.
+  do-nothing.sh: |
+    #!/bin/bash -x
+    /usr/bin/tail -f /var/log/dmesg
+
+  # A start script that has user specified content. Can be used to conduct
+  # ad-hoc operation as specified by a user.
+  custom-run.sh: {{ .Values.customRunScript | quote }}
 ---
 apiVersion: apps/v1beta1
 kind: StatefulSet
@@ -34,9 +96,10 @@ metadata:
   name: hdfs-namenode
 spec:
   serviceName: "hdfs-namenode"
-  # Create a size-1 set. The namenode DNS name will be
-  # hdfs-namenode-0.hdfs-namenode.default.svc.YOUR-CLUSTER-DOMAIN
-  replicas: 1
+  # Create a size-2 set. The namenode DNS names will be
+  # hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local
+  # and hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local
+  replicas: 2
   template:
     metadata:
       labels:
@@ -47,7 +110,18 @@ spec:
       hostNetwork: true
       hostPID: true
       dnsPolicy: ClusterFirstWithHostNet
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                    - hfds-namenode
+              topologyKey: "kubernetes.io/hostname"
       containers:
+        # TODO: Support hadoop version as option.
         - name: hdfs-namenode
           image: uhopper/hadoop-namenode:2.7.2
           env:
@@ -60,13 +134,15 @@ spec:
               value: "true"
             - name: CORE_CONF_hadoop_rpc_protection
               value: privacy
-            - name:   HDFS_CONF_dfs_block_access_token_enable
+            - name: HDFS_CONF_dfs_block_access_token_enable
               value: "true"
-            - name:   HDFS_CONF_dfs_encrypt_data_transfer
+            - name: HDFS_CONF_dfs_encrypt_data_transfer
               value: "true"
             - name: HDFS_CONF_dfs_namenode_kerberos_principal
               value: hdfs/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
-            - name:  HDFS_CONF_dfs_namenode_kerberos_https_principal
+            # TODO: Check if the https principal is no longer needed in newer
+            # Hadoop version.
+            - name: HDFS_CONF_dfs_namenode_kerberos_https_principal
               value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
             - name: HDFS_CONF_dfs_web_authentication_kerberos_principal
               value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
@@ -77,14 +153,54 @@ spec:
             - name: {{ $key | quote }}
               value: {{ $value | quote }}
             {{- end }}
-            - name: CLUSTER_NAME
+            - name: CORE_CONF_fs_defaultFS
+              value: hdfs://hdfs-k8s
+            - name: CORE_CONF_ha_zookeeper_quorum
+              value: {{ .Values.zookeeperQuorum }}
+            - name: HDFS_CONF_dfs_nameservices
               value: hdfs-k8s
+            - name: HDFS_CONF_dfs_ha_namenodes_hdfs___k8s
+              value: nn0,nn1
+            - name: HDFS_CONF_dfs_namenode_rpc___address_hdfs___k8s_nn0
+              value: hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020
+            - name: HDFS_CONF_dfs_namenode_rpc___address_hdfs___k8s_nn1
+              value: hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:8020
+            - name: HDFS_CONF_dfs_namenode_http___address_hdfs___k8s_nn0
+              value: hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:50070
+            - name: HDFS_CONF_dfs_namenode_http___address_hdfs___k8s_nn1
+              value: hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:50070
+            - name: HDFS_CONF_dfs_namenode_shared_edits_dir
+              value: qjournal://{{ .Values.journalQuorum }}/hdfs-k8s
+            - name: HDFS_CONF_dfs_ha_automatic___failover_enabled
+              value: "true"
+            - name: HDFS_CONF_dfs_ha_fencing_methods
+              value: "shell(/bin/true)"
+            - name: HDFS_CONF_dfs_client_failover_proxy_provider_hdfs___k8s
+              value: org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider
+            - name: HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check
+              value: "false"
+            - name: MULTIHOMED_NETWORK
+              value: "0"
+            # Used by the start script below.
+            - name: MY_POD
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          command: ['/bin/sh', '-c']
+          # The start script is provided by a config map.
+          args:
+            - /entrypoint.sh "/nn-start/{{ .Values.namenodeStartScript }}"
           ports:
           - containerPort: 8020
             name: fs
+          - containerPort: 50070
+            name: http
           volumeMounts:
-            - name: hdfs-name
+            - name: metadatadir
               mountPath: /hadoop/dfs/name
+            - name: nn-start
+              mountPath: /nn-start
+              readOnly: true
             {{- if .Values.kerberosEnabled }}
             - name: kerberos-config
               mountPath: /etc/krb5.conf
@@ -112,15 +228,18 @@ spec:
             - name: kerberos-keytab-copy
               mountPath: /kerberos-keytab-copy
       {{- end }}
-      # Pin the pod to a node. You can label your node like below:
-      #   $ kubectl label nodes YOUR-NODE hdfs-namenode-selector=hdfs-namenode-0
+      {{- if .Values.namenodePinningEnabled }}
+      # Pin namenode pods to a set of nodes. You can label your node like below:
+      #   $ kubectl label nodes YOUR-NODE hdfs-namenode-selector=hdfs-namenode
       nodeSelector:
-        hdfs-namenode-selector: hdfs-namenode-0
+        hdfs-namenode-selector: hdfs-namenode
+      {{- end }}
       restartPolicy: Always
       volumes:
-        - name: hdfs-name
-          hostPath:
-            path: {{ .Values.nameNodeHostPath }}
+        - name: nn-start
+          configMap:
+            name: hdfs-namenode-start-scripts
+            defaultMode: 0744
         {{- if .Values.kerberosEnabled }}
         - name: kerberos-config
           configMap:
@@ -131,3 +250,16 @@ spec:
         - name: kerberos-keytab-copy
           emptyDir: {}
         {{- end }}
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        runAsUser: {{ .Values.podSecurityContext.runAsUser }}
+        fsGroup: {{ .Values.podSecurityContext.fsGroup }}
+      {{- end }}
+  volumeClaimTemplates:
+  - metadata:
+      name: metadatadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.metadataVolumeSize }}

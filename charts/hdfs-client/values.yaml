@@ -15,13 +15,6 @@
 
 # Default values for template variables.
 
-# A list of the local disk directories on cluster nodes that will contain the datanode
-# blocks. These paths will be mounted to the datanode as K8s HostPath volumes.
-# In a command line, the list should be enclosed in '{' and '}'.
-# e.g. --set "dataNodeHostPath={/hdfs-data,/hdfs-data1}"
-dataNodeHostPath:
-  - /hdfs-data
-
 # Custom hadoop config keys passed through env variables to hadoop uhopper images.
 # See https://hub.docker.com/r/uhopper/hadoop/ to get more details
 # Please note that these are not hadoop env variables, but docker env variables that
@@ -46,19 +39,6 @@ kerberosConfigMap: kerberos-config
 # Effective only if Kerberos is enabled. Name of the kerberos config file inside
 # the config map.
 kerberosConfigFileName: krb5.conf
-
-# Effective only if Kerberos is enabled. Name of the k8s secret containing
-# the kerberos keytab files of per-host hdfs principals. The secret should
-# have multiple data items. Each data item name should be formatted as:
-#    `HOST-NAME.keytab`
-# where HOST-NAME should match the cluster node
-# host name that each per-host HDFS principal is associated with.
-kerberosKeytabsSecret: hdfs-kerberos-keytabs
-
-# Effective only if Kerberos is enabled. Enable protection of datanodes using
-# the jsvc utility. See the reference doc at
-# https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Secure_DataNode
-jsvcEnabled: true
 
 # Whether or not to expect namenodes in the HA setup.
 namenodeHAEnabled: true
