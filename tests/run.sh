@@ -30,6 +30,6 @@ helm install zookeeper  \
   --set servers=1,heap=100m,resources.requests.memory=100m
 k8s_check_ready pod -l app=zookeeper
 
-helm install hdfs-journalnode  \
+helm install hdfs-journalnode-k8s  \
   --name my-hdfs-journalnode
 k8s_check_ready pod -l app=hdfs-journalnode
