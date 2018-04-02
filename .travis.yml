@@ -7,8 +7,4 @@ before_script:
 - tests/setup.sh
 
 script:
-# Create example Redis deployment on Kubernetes.
-- kubectl cluster-info 
-- kubectl run travis-example --image=redis
-- kubectl get deployment
-# TODO: Run HDFS.
+- tests/run.sh
