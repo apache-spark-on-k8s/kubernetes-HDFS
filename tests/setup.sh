@@ -35,22 +35,19 @@ source lib/_k8s.sh
 
 rm -rf tmp
 mkdir -p bin tmp
-if [[ ! -x bin/kubectl ]]
-then
+if [[ ! -x bin/kubectl ]]; then
   # Download kubectl, which is a requirement for using minikube.
   curl -Lo bin/kubectl  \
     https://storage.googleapis.com/kubernetes-release/release/${_KUBERNETES_VERSION}/bin/${_MY_OS}/amd64/kubectl
   chmod +x bin/kubectl
 fi
-if [[ ! -x bin/minikube ]]
-then
+if [[ ! -x bin/minikube ]]; then
   # Download minikube.
   curl -Lo bin/minikube  \
     https://storage.googleapis.com/minikube/releases/${_MINIKUBE_VERSION}/minikube-${_MY_OS}-amd64
   chmod +x bin/minikube
 fi
-if [[ ! -x bin/helm ]]
-then
+if [[ ! -x bin/helm ]]; then
   # Download helm
   curl -Lo tmp/helm.tar.gz  \
     https://storage.googleapis.com/kubernetes-helm/helm-${_HELM_VERSION}-${_MY_OS}-amd64.tar.gz
@@ -61,9 +58,32 @@ export PATH=${_MY_DIR}/bin:$PATH
 
 _VM_DRIVER=""
 if [[ "${USE_MINIKUBE_DRIVER_NONE:-}" = "true" ]]; then
-# Run minikube with none driver.
-# See https://blog.travis-ci.com/2017-10-26-running-kubernetes-on-travis-ci-with-minikube
+  # Run minikube with none driver.
+  # See https://blog.travis-ci.com/2017-10-26-running-kubernetes-on-travis-ci-with-minikube
   _VM_DRIVER="--vm-driver=none"
+  if [[ ! -x /usr/local/bin/nsenter ]]; then
+    # From https://engineering.bitnami.com/articles/implementing-kubernetes-integration-tests-in-travis.html
+    # Travis ubuntu trusty env doesn't have nsenter, needed for --vm-driver=none
+    which nsenter >/dev/null && return 0
+    echo "INFO: Building 'nsenter' ..."
+cat <<-EOF | docker run -i --rm -v "$(pwd):/build" ubuntu:14.04 >& nsenter.build.log
+        apt-get update
+        apt-get install -qy git bison build-essential autopoint libtool automake autoconf gettext pkg-config
+        git clone --depth 1 git://git.kernel.org/pub/scm/utils/util-linux/util-linux.git /tmp/util-linux
+        cd /tmp/util-linux
+        ./autogen.sh
+        ./configure --without-python --disable-all-programs --enable-nsenter
+        make nsenter
+        cp -pfv nsenter /build
+EOF
+    if [ ! -f ./nsenter ]; then
+        echo "ERROR: nsenter build failed, log:"
+        cat nsenter.build.log
+        return 1
+    fi
+    echo "INFO: nsenter build OK"
+    mv nsenter /usr/local/bin
+  fi
 fi
 _MINIKUBE="minikube"
 if [[ "${USE_SUDO_MINIKUBE_START:-}" = "true" ]]; then
