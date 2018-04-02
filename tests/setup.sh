@@ -82,7 +82,7 @@ EOF
         return 1
     fi
     echo "INFO: nsenter build OK"
-    mv nsenter /usr/local/bin
+    sudo mv ./nsenter /usr/local/bin
   fi
 fi
 _MINIKUBE="minikube"
