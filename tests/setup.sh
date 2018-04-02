@@ -36,19 +36,19 @@ source lib/_k8s.sh
 rm -rf tmp
 mkdir -p bin tmp
 if [[ ! -x bin/kubectl ]]; then
-  # Download kubectl, which is a requirement for using minikube.
+  echo Download kubectl, which is a requirement for using minikube.
   curl -Lo bin/kubectl  \
     https://storage.googleapis.com/kubernetes-release/release/${_KUBERNETES_VERSION}/bin/${_MY_OS}/amd64/kubectl
   chmod +x bin/kubectl
 fi
 if [[ ! -x bin/minikube ]]; then
-  # Download minikube.
+  echo Download minikube.
   curl -Lo bin/minikube  \
     https://storage.googleapis.com/minikube/releases/${_MINIKUBE_VERSION}/minikube-${_MY_OS}-amd64
   chmod +x bin/minikube
 fi
 if [[ ! -x bin/helm ]]; then
-  # Download helm
+  echo Download helm
   curl -Lo tmp/helm.tar.gz  \
     https://storage.googleapis.com/kubernetes-helm/helm-${_HELM_VERSION}-${_MY_OS}-amd64.tar.gz
   (cd tmp; tar xfz helm.tar.gz; mv ${_MY_OS}-amd64/helm ${_MY_DIR}/bin)
@@ -87,7 +87,7 @@ EOF
 fi
 _MINIKUBE="minikube"
 if [[ "${USE_SUDO_MINIKUBE_START:-}" = "true" ]]; then
-  _MINIKUBE="sudo ./bin/minikube"
+  _MINIKUBE="sudo PATH=${_MY_DIR}/bin:$PATH ./bin/minikube"
 fi
 $_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
   $_VM_DRIVER
