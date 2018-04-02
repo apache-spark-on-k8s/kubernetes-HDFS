@@ -11,6 +11,6 @@ k8s_check_ready() {
       return 1
     fi
     kubectl get "$@"
-    sleep 1
+    sleep 5
   done
 }

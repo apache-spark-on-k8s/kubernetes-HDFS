@@ -87,7 +87,7 @@ EOF
 fi
 _MINIKUBE="minikube"
 if [[ "${USE_SUDO_MINIKUBE_START:-}" = "true" ]]; then
-  _MINIKUBE="sudo PATH=${_MY_DIR}/bin:$PATH ./bin/minikube"
+  _MINIKUBE="sudo ./bin/minikube"
 fi
 $_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
   $_VM_DRIVER
