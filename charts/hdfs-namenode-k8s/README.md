@@ -13,7 +13,7 @@ See the other chart for `datanodes`.
   ```
   $ kubectl create -f  \
       https://raw.githubusercontent.com/kubernetes/contrib/master/statefulsets/zookeeper/zookeeper.yaml
-  $ helm install -n my-hdfs-journalnode hdfs-namenode-journalnode
+  $ helm install -n my-hdfs-journalnode hdfs-journalnode
   ```
 
   2. (Skip this if you do not plan to enable Kerberos)
