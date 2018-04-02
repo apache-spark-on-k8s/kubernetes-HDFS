@@ -9,7 +9,7 @@ set -o nounset
 # Catch the error in case mysqldump fails (but gzip succeeds) in `mysqldump |gzip`
 set -o pipefail
 # Turn on traces, useful while debugging but commented out by default
-set -o xtrace
+#set -o xtrace
 
 _MY_SCRIPT="${BASH_SOURCE[0]}"
 _MY_DIR=$(cd "$(dirname "$_MY_SCRIPT")" && pwd)
@@ -30,6 +30,9 @@ export MINIKUBE_WANTREPORTERRORPROMPT=false
 export CHANGE_MINIKUBE_NONE_USER=true
 
 cd $_MY_DIR
+
+source lib/_k8s.sh
+
 rm -rf tmp
 mkdir -p bin tmp
 if [[ ! -x bin/kubectl ]]
@@ -57,23 +60,22 @@ fi
 export PATH=${_MY_DIR}/bin:$PATH
 
 _VM_DRIVER=""
-if [[ "${USE_MINIKUBE_DRIVER_NONE:-}" == "true" ]]; then
+if [[ "${USE_MINIKUBE_DRIVER_NONE:-}" = "true" ]]; then
 # Run minikube with none driver.
 # See https://blog.travis-ci.com/2017-10-26-running-kubernetes-on-travis-ci-with-minikube
   _VM_DRIVER="--vm-driver=none"
 fi
 _MINIKUBE="minikube"
-if [[ "${USE_SUDO_MINIKUBE_START:-}" == "true" ]]; then
+if [[ "${USE_SUDO_MINIKUBE_START:-}" = "true" ]]; then
   _MINIKUBE="sudo ./bin/minikube"
 fi
 $_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
   $_VM_DRIVER
 # Fix the kubectl context, as it's often stale.
 minikube update-context
+
 # Wait for Kubernetes to be up and ready.
-_JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'
-until kubectl get nodes -o jsonpath="$_JSONPATH" 2>&1 | grep -q "Ready=True"
-do
-  sleep 1
-done
+k8s_check_ready nodes
+
 helm init
+k8s_check_ready pod -n kube-system -l name=tiller

@@ -12,8 +12,20 @@ set -o pipefail
 set -o xtrace
 
 _MY_SCRIPT="${BASH_SOURCE[0]}"
-_MY_DIR=$(cd "$(dirname "$_MY_SCRIPT")" && pwd)
-cd $_MY_DIR
-export PATH=${_MY_DIR}/bin:$PATH
+_TEST_DIR=$(cd "$(dirname "$_MY_SCRIPT")" && pwd)
+export PATH=${_TEST_DIR}/bin:$PATH
+source ${_TEST_DIR}/lib/_k8s.sh
+
+_PROJECT_DIR=$(cd "$(dirname "$_TEST_DIR")" && pwd)
+_CHART_DIR=${_PROJECT_DIR}/charts
+
+cd $_CHART_DIR
 
 kubectl cluster-info
+
+helm install zookeeper  \
+  --name my-zookeeper  \
+  --version 0.6.3 \
+  --repo https://kubernetes-charts-incubator.storage.googleapis.com/  \
+  --set servers=1
+k8s_check_ready pod -l app=zookeeper
