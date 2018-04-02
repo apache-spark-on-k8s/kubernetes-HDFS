@@ -22,9 +22,10 @@ case "${_UNAME_OUT}" in
     Darwin*)    _MY_OS=darwin;;
     *)          _MY_OS="UNKNOWN:${unameOut}"
 esac
-echo ${_MY_OS}
+echo "My OS is ${_MY_OS}"
 
-# This moves Kubernetes specific config files.
+export MINIKUBE_WANTUPDATENOTIFICATION=false
+export MINIKUBE_WANTREPORTERRORPROMPT=false
 export CHANGE_MINIKUBE_NONE_USER=true
 
 cd $_MY_DIR
@@ -39,22 +40,25 @@ curl -Lo bin/minikube  \
   https://storage.googleapis.com/minikube/releases/${_MINIKUBE_VERSION}/minikube-${_MY_OS}-amd64
 chmod +x bin/minikube
 
+export PATH=${_MY_DIR}/bin:$PATH
+
 _VM_DRIVER=""
 if [[ "${USE_MINIKUBE_DRIVER_NONE:-}" == "true" ]]; then
 # Run minikube with none driver.
 # See https://blog.travis-ci.com/2017-10-26-running-kubernetes-on-travis-ci-with-minikube
   _VM_DRIVER="--vm-driver=none"
 fi
-_MINIKUBE="bin/minikube"
+_MINIKUBE="minikube"
 if [[ "${USE_SUDO_MINIKUBE_START:-}" == "true" ]]; then
-  _MINIKUBE="sudo bin/minikube"
+  _MINIKUBE="sudo minikube"
 fi
 $_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
   $_VM_DRIVER
 # Fix the kubectl context, as it's often stale.
-bin/minikube update-context
+minikube update-context
 # Wait for Kubernetes to be up and ready.
 _JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'
 until kubectl get nodes -o jsonpath="$_JSONPATH" 2>&1 | grep -q "Ready=True"
-  do sleep 1
+do
+  sleep 1
 done
