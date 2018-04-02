@@ -32,4 +32,6 @@ k8s_check_ready pod -l app=zookeeper
 
 helm install hdfs-journalnode-k8s  \
   --name my-hdfs-journalnode
-k8s_check_ready pod -l app=hdfs-journalnode
+for i in $(seq 0 2); do
+  k8s_check_ready pod hdfs-journalnode-$i
+done
