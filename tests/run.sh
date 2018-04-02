@@ -27,5 +27,5 @@ helm install zookeeper  \
   --name my-zookeeper  \
   --version 0.6.3 \
   --repo https://kubernetes-charts-incubator.storage.googleapis.com/  \
-  --set servers=1
+  --set servers=1,heap=100m,resources.requests.memory=100m
 k8s_check_ready pod -l app=zookeeper
