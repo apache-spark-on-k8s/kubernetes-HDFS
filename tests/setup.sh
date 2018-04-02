@@ -50,7 +50,7 @@ if [[ "${USE_MINIKUBE_DRIVER_NONE:-}" == "true" ]]; then
 fi
 _MINIKUBE="minikube"
 if [[ "${USE_SUDO_MINIKUBE_START:-}" == "true" ]]; then
-  _MINIKUBE="sudo minikube"
+  _MINIKUBE="sudo ./bin/minikube"
 fi
 $_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
   $_VM_DRIVER
