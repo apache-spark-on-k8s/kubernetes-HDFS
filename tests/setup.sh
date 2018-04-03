@@ -13,9 +13,9 @@ set -o pipefail
 
 _MY_SCRIPT="${BASH_SOURCE[0]}"
 _MY_DIR=$(cd "$(dirname "$_MY_SCRIPT")" && pwd)
-_KUBERNETES_VERSION=v1.7.5
-# Avoid >=0.24 to work around https://github.com/kubernetes/minikube/issues/2240
-_MINIKUBE_VERSION=v0.23.0
+# Avoids 1.7.x because of https://github.com/kubernetes/minikube/issues/2240
+_KUBERNETES_VERSION=v1.9.4
+_MINIKUBE_VERSION=v0.25.2
 _HELM_VERSION=v2.8.1
 
 _UNAME_OUT=$(uname -s)
@@ -37,19 +37,19 @@ source lib/_k8s.sh
 rm -rf tmp
 mkdir -p bin tmp
 if [[ ! -x bin/kubectl ]]; then
-  echo Download kubectl, which is a requirement for using minikube.
+  echo Downloading kubectl, which is a requirement for using minikube.
   curl -Lo bin/kubectl  \
     https://storage.googleapis.com/kubernetes-release/release/${_KUBERNETES_VERSION}/bin/${_MY_OS}/amd64/kubectl
   chmod +x bin/kubectl
 fi
 if [[ ! -x bin/minikube ]]; then
-  echo Download minikube.
+  echo Downloading minikube.
   curl -Lo bin/minikube  \
     https://storage.googleapis.com/minikube/releases/${_MINIKUBE_VERSION}/minikube-${_MY_OS}-amd64
   chmod +x bin/minikube
 fi
 if [[ ! -x bin/helm ]]; then
-  echo Download helm
+  echo Downloading helm
   curl -Lo tmp/helm.tar.gz  \
     https://storage.googleapis.com/kubernetes-helm/helm-${_HELM_VERSION}-${_MY_OS}-amd64.tar.gz
   (cd tmp; tar xfz helm.tar.gz; mv ${_MY_OS}-amd64/helm ${_MY_DIR}/bin)
@@ -91,6 +91,8 @@ if [[ "${USE_SUDO_MINIKUBE:-}" = "true" ]]; then
   _MINIKUBE="sudo PATH=${_MY_DIR}/bin:$PATH bin/minikube"
 fi
 
+# The default bootstrapper kubeadm assumes CentOS. Travis is Debian.
+$_MINIKUBE config set bootstrapper localkube
 $_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
   ${_VM_DRIVER:-}
 # Fix the kubectl context, as it's often stale.
