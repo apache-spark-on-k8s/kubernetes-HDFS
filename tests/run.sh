@@ -50,7 +50,7 @@ k8s_all_pods_ready 3 -l app=hdfs-journalnode
 # port conflict
 _retry helm install hdfs-namenode-k8s  \
   --name my-hdfs-namenode  \
-  --set hostNetworkEnabled=false,zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper.default.svc.cluster.local:2181
+  --set hostNetworkEnabled=false,zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless.default.svc.cluster.local:2181
 
 _retry helm install hdfs-datanode-k8s  \
   --name my-hdfs-datanode
