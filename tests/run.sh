@@ -47,3 +47,5 @@ done
 helm install hdfs-datanode-k8s  \
   --name my-hdfs-datanode
 k8s_any_pod_ready -l name=hdfs-datanode
+
+kubectl get pods
