@@ -99,8 +99,13 @@ $_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
   ${_VM_DRIVER:-}
 # Fix the kubectl context, as it's often stale.
 $_MINIKUBE update-context
-echo Minikube disks
-$_MINIKUBE ssh df
+echo Minikube disks:
+if [[ "${USE_MINIKUBE_DRIVER_NONE:-}" = "true" ]]; then
+  # minikube does not support ssh for --vm-driver=none
+  df
+else
+  $_MINIKUBE ssh df
+fi
 
 # Wait for Kubernetes to be up and ready.
 k8s_single_node_ready
