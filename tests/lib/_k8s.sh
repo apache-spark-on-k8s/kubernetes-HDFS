@@ -1,7 +1,7 @@
 # Helper bash functions.
 
 # Wait for Kubernetes resources to be up and ready.
-_wait_for_ready() {
+function _wait_for_ready () {
   local count="$1"
   shift
   local evidence="$1"
@@ -19,23 +19,23 @@ _wait_for_ready() {
 }
 
 # Wait for all expected number of nodes to be ready
-k8s_all_nodes_ready() {
+function k8s_all_nodes_ready () {
   local count="$1"
   shift
   _wait_for_ready "$count" Ready kubectl get nodes
 }
 
-k8s_single_node_ready() {
+function k8s_single_node_ready () {
   k8s_all_nodes_ready 1
 }
 
 # Wait for all expected number of pods to be ready
-k8s_all_pods_ready() {
+function k8s_all_pods_ready () {
   local count="$1"
   shift
   _wait_for_ready "$count" Running kubectl get pods "$@"
 }
 
-k8s_single_pod_ready() {
+function k8s_single_pod_ready () {
   k8s_all_pods_ready 1 "$@"
 }
