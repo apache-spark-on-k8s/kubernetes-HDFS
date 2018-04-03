@@ -6,7 +6,7 @@ function _wait_for_ready () {
   shift
   local evidence="$1"
   shift
-  local attempts=20
+  local attempts=40
   echo "Running: $@"
   while [[ "$count" != $("$@" 2>&1 | tail -n +2 | grep -c "$evidence") ]];
   do
