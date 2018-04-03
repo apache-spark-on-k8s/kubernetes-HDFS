@@ -28,10 +28,10 @@ helm install zookeeper  \
   --version 0.6.3 \
   --repo https://kubernetes-charts-incubator.storage.googleapis.com/  \
   --set servers=1,heap=100m,resources.requests.memory=100m
-k8s_check_ready pod -l app=zookeeper
+k8s_single_pod_ready my-zookeeper-zookeeper-0
 
 helm install hdfs-journalnode-k8s  \
   --name my-hdfs-journalnode
 for i in $(seq 0 2); do
-  k8s_check_ready pod hdfs-journalnode-$i
+  k8s_single_pod_ready hdfs-journalnode-$i
 done

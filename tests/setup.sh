@@ -95,7 +95,7 @@ $_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
 minikube update-context
 
 # Wait for Kubernetes to be up and ready.
-k8s_check_ready nodes
+k8s_any_node_ready
 
 helm init
-k8s_check_ready pod -n kube-system -l name=tiller
+k8s_any_pod_ready -n kube-system -l name=tiller
