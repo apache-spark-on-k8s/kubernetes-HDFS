@@ -1,7 +1,7 @@
 sudo: required
 
 env:
-  - USE_MINIKUBE_DRIVER_NONE=true USE_SUDO_MINIKUBE_START=true
+  - USE_MINIKUBE_DRIVER_NONE=true USE_SUDO_MINIKUBE=true
 
 before_script:
 - tests/setup.sh

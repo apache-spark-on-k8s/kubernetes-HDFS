@@ -84,14 +84,18 @@ EOF
     sudo mv ./nsenter /usr/local/bin
   fi
 fi
+
 _MINIKUBE="minikube"
-if [[ "${USE_SUDO_MINIKUBE_START:-}" = "true" ]]; then
+if [[ "${USE_SUDO_MINIKUBE:-}" = "true" ]]; then
   _MINIKUBE="sudo PATH=${_MY_DIR}/bin:$PATH bin/minikube"
 fi
+# See https://github.com/kubernetes/minikube/issues/2240#issuecomment-348319371
+$_MINIKUBE config set bootstrapper kubeadm
+
 $_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
   ${_VM_DRIVER:-}
 # Fix the kubectl context, as it's often stale.
-minikube update-context
+$_MINIKUBE update-context
 
 # Wait for Kubernetes to be up and ready.
 k8s_any_node_ready
