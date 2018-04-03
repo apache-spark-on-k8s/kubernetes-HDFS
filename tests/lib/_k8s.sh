@@ -30,11 +30,12 @@ function k8s_single_node_ready () {
   k8s_all_nodes_ready 1
 }
 
-# Wait for all expected number of pods to be ready
+# Wait for all expected number of pods to be ready. This works only for
+# pods with one container. We check "1/1" in the `kubectl get pods` output.
 function k8s_all_pods_ready () {
   local count="$1"
   shift
-  _wait_for_ready "$count" Running kubectl get pods "$@"
+  _wait_for_ready "$count" "1/1" kubectl get pods "$@"
 }
 
 function k8s_single_pod_ready () {
