@@ -26,11 +26,11 @@ cd $_CHART_DIR
 kubectl cluster-info
 
 function _retry () {
-  local attempts=3
+  local attempts=5
   echo Running: "$@"
   until "$@"; do
     ((attempts--)) || return 1
-    sleep 1
+    sleep 5
   done
 }
 
