@@ -69,9 +69,6 @@ k8s_single_pod_ready -l app=hdfs-client
 CLIENT=$(kubectl get pods | grep hdfs-client | cut -d' ' -f 1)
 echo Found client pod $CLIENT
 
-# store state of xtrace option.
-_TRACE_STATE="$(shopt -po xtrace)"
-set -o xtrace
 kubectl exec $CLIENT -- hdfs dfsadmin -report
 kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn0
 kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn1
@@ -79,6 +76,3 @@ kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn1
 kubectl exec $CLIENT -- hadoop fs -rmr /tmp
 kubectl exec $CLIENT -- hadoop fs -mkdir /tmp
 kubectl exec $CLIENT -- hadoop fs -copyFromLocal /opt/hadoop-2.7.2/share/hadoop/hdfs/lib /tmp
-
-# restore the value of xtrace to its original value.
-eval "$_TRACE_STATE"
