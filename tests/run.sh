@@ -28,24 +28,23 @@ helm install zookeeper  \
   --version 0.6.3 \
   --repo https://kubernetes-charts-incubator.storage.googleapis.com/  \
   --set servers=1,heap=100m,resources.requests.memory=100m
-k8s_single_pod_ready my-zk-zookeeper-0
 
 helm install hdfs-journalnode-k8s  \
   --name my-hdfs-journalnode
-for i in $(seq 0 2); do
-  k8s_single_pod_ready hdfs-journalnode-$i
-done
 
-# Disables hostNetwork so two namenode pods can avoid port conflict
+k8s_single_pod_ready -l app=zookeeper
+k8s_all_pods_ready 3 -l app=hdfs-journalnode
+
+# Disables hostNetwork so namenode pods on a single minikube node can avoid
+# port conflict
 helm install hdfs-namenode-k8s  \
   --name my-hdfs-namenode  \
   --set hostNetworkEnabled=false,zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper.default.svc.cluster.local:2181
-for i in $(seq 0 1); do
-  k8s_single_pod_ready hdfs-namenode-$i
-done
 
 helm install hdfs-datanode-k8s  \
   --name my-hdfs-datanode
-k8s_any_pod_ready -l name=hdfs-datanode
+
+k8s_all_pods_ready 2 -l app=hdfs-namenode
+k8s_single_pod_ready -l name=hdfs-datanode
 
 kubectl get pods

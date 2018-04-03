@@ -24,7 +24,7 @@ case "${_UNAME_OUT}" in
     Darwin*)    _MY_OS=darwin;;
     *)          _MY_OS="UNKNOWN:${unameOut}"
 esac
-echo "My OS is ${_MY_OS}"
+echo "Local OS is ${_MY_OS}"
 
 export MINIKUBE_WANTUPDATENOTIFICATION=false
 export MINIKUBE_WANTREPORTERRORPROMPT=false
@@ -99,7 +99,7 @@ $_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
 $_MINIKUBE update-context
 
 # Wait for Kubernetes to be up and ready.
-k8s_any_node_ready
+k8s_single_node_ready
 
 helm init
-k8s_any_pod_ready -n kube-system -l name=tiller
+k8s_single_pod_ready -n kube-system -l name=tiller

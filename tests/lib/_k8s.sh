@@ -1,33 +1,41 @@
 # Helper bash functions.
 
 # Wait for Kubernetes resources to be up and ready.
-_k8s_ready() {
-  local jsonpath="$1"
+_wait_for_ready() {
+  local count="$1"
   shift
   local evidence="$1"
   shift
   local attempts=20
-  until kubectl get "$@" -o jsonpath="$jsonpath" 2>&1 | grep -q "$evidence"
+  while [[ "$count" != $("$@" 2>&1 | tail -n +2 | grep -c "$evidence") ]];
   do
+    if [[ "$attempts" = 1 ]]; then
+      "$@" || true
+    fi
     ((attempts--)) || return 1
-    kubectl get "$@" || true
     sleep 5
   done
+  "$@" || true
 }
 
-k8s_any_node_ready() {
-  local jsonpath='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'
-  _k8s_ready "$jsonpath" "Ready=True" nodes "$@"
+# Wait for all expected number of nodes to be ready
+k8s_all_nodes_ready() {
+  local count="$1"
+  shift
+  _wait_for_ready "$count" Ready kubectl get nodes
 }
 
-# Wait for any pod to be ready among a list of pods
-k8s_any_pod_ready() {
-  local jsonpath='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'
-  _k8s_ready "$jsonpath" "Ready=True" pods "$@"
+k8s_single_node_ready() {
+  k8s_all_nodes_ready 1
 }
 
-# Wait for a single particular pod to be ready.
+# Wait for all expected number of pods to be ready
+k8s_all_pods_ready() {
+  local count="$1"
+  shift
+  _wait_for_ready "$count" Running kubectl get pods "$@"
+}
+
 k8s_single_pod_ready() {
-  local jsonpath='jsonpath={.status.containerStatuses[0].ready}'
-  _k8s_ready "$jsonpath" "true" pod "$@"
+  k8s_all_pods_ready 1 "$@"
 }
