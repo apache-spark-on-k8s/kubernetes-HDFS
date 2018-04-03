@@ -69,10 +69,10 @@ k8s_single_pod_ready -l app=hdfs-client
 CLIENT=$(kubectl get pods | grep hdfs-client | cut -d' ' -f 1)
 echo Found client pod $CLIENT
 
-kubectl exec $CLIENT -- hdfs dfsadmin -report
-kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn0
-kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn1
+_retry kubectl exec $CLIENT -- hdfs dfsadmin -report
+_retry kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn0
+_retry kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn1
 
-kubectl exec $CLIENT -- hadoop fs -rmr /tmp
-kubectl exec $CLIENT -- hadoop fs -mkdir /tmp
-kubectl exec $CLIENT -- hadoop fs -copyFromLocal /opt/hadoop-2.7.2/share/hadoop/hdfs/lib /tmp
+_retry kubectl exec $CLIENT -- hadoop fs -rmr /tmp
+_retry kubectl exec $CLIENT -- hadoop fs -mkdir /tmp
+_retry kubectl exec $CLIENT -- hadoop fs -copyFromLocal /opt/hadoop-2.7.2/share/hadoop/hdfs/lib /tmp
