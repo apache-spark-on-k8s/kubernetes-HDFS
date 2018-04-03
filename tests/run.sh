@@ -28,7 +28,7 @@ helm install zookeeper  \
   --version 0.6.3 \
   --repo https://kubernetes-charts-incubator.storage.googleapis.com/  \
   --set servers=1,heap=100m,resources.requests.memory=100m
-k8s_single_pod_ready my-zookeeper-zookeeper-0
+k8s_single_pod_ready my-zk-zookeeper-0
 
 helm install hdfs-journalnode-k8s  \
   --name my-hdfs-journalnode
@@ -39,3 +39,6 @@ done
 helm install hdfs-namenode-k8s  \
   --name my-hdfs-namenode  \
   --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper.default.svc.cluster.local:2181
+for i in $(seq 0 1); do
+  k8s_single_pod_ready hdfs-namenode-$i
+done
