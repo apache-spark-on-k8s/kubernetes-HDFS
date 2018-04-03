@@ -73,6 +73,6 @@ _run kubectl exec $CLIENT -- hdfs dfsadmin -report
 _run kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn0
 _run kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn1
 
-_run kubectl exec $CLIENT -- hadoop fs -rmr /tmp
+_run kubectl exec $CLIENT -- hadoop fs -rm -r -f /tmp
 _run kubectl exec $CLIENT -- hadoop fs -mkdir /tmp
 _run kubectl exec $CLIENT -- hadoop fs -copyFromLocal /opt/hadoop-2.7.2/share/hadoop/hdfs/lib /tmp
