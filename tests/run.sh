@@ -53,7 +53,8 @@ _run helm install hdfs-namenode-k8s  \
 k8s_all_pods_ready 2 -l app=hdfs-namenode
 
 _run helm install hdfs-datanode-k8s  \
-  --name my-hdfs-datanode
+  --name my-hdfs-datanode  \
+  --set "dataNodeHostPath={/mnt/sda1/hdfs-data}"
 k8s_single_pod_ready -l name=hdfs-datanode
 
 echo All pods:
