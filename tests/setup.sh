@@ -56,7 +56,6 @@ fi
 
 export PATH=${_MY_DIR}/bin:$PATH
 
-_VM_DRIVER=""
 if [[ "${USE_MINIKUBE_DRIVER_NONE:-}" = "true" ]]; then
   # Run minikube with none driver.
   # See https://blog.travis-ci.com/2017-10-26-running-kubernetes-on-travis-ci-with-minikube
@@ -87,10 +86,10 @@ EOF
 fi
 _MINIKUBE="minikube"
 if [[ "${USE_SUDO_MINIKUBE_START:-}" = "true" ]]; then
-  _MINIKUBE="sudo ./bin/minikube"
+  _MINIKUBE="sudo PATH=${_MY_DIR}/bin:$PATH minikube"
 fi
 $_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
-  $_VM_DRIVER
+  ${_VM_DRIVER:-}
 # Fix the kubectl context, as it's often stale.
 minikube update-context
 

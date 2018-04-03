@@ -36,9 +36,14 @@ for i in $(seq 0 2); do
   k8s_single_pod_ready hdfs-journalnode-$i
 done
 
+# Disables hostNetwork so two namenode pods can avoid port conflict
 helm install hdfs-namenode-k8s  \
   --name my-hdfs-namenode  \
-  --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper.default.svc.cluster.local:2181
+  --set hostNetworkEnabled=false,zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper.default.svc.cluster.local:2181
 for i in $(seq 0 1); do
   k8s_single_pod_ready hdfs-namenode-$i
 done
+
+helm install hdfs-datanode-k8s  \
+  --name my-hdfs-datanode
+k8s_any_pod_ready -l name=hdfs-datanode

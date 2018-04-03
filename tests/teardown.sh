@@ -16,12 +16,16 @@ _MY_DIR=$(cd "$(dirname "$_MY_SCRIPT")" && pwd)
 cd $_MY_DIR
 export PATH=${_MY_DIR}/bin:$PATH
 
-minikube status
-minikube stop
+for chart in my-hdfs-datanode my-hdfs-namenode my-hdfs-journalnode my-zk; do
+  helm delete --purge $chart || true
+done
+
+minikube status || true
+minikube stop || true
 
 rm -rf tmp
 if [[ "${TEARDOWN_DELETE_MINIKUBE:-}" = "true" ]]; then
-  minikube delete
+  minikube delete || true
 fi
 if [[ "${TEARDOWN_DELETE_BIN:-}" = "true" ]]; then
   rm -rf bin
