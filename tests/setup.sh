@@ -9,7 +9,7 @@ set -o nounset
 # Catch the error in case mysqldump fails (but gzip succeeds) in `mysqldump |gzip`
 set -o pipefail
 # Turn on traces, useful while debugging but commented out by default
-set -o xtrace
+#set -o xtrace
 
 _MY_SCRIPT="${BASH_SOURCE[0]}"
 _MY_DIR=$(cd "$(dirname "$_MY_SCRIPT")" && pwd)

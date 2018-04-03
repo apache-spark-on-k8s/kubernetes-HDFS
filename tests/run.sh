@@ -24,7 +24,7 @@ cd $_CHART_DIR
 kubectl cluster-info
 
 helm install zookeeper  \
-  --name my-zookeeper  \
+  --name my-zk  \
   --version 0.6.3 \
   --repo https://kubernetes-charts-incubator.storage.googleapis.com/  \
   --set servers=1,heap=100m,resources.requests.memory=100m
@@ -35,3 +35,7 @@ helm install hdfs-journalnode-k8s  \
 for i in $(seq 0 2); do
   k8s_single_pod_ready hdfs-journalnode-$i
 done
+
+helm install hdfs-namenode-k8s  \
+  --name my-hdfs-namenode  \
+  --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper.default.svc.cluster.local:2181
