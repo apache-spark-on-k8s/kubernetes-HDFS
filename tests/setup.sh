@@ -14,7 +14,8 @@ set -o pipefail
 _MY_SCRIPT="${BASH_SOURCE[0]}"
 _MY_DIR=$(cd "$(dirname "$_MY_SCRIPT")" && pwd)
 _KUBERNETES_VERSION=v1.7.5
-_MINIKUBE_VERSION=v0.25.2
+# Avoid >=0.24 to work around https://github.com/kubernetes/minikube/issues/2240
+_MINIKUBE_VERSION=v0.23.0
 _HELM_VERSION=v2.8.1
 
 _UNAME_OUT=$(uname -s)
@@ -89,8 +90,6 @@ _MINIKUBE="minikube"
 if [[ "${USE_SUDO_MINIKUBE:-}" = "true" ]]; then
   _MINIKUBE="sudo PATH=${_MY_DIR}/bin:$PATH bin/minikube"
 fi
-# See https://github.com/kubernetes/minikube/issues/2240#issuecomment-348319371
-$_MINIKUBE config set bootstrapper kubeadm
 
 $_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
   ${_VM_DRIVER:-}
