@@ -25,8 +25,8 @@ cd $_CHART_DIR
 
 kubectl cluster-info
 
-function _retry () {
-  local attempts=5
+function _run () {
+  local attempts=2
   echo Running: "$@"
   until "$@"; do
     ((attempts--)) || return 1
@@ -34,45 +34,44 @@ function _retry () {
   done
 }
 
-_retry helm install zookeeper  \
+_run helm install zookeeper  \
   --name my-zk  \
   --version 0.6.3 \
   --repo https://kubernetes-charts-incubator.storage.googleapis.com/  \
   --set servers=1,heap=100m,resources.requests.memory=100m
-
-_retry helm install hdfs-journalnode-k8s  \
-  --name my-hdfs-journalnode
-
 k8s_single_pod_ready -l app=zookeeper
+
+_run helm install hdfs-journalnode-k8s  \
+  --name my-hdfs-journalnode
 k8s_all_pods_ready 3 -l app=hdfs-journalnode
 
 # Disables hostNetwork so namenode pods on a single minikube node can avoid
 # port conflict
-_retry helm install hdfs-namenode-k8s  \
+_run helm install hdfs-namenode-k8s  \
   --name my-hdfs-namenode  \
   --set hostNetworkEnabled=false,zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless.default.svc.cluster.local:2181
-
-_retry helm install hdfs-datanode-k8s  \
-  --name my-hdfs-datanode
-
 k8s_all_pods_ready 2 -l app=hdfs-namenode
+
+_run helm install hdfs-datanode-k8s  \
+  --name my-hdfs-datanode
 k8s_single_pod_ready -l name=hdfs-datanode
 
+echo All pods:
 kubectl get pods
 
+echo All persistent volumes:
 kubectl get pv
 
-_retry helm install hdfs-client  \
+_run helm install hdfs-client  \
   --name my-hdfs-client
-
 k8s_single_pod_ready -l app=hdfs-client
 CLIENT=$(kubectl get pods | grep hdfs-client | cut -d' ' -f 1)
 echo Found client pod $CLIENT
 
-_retry kubectl exec $CLIENT -- hdfs dfsadmin -report
-_retry kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn0
-_retry kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn1
+_run kubectl exec $CLIENT -- hdfs dfsadmin -report
+_run kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn0
+_run kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn1
 
-_retry kubectl exec $CLIENT -- hadoop fs -rmr /tmp
-_retry kubectl exec $CLIENT -- hadoop fs -mkdir /tmp
-_retry kubectl exec $CLIENT -- hadoop fs -copyFromLocal /opt/hadoop-2.7.2/share/hadoop/hdfs/lib /tmp
+_run kubectl exec $CLIENT -- hadoop fs -rmr /tmp
+_run kubectl exec $CLIENT -- hadoop fs -mkdir /tmp
+_run kubectl exec $CLIENT -- hadoop fs -copyFromLocal /opt/hadoop-2.7.2/share/hadoop/hdfs/lib /tmp
