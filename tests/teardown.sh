@@ -22,7 +22,6 @@ minikube status || true
 minikube stop || true
 
 if [[ "${TEARDOWN_DELETE_MINIKUBE:-}" = "true" ]]; then
-  minikube stop || true
   minikube delete || true
 fi
 rm -rf tmp
