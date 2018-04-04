@@ -57,7 +57,7 @@ if [[ ! -x bin/helm ]]; then
   (cd tmp; tar xfz helm.tar.gz; mv ${_MY_OS}-amd64/helm ${_MY_DIR}/bin)
 fi
 
-export PATH=${_MY_DIR}/bin:$PATH
+export PATH="${_MY_DIR}/bin:$PATH"
 
 if [[ "${USE_MINIKUBE_DRIVER_NONE:-}" = "true" ]]; then
   # Run minikube with none driver.
@@ -90,7 +90,7 @@ fi
 
 _MINIKUBE="minikube"
 if [[ "${USE_SUDO_MINIKUBE:-}" = "true" ]]; then
-  _MINIKUBE="sudo PATH=${_MY_DIR}/bin:$PATH bin/minikube"
+  _MINIKUBE="sudo PATH=$PATH bin/minikube"
 fi
 
 # The default bootstrapper kubeadm assumes CentOS. Travis is Debian.

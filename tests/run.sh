@@ -66,7 +66,7 @@ kubectl get pv
 _run helm install hdfs-client  \
   --name my-hdfs-client
 k8s_single_pod_ready -l app=hdfs-client
-_CLIENT=$(kubectl get pods -l app=hdfs-client --no-headers| cut -d' ' -f 1)
+_CLIENT=$(kubectl get pods -l app=hdfs-client -o name| cut -d/ -f 2)
 echo Found client pod $_CLIENT
 
 _run kubectl exec $_CLIENT -- hdfs dfsadmin -report
