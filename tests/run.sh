@@ -66,13 +66,13 @@ kubectl get pv
 _run helm install hdfs-client  \
   --name my-hdfs-client
 k8s_single_pod_ready -l app=hdfs-client
-CLIENT=$(kubectl get pods | grep hdfs-client | cut -d' ' -f 1)
-echo Found client pod $CLIENT
+_CLIENT=$(kubectl get pods -l app=hdfs-client --no-headers| cut -d' ' -f 1)
+echo Found client pod $_CLIENT
 
-_run kubectl exec $CLIENT -- hdfs dfsadmin -report
-_run kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn0
-_run kubectl exec $CLIENT -- hdfs haadmin -getServiceState nn1
+_run kubectl exec $_CLIENT -- hdfs dfsadmin -report
+_run kubectl exec $_CLIENT -- hdfs haadmin -getServiceState nn0
+_run kubectl exec $_CLIENT -- hdfs haadmin -getServiceState nn1
 
-_run kubectl exec $CLIENT -- hadoop fs -rm -r -f /tmp
-_run kubectl exec $CLIENT -- hadoop fs -mkdir /tmp
-_run kubectl exec $CLIENT -- hadoop fs -copyFromLocal /opt/hadoop-2.7.2/share/hadoop/hdfs/lib /tmp
+_run kubectl exec $_CLIENT -- hadoop fs -rm -r -f /tmp
+_run kubectl exec $_CLIENT -- hadoop fs -mkdir /tmp
+_run kubectl exec $_CLIENT -- hadoop fs -copyFromLocal /opt/hadoop-2.7.2/share/hadoop/hdfs/lib /tmp
