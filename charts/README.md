@@ -17,8 +17,11 @@ Requires Kubernetes 1.6+ as the `namenode` and `datanodes` are using
 The HDFS daemons should be launched in the following order.
 
   1. hdfs namenode daemons. For the High Availity (HA)
-     setup, follow instructions in `hdfs-namenode-k8s/README.md`. Or if you do
-     not want the HA setup, follow `hdfs-simple-namenode-k8s/README.md` instead.
+     setup, follow instructions in
+     [hdfs-namenode-k8s/README.md](hdfs-namenode-k8s/README.md)
+     Or if you do not want the HA setup, follow
+     [hdfs-simple-namenode-k8s/README.md](hdfs-simple-namenode-k8s/README.md)
+     instead.
   2. hdfs datanode daemons. See `hdfs-datanode-k8s/README.md`
      for how to launch.
 
