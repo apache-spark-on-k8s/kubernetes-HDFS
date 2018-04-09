@@ -22,7 +22,8 @@ The HDFS daemons should be launched in the following order.
      Or if you do not want the HA setup, follow
      [hdfs-simple-namenode-k8s/README.md](hdfs-simple-namenode-k8s/README.md)
      instead.
-  2. hdfs datanode daemons. See `hdfs-datanode-k8s/README.md`
+  2. hdfs datanode daemons. See
+     [hdfs-datanode-k8s/README.md](hdfs-datanode-k8s/README.md)
      for how to launch.
 
 Kerberos is supported. See the `kerberosEnabled` option in the namenode and
