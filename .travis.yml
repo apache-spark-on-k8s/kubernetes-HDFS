@@ -11,4 +11,4 @@ script:
 
 after_script:
 - tests/cleanup.sh
-- TEARDOWN_DELETE_MINIKUBE=true TEARDOWN_DELETE_BIN=true tests/teardown.sh
+- tests/teardown.sh

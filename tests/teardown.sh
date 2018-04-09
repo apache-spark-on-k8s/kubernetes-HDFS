@@ -20,11 +20,6 @@ export PATH=${_MY_DIR}/bin:$PATH
 
 minikube status || true
 minikube stop || true
-
-if [[ "${TEARDOWN_DELETE_MINIKUBE:-}" = "true" ]]; then
-  minikube delete || true
-fi
+minikube delete || true
 rm -rf tmp
-if [[ "${TEARDOWN_DELETE_BIN:-}" = "true" ]]; then
-  rm -rf bin
-fi
+rm -rf bin

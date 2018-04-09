@@ -1,11 +1,20 @@
-### Prerequisite
+---
+layout: global
+title: HDFS charts
+---
 
-Requires Kubernetes 1.6 as the `namenode` and `datanodes` are using `ClusterFirstWithHostNet`, which was introduced in Kubernetes 1.6
+# HDFS charts
+Helm charts for launching HDFS daemons in a K8s cluster. Note that the HDFS
+charts are currently being heavily revised and are subject to change.
 
-### Usage
+# Prerequisite
 
-Helm charts for launching HDFS daemons in a K8s cluster.
-The daemons should be launched in the following order.
+Requires Kubernetes 1.6 as the `namenode` and `datanodes` are using
+`ClusterFirstWithHostNet`, which was introduced in Kubernetes 1.6
+
+# Usage
+
+The HDFS daemons should be launched in the following order.
 
   1. hdfs namenode daemons. For the High Availity (HA)
      setup, follow instructions in `hdfs-namenode-k8s/README.md`. Or if you do

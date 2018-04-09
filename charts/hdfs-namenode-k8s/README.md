@@ -1,22 +1,43 @@
+---
+layout: global
+title: HDFS namenodes
+---
 HDFS `namenodes` in HA setup running inside a Kubernetes cluster.
 See the other chart for `datanodes`.
 
 ### Usage
 
-  1. Launch zookeeper and journal node quorum. Zookeeper is needed to decide
-     which namenode instance is active. Journal node quorum is needed to
-     synchronize metadata updates from the active namenode to the standby
-     namenode. You would need to provide persistent volumes for zookeeper and
-     journal node quorums. If each quorum is size 3, you need 6 volumes in
-     total.
+  1. Launch a zookeeper quorum. Zookeeper is needed to decide
+     which namenode instance is active.
+     You would need to provide persistent volumes for zookeeper.
+     If your quorum is size 3 (default), you need 3 volumes.
+
+     You can run Zookeeper in two different ways. Here, you can use
+     `kubectl create` using a single StatefulSet yaml file.
 
   ```
   $ kubectl create -f  \
       https://raw.githubusercontent.com/kubernetes/contrib/master/statefulsets/zookeeper/zookeeper.yaml
+  ```
+
+    Alternatively, you can use a helm chart.
+  ```
+  $ helm install zookeeper  \
+      --name my-zk  \
+      --version 0.6.3 \
+      --repo https://kubernetes-charts-incubator.storage.googleapis.com/
+  ```
+
+  2. Launch a journal node quorum. The journal node quorum is needed to
+     synchronize metadata updates from the active namenode to the standby
+     namenode. You would need to provide persistent volumes for journal node
+     quorums. If your quorum is size 3 (default), you need 3 volumes.
+
+  ```
   $ helm install -n my-hdfs-journalnode hdfs-journalnode
   ```
 
-  2. (Skip this if you do not plan to enable Kerberos)
+  3. (Skip this if you do not plan to enable Kerberos)
      Prepare Kerberos setup, following the steps below.
 
      - Create a config map containing your Kerberos config file. This will be
@@ -74,7 +95,7 @@ See the other chart for `datanodes`.
     $ kubectl label nodes YOUR-HOST-2 hdfs-namenode-selector=hdfs-namenode
     ```
 
-  3. Now it's time to launch namenodes using the helm chart, `hdfs-namenode-k8s`.
+  4. Now it's time to launch namenodes using the helm chart, `hdfs-namenode-k8s`.
      But, you need to first provide two persistent volumes for storing
      metadata. Each volume should have at least 100 GB. (Can be overriden by
      the metadataVolumeSize helm option).
@@ -83,6 +104,14 @@ See the other chart for `datanodes`.
 
   ```
   $ helm install -n my-hdfs-namenode hdfs-namenode-k8s
+  ```
+
+  If you launched Zookeeper using the helm chart in step (2), the command
+  line will be slightly different:
+
+  ```
+  $ helm install -n my-hdfs-namenode hdfs-namenode-k8s  \
+      --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless.default.svc.cluster.local:2181,my-zk-zookeeper-1.my-zk-zookeeper-headless.default.svc.cluster.local:2181,my-zk-zookeeper-2.my-zk-zookeeper-headless.default.svc.cluster.local:2181
   ```
 
   If enabling Kerberos, specify necessary options. For instance,
@@ -100,7 +129,7 @@ See the other chart for `datanodes`.
       hdfs-namenode-k8s
   ```
 
-  4. Confirm the daemons are launched.
+  5. Confirm the daemons are launched.
 
   ```
   $ kubectl get pods | grep hdfs-namenode

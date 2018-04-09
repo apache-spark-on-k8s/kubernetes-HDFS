@@ -1,3 +1,7 @@
+---
+layout: global
+title: HDFS datanodes
+---
 HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
 `namenode`.
 
