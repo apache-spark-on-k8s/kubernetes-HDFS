@@ -23,10 +23,12 @@ You can execute these scripts in the listed order to run the integration tests.
 These scripts do not require any command line options for the basic
 functionality. So an example execution would look lile:
 
-   tests/setup.sh
-   tests/run.sh
-   tests/cleanup.sh
-   tests/teardown.sh
+```
+   $ tests/setup.sh
+   $ tests/run.sh
+   $ tests/cleanup.sh
+   $ tests/teardown.sh
+```
    
 ## Re-running tests
 
