@@ -9,7 +9,7 @@ charts are currently being heavily revised and are subject to change.
 
 # Prerequisite
 
-Requires Kubernetes 1.6 as the `namenode` and `datanodes` are using
+Requires Kubernetes 1.6+ as the `namenode` and `datanodes` are using
 `ClusterFirstWithHostNet`, which was introduced in Kubernetes 1.6
 
 # Usage
