@@ -105,11 +105,18 @@ spec:
       labels:
         app: hdfs-namenode
     spec:
+      {{- if .Values.hostNetworkEnabled }}
       # Use hostNetwork so datanodes connect to namenode without going through an overlay network
       # like weave. Otherwise, namenode fails to see physical IP address of datanodes.
+      # Disabling this will break data locality as namenode will see pod virtual IPs and fails to
+      # equate them with cluster node physical IPs associated with data nodes.
+      # We currently disable this only for CI on minikube.
       hostNetwork: true
       hostPID: true
       dnsPolicy: ClusterFirstWithHostNet
+      {{- else }}
+      dnsPolicy: ClusterFirst
+      {{- end }}
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

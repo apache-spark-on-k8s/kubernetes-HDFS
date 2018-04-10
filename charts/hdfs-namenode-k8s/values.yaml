@@ -35,13 +35,18 @@ metadataVolumeSize: 100Gi
 # Separated by the comma character.
 zookeeperQuorum: zk-0.zk-svc.default.svc.cluster.local:2181,zk-1.zk-svc.default.svc.cluster.local:2181,zk-2.zk-svc.default.svc.cluster.local:2181
 
-
 # Journal nodes quorum to use for sharing editlogs from an active namenode to
 # a standby namenode. Separated by the semicolon character.
 journalQuorum: hdfs-journalnode-0.hdfs-journalnode.default.svc.cluster.local:8485;hdfs-journalnode-1.hdfs-journalnode.default.svc.cluster.local:8485;hdfs-journalnode-2.hdfs-journalnode.default.svc.cluster.local:8485
 
 # Whether or not to enable pinning of namenode pods to labeled k8s cluster nodes.
 namenodePinningEnabled: false
+
+# Whether or not to use hostNetwork in namenode pods. Disabling this will break
+# data locality as namenode will see pod virtual IPs and fails to equate them with
+# cluster node physical IPs associated with data nodes.
+# We currently disable this only for CI on minikube.
+hostNetworkEnabled: true
 
 # Custom hadoop config keys passed through env variables to hadoop uhopper images.
 # See https://hub.docker.com/r/uhopper/hadoop/ to get more details

@@ -1,3 +1,7 @@
+---
+layout: global
+title: HDFS datanodes
+---
 HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
 `namenode`.
 
@@ -50,7 +54,7 @@ physical IPs.
 
 Note they run under the `default` namespace.
 
-###Credits
+### Credits
 
 This chart is using public Hadoop docker images hosted by
 [uhopper](https://hub.docker.com/u/uhopper/).
