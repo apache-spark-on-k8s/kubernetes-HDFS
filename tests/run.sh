@@ -6,7 +6,8 @@ set -o errexit
 set -o errtrace
 # Do not allow use of undefined vars. Use ${VAR:-} to use an undefined VAR
 set -o nounset
-# Catch the error in case mysqldump fails (but gzip succeeds) in `mysqldump |gzip`
+# Catch an error in command pipes. e.g. mysqldump fails (but gzip succeeds)
+# in `mysqldump |gzip`
 set -o pipefail
 if [[ "${DEBUG:-}" = "true" ]]; then
 # Turn on traces, useful while debugging but commented out by default
@@ -75,4 +76,6 @@ _run kubectl exec $_CLIENT -- hdfs haadmin -getServiceState nn1
 
 _run kubectl exec $_CLIENT -- hadoop fs -rm -r -f /tmp
 _run kubectl exec $_CLIENT -- hadoop fs -mkdir /tmp
-_run kubectl exec $_CLIENT -- hadoop fs -copyFromLocal /opt/hadoop-2.7.2/share/hadoop/hdfs/lib /tmp
+_run kubectl exec $_CLIENT -- sh -c  \
+  "(head -c 100M < /dev/urandom > /tmp/random-100M)"
+_run kubectl exec $_CLIENT -- hadoop fs -copyFromLocal /tmp/random-100M /tmp

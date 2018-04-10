@@ -10,7 +10,7 @@ is subject to change.
 
 The integration tests consists of 4 scripts under the `tests` dir:
 
-  - `setup.sh`: Downloads and starts minikube. Also downlods tools such as
+  - `setup.sh`: Downloads and starts minikube. Also downloads tools such as
     kubectl, helm, etc.
   - `run.sh`: Launches the HDFS helm charts on the started minikube instance
     and tests the resulting HDFS cluster using a HDFS client.
