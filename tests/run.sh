@@ -35,6 +35,10 @@ function _run () {
   done
 }
 
+_run helm install krb5-server  \
+  --name my-krb5-server
+k8s_single_pod_ready -l app=krb5-server
+
 _run helm install zookeeper  \
   --name my-zk  \
   --version 0.6.3 \

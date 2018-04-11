@@ -23,7 +23,8 @@ _CHARTS="my-hdfs-client  \
   my-hdfs-datanode  \
   my-hdfs-namenode  \
   my-hdfs-journalnode  \
-  my-zk"
+  my-zk  \
+  my-krb5-server"
 for chart in $_CHARTS; do
   helm delete --purge $chart || true
 done

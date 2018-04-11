@@ -1,0 +1,4 @@
+apiVersion: v1
+description: A Helm chart for Kerberos server
+name: krb5-server
+version: 0.1.0

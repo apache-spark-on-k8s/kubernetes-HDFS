@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "krb5-server.fullname" . }}
+  labels:
+    app: {{ template "krb5-server.name" . }}
+    chart: {{ template "krb5-server.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ template "krb5-server.name" . }}
+    release: {{ .Release.Name }}
