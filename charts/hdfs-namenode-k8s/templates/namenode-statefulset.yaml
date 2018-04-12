@@ -150,9 +150,9 @@ spec:
             # TODO: Check if the https principal is no longer needed in newer
             # Hadoop version.
             - name: HDFS_CONF_dfs_namenode_kerberos_https_principal
-              value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
+              value: HTTP/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
             - name: HDFS_CONF_dfs_web_authentication_kerberos_principal
-              value: http/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
+              value: HTTP/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
             - name: HDFS_CONF_dfs_namenode_keytab_file
               value: /etc/security/hdfs.keytab
             {{- end }}

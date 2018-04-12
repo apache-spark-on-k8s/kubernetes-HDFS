@@ -2,12 +2,26 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# Your Kerberos realm
+realm: MYCOMPANY.COM
+
+# Size of editata persistent volume per journalnode instance.
+dataVolumeSize: 20Gi
+
+# Parameters for determining which Unix user and group IDs to use in pods.
+# Persistent volume permission may need to match these.
+podSecurityContext:
+  enabled: false
+  runAsUser: 0
+  fsGroup: 1000
+
 image:
   repository: gcavalcante8808/krb5-server
+  # TODO: Using latest tag is not desirable. The current image does not have specific tags.
+  # Find a way to fix it.
   tag: latest
   pullPolicy: IfNotPresent
 
 service:
   type: ClusterIP
-  port: 80
-
+  port: 88

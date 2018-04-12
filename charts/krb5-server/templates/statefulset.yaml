@@ -1,5 +1,5 @@
-apiVersion: apps/v1beta2
-kind: Deployment
+apiVersion: apps/v1beta1
+kind: StatefulSet
 metadata:
   name: {{ template "krb5-server.fullname" . }}
   labels:
@@ -8,6 +8,7 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+  serviceName: "krb5-server"
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -25,32 +26,33 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: KRB5_REALM
-              value: EXAMPLE.COM
+              value: {{ .Values.realm }}
             - name: KRB5_KDC
               value: localhost
           ports:
-            - name: http
-              containerPort: 80
+            - name: kdc-tcp
+              containerPort: 88
               protocol: TCP
+            - name: kdc-udp
+              containerPort: 88
+              protocol: UDP
           livenessProbe:
-            httpGet:
-              path: /
-              port: http
+            tcpSocket:
+              port: kdc-tcp
           readinessProbe:
-            httpGet:
-              path: /
-              port: http
-          resources:
-{{ toYaml .Values.resources | indent 12 }}
-    {{- with .Values.nodeSelector }}
-      nodeSelector:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.affinity }}
-      affinity:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
-      tolerations:
-{{ toYaml . | indent 8 }}
-    {{- end }}
+            tcpSocket:
+              port: kdc-tcp
+      restartPolicy: Always
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        runAsUser: {{ .Values.podSecurityContext.runAsUser }}
+        fsGroup: {{ .Values.podSecurityContext.fsGroup }}
+      {{- end }}
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.dataVolumeSize }}

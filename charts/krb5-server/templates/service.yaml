@@ -1,19 +1,23 @@
+# A headless service to create DNS records.
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "krb5-server.fullname" . }}
+  name: krb5-server
   labels:
-    app: {{ template "krb5-server.name" . }}
-    chart: {{ template "krb5-server.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    app: krb5-server
+  annotations:
+    # TODO: Deprecated. Replace tolerate-unready-endpoints with
+    # v1.Service.PublishNotReadyAddresses.
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
 spec:
-  type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: http
       protocol: TCP
-      name: http
+      name: kdc-tcp
+    - port: {{ .Values.service.port }}
+      protocol: UDP
+      name: kdc-udp
+  clusterIP: None
   selector:
     app: {{ template "krb5-server.name" . }}
     release: {{ .Release.Name }}

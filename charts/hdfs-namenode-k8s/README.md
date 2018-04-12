@@ -56,23 +56,23 @@ See the other chart for `datanodes`.
 
        ```
         $ kadmin.local -q "addprinc -randkey hdfs/kube-n1.mycompany.com@MYCOMPANY.COM"
-        $ kadmin.local -q "addprinc -randkey http/kube-n1.mycompany.com@MYCOMPANY.COM"
+        $ kadmin.local -q "addprinc -randkey HTTP/kube-n1.mycompany.com@MYCOMPANY.COM"
         $ mkdir hdfs-keytabs
         $ kadmin.local -q "ktadd -norandkey  \
                   -k hdfs-keytabs/kube-n1.mycompany.com.keytab  \
                   hdfs/kube-n1.mycompany.com@MYCOMPANY.COM  \
-                  http/kube-n1.mycompany.com@MYCOMPANY.COM"
+                  HTTP/kube-n1.mycompany.com@MYCOMPANY.COM"
 
         $ kadmin.local -q "addprinc -randkey hdfs/kube-n2.mycompany.com@MYCOMPANY.COM"
-        $ kadmin.local -q "addprinc -randkey http/kube-n2.mycompany.com@MYCOMPANY.COM"
+        $ kadmin.local -q "addprinc -randkey HTTP/kube-n2.mycompany.com@MYCOMPANY.COM"
         $ kadmin.local -q "ktadd -norandkey  \
                   -k hdfs-keytabs/kube-n2.mycompany.com.keytab  \
                   hdfs/kube-n2.mycompany.com@MYCOMPANY.COM  \
-                  http/kube-n2.mycompany.com@MYCOMPANY.COM"
+                  HTTP/kube-n2.mycompany.com@MYCOMPANY.COM"
         $ kadmin.local -q "ktadd -norandkey  \
                   -k hdfs-keytabs/kube-n2.mycompany.com.keytab  \
                   hdfs/kube-n2.mycompany.com@MYCOMPANY.COM  \
-                  http/kube-n2.mycompany.com@MYCOMPANY.COM"
+                  HTTP/kube-n2.mycompany.com@MYCOMPANY.COM"
        ```
 
      - Create a k8s secret containing all the keytab files. This will be mounted
