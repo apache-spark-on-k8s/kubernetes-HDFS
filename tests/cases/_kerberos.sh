@@ -5,6 +5,11 @@ function run_test_case () {
     --name my-krb5-server
   k8s_single_pod_ready -l app=krb5-server
 
+  _KDC=$(kubectl get pod -l app=krb5-server --no-headers -o name | cut -d/ -f2)
+  _run kubectl cp $_KDC:/etc/krb5.conf $_TEST_DIR/tmp/krb5.conf
+  _run kubectl create configmap kerberos-config  \
+    --from-file=$_TEST_DIR/tmp/krb5.conf
+
   _run helm install zookeeper  \
     --name my-zk  \
     --version 0.6.3 \
@@ -16,15 +21,36 @@ function run_test_case () {
     --name my-hdfs-journalnode
   k8s_all_pods_ready 3 -l app=hdfs-journalnode
 
+  _SECRET_CMD="kubectl create secret generic hdfs-kerberos-keytabs"
+  _HOSTS="hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local  \
+    hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local  \
+    $(kubectl get node --no-headers -o name | cut -d/ -f2)"
+  for _HOST in $_HOSTS; do
+    _run kubectl exec $_KDC -- kadmin.local -q  \
+      "addprinc -randkey hdfs/$_HOST@MYCOMPANY.COM"
+    _run kubectl exec $_KDC -- kadmin.local -q  \
+      "addprinc -randkey HTTP/$_HOST@MYCOMPANY.COM"
+    _run kubectl exec $_KDC -- kadmin.local -q  \
+      "ktadd -norandkey -k /tmp/$_HOST.keytab hdfs/$_HOST@MYCOMPANY.COM HTTP/$_HOST@MYCOMPANY.COM"
+    _run kubectl cp $_KDC:/tmp/$_HOST.keytab $_TEST_DIR/tmp/$_HOST.keytab
+    _SECRET_CMD+=" --from-file=$_TEST_DIR/tmp/$_HOST.keytab"
+  done
+  _run $_SECRET_CMD
+
   # Disables hostNetwork so namenode pods on a single minikube node can avoid
   # port conflict
   _run helm install hdfs-namenode-k8s  \
     --name my-hdfs-namenode  \
-    --set hostNetworkEnabled=false,zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless.default.svc.cluster.local:2181
+    --set kerberosEnabled=true  \
+    --set kerberosRealm=MYCOMPANY.COM  \
+    --set hostNetworkEnabled=false  \
+    --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless:2181
   k8s_all_pods_ready 2 -l app=hdfs-namenode
 
   _run helm install hdfs-datanode-k8s  \
     --name my-hdfs-datanode  \
+    --set kerberosEnabled=true  \
+    --set kerberosRealm=MYCOMPANY.COM  \
     --set "dataNodeHostPath={/mnt/sda1/hdfs-data}"
   k8s_single_pod_ready -l name=hdfs-datanode
 
@@ -52,6 +78,8 @@ function run_test_case () {
 }
 
 function cleanup_test_case() {
+  kubectl delete configmap kerberos-config || true
+  kubectl delete secret hdfs-kerberos-keytabs || true
   local charts="my-hdfs-client  \
     my-hdfs-datanode  \
     my-hdfs-namenode  \

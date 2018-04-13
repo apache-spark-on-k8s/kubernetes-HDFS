@@ -42,6 +42,7 @@ for _CASE in $_CASES; do
   source $_CASE
   run_test_case
   if [[ "${SKIP_CLEANUP:-false}" = "false" ]]; then
+    echo Cleaning up test case: $_CASE
     cleanup_test_case
   fi
 done

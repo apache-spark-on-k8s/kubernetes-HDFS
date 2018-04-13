@@ -17,8 +17,8 @@ fi
 _MY_SCRIPT="${BASH_SOURCE[0]}"
 _MY_DIR=$(cd "$(dirname "$_MY_SCRIPT")" && pwd)
 # Avoids 1.7.x because of https://github.com/kubernetes/minikube/issues/2240
-_KUBERNETES_VERSION=v1.9.4
-_MINIKUBE_VERSION=v0.25.2
+_KUBERNETES_VERSION=v1.10.0
+_MINIKUBE_VERSION=v0.26.0
 _HELM_VERSION=v2.8.1
 
 _UNAME_OUT=$(uname -s)

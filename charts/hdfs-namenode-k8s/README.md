@@ -120,7 +120,9 @@ See the other chart for `datanodes`.
      If enabling Kerberos, specify necessary options. For instance,
      ```
      $ helm install -n my-hdfs-namenode  \
-         --set kerberosEnabled=true,kerberosRealm=MYCOMPANY.COM hdfs-namenode-k8s
+         --set kerberosEnabled=true  \
+         --set kerberosRealm=MYCOMPANY.COM  \
+         hdfs-namenode-k8s
      ```
      The two variables above are required. For other variables, see values.yaml.
 
@@ -128,7 +130,9 @@ See the other chart for `datanodes`.
      the namenodePinningEnabled option:
      ```
      $ helm install -n my-hdfs-namenode  \
-         --set kerberosEnabled=true,kerberosRealm=MYCOMPANY.COM,namenodePinningEnabled=true \
+         --set kerberosEnabled=true  \
+         --set kerberosRealm=MYCOMPANY.COM  \
+         --set namenodePinningEnabled=true \
          hdfs-namenode-k8s
      ```
 

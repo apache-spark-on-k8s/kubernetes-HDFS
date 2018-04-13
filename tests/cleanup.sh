@@ -14,17 +14,16 @@ if [[ "${DEBUG:-}" = "true" ]]; then
 fi
 
 _MY_SCRIPT="${BASH_SOURCE[0]}"
-_MY_DIR=$(cd "$(dirname "$_MY_SCRIPT")" && pwd)
+_TEST_DIR=$(cd "$(dirname "$_MY_SCRIPT")" && pwd)
 
-cd $_MY_DIR
-export PATH=${_MY_DIR}/bin:$PATH
+cd $_TEST_DIR
+export PATH=${_TEST_DIR}/bin:$PATH
 
-_CHARTS="my-hdfs-client  \
-  my-hdfs-datanode  \
-  my-hdfs-namenode  \
-  my-hdfs-journalnode  \
-  my-zk  \
-  my-krb5-server"
-for chart in $_CHARTS; do
-  helm delete --purge $chart || true
-done
+_DEFAULT_CASES="*"
+: "${CASES:=$_DEFAULT_CASES}"
+_CASES=$(ls ${_TEST_DIR}/cases/${CASES})
+for _CASE in $_CASES; do
+  source $_CASE
+  echo Cleaning up test case: $_CASE
+  cleanup_test_case
+ done
