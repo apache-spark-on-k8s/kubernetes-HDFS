@@ -15,7 +15,7 @@ function _wait_for_ready () {
       "$@" || true
       local command="$@"
       command="${command/get/describe}"
-      "$command" || true
+      $command || true
     fi
     ((attempts--)) || return 1
     sleep 5
@@ -27,7 +27,8 @@ function _wait_for_ready () {
 function k8s_all_nodes_ready () {
   local count="$1"
   shift
-  _wait_for_ready "$count" " Ready" kubectl get nodes
+  _wait_for_ready "$count" "-v NotReady" kubectl get nodes
+  _wait_for_ready "$count" Ready kubectl get nodes
 }
 
 function k8s_single_node_ready () {
