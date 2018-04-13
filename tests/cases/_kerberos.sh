@@ -65,6 +65,18 @@ function run_test_case () {
   echo All persistent volumes:
   kubectl get pv
 
+  _NN0=hdfs-namenode-0
+  kubectl exec $_NN0 -- apt install -y krb5-user || true
+  _run kubectl exec $_NN0 --   \
+    kinit -t /etc/security/hdfs.keytab  \
+    hdfs/hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local@MYCOMPANY.COM
+  _run kubectl exec $_NN0 -- hdfs dfsadmin -report
+  _run kubectl exec $_NN0 -- hdfs haadmin -getServiceState nn0
+  _run kubectl exec $_NN0 -- hdfs haadmin -getServiceState nn1
+  _run kubectl exec $_NN0 -- hadoop fs -rm -r -f /tmp
+  _run kubectl exec $_NN0 -- hadoop fs -mkdir /tmp
+  _run kubectl exec $_NN0 -- hadoop fs -chmod 0777 /tmp
+
   _run helm install hdfs-client  \
     --name my-hdfs-client  \
     --set kerberosEnabled=true
@@ -79,13 +91,12 @@ function run_test_case () {
   _run kubectl cp $_KDC:/tmp/user1.keytab $_TEST_DIR/tmp/user1.keytab
   _run kubectl cp $_TEST_DIR/tmp/user1.keytab $_CLIENT:/tmp/user1.keytab
 
-  _run kubectl exec $_CLIENT -- apt install -y krb5-user
+  kubectl exec $_CLIENT -- apt install -y krb5-user || true
 
   _run kubectl exec $_CLIENT -- kinit -t /tmp/user1.keytab user1@MYCOMPANY.COM
-  _run kubectl exec $_CLIENT -- hadoop fs -rm -r -f /tmp
-  _run kubectl exec $_CLIENT -- hadoop fs -mkdir /tmp
   _run kubectl exec $_CLIENT -- sh -c  \
     "(head -c 100M < /dev/urandom > /tmp/random-100M)"
+  _run kubectl exec $_CLIENT -- hadoop fs -ls /
   _run kubectl exec $_CLIENT -- hadoop fs -copyFromLocal /tmp/random-100M /tmp
 }
 
