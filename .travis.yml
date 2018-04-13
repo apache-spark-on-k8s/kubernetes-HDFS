@@ -1,9 +1,5 @@
 sudo: required
 
-env:
-  - CASES=_basic.sh
-  - CASES=_kerberos.sh
-
 before_script:
 - USE_MINIKUBE_DRIVER_NONE=true USE_SUDO_MINIKUBE=true tests/setup.sh
 

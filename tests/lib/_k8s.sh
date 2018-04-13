@@ -11,6 +11,7 @@ function _wait_for_ready () {
   while [[ "$count" != $("$@" 2>&1 | tail -n +2 | grep -c $evidence) ]];
   do
     if [[ "$attempts" = 1 ]]; then
+      echo The last attempt: "$@"
       "$@" || true
     fi
     ((attempts--)) || return 1
