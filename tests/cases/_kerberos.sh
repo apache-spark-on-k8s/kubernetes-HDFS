@@ -66,7 +66,8 @@ function run_test_case () {
   kubectl get pv
 
   _NN0=hdfs-namenode-0
-  kubectl exec $_NN0 -- apt install -y krb5-user || true
+  kubectl exec $_NN0 -- sh -c "(apt install -y krb5-user > /dev/null)"  \
+    || true
   _run kubectl exec $_NN0 --   \
     kinit -t /etc/security/hdfs.keytab  \
     hdfs/hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local@MYCOMPANY.COM
@@ -91,7 +92,8 @@ function run_test_case () {
   _run kubectl cp $_KDC:/tmp/user1.keytab $_TEST_DIR/tmp/user1.keytab
   _run kubectl cp $_TEST_DIR/tmp/user1.keytab $_CLIENT:/tmp/user1.keytab
 
-  kubectl exec $_CLIENT -- apt install -y krb5-user || true
+  kubectl exec $_CLIENT -- sh -c "(apt install -y krb5-user > /dev/null)"  \
+    || true
 
   _run kubectl exec $_CLIENT -- kinit -t /tmp/user1.keytab user1@MYCOMPANY.COM
   _run kubectl exec $_CLIENT -- sh -c  \
