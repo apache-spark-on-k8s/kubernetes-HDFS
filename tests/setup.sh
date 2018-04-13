@@ -98,6 +98,7 @@ fi
 
 # The default bootstrapper kubeadm assumes CentOS. Travis is Debian.
 $_MINIKUBE config set bootstrapper localkube
+$_MINIKUBE config set ShowBootstrapperDeprecationNotification false || true
 $_MINIKUBE start --kubernetes-version=${K8S_VERSION}  \
   ${_VM_DRIVER:-}
 # Fix the kubectl context, as it's often stale.
@@ -118,6 +119,7 @@ $_MINIKUBE addons list
 kubectl get storageclass
 echo Showing kube-system pods
 kubectl get -n kube-system pods
+k8s_all_pods_ready 4 -n kube-system
 
 helm init
 k8s_single_pod_ready -n kube-system -l name=tiller
