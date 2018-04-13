@@ -4,7 +4,7 @@ before_script:
 - USE_MINIKUBE_DRIVER_NONE=true USE_SUDO_MINIKUBE=true tests/setup.sh
 
 script:
-- tests/run.sh
+- DEBUG=true tests/run.sh
 
 after_script:
 - tests/cleanup.sh
