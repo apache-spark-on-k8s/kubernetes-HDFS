@@ -124,6 +124,8 @@ _ADDON=$(kubectl get pod -n kube-system -l component=kube-addon-manager --no-hea
 echo Addon-manager log:
 kubectl logs -n kube-system $_ADDON
 k8s_all_pods_ready 4 -n kube-system || true
+echo Addon-manager describe:
+kubectl describe pod -n kube-system $_ADDON
 echo Addon-manager log:
 kubectl logs -n kube-system $_ADDON
 k8s_all_pods_ready 4 -n kube-system
