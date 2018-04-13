@@ -28,7 +28,7 @@ spec:
             - name: KRB5_REALM
               value: {{ .Values.realm }}
             - name: KRB5_KDC
-              value: localhost
+              value: {{ template "krb5-server.fullname" . }}-0.{{ template "krb5-server.name" . }}..default.svc.cluster.local
           ports:
             - name: kdc-tcp
               containerPort: 88
