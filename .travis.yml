@@ -1,5 +1,10 @@
 sudo: required
 
+env:
+  # Travis does not work well with minikube 0.26.x yet.
+  - CASES=_basic.sh K8S_VERSION=v1.9.4 MINIKUBE_VERSION=v0.25.2
+  - CASES=_kerberos.sh
+
 before_script:
 - USE_MINIKUBE_DRIVER_NONE=true USE_SUDO_MINIKUBE=true tests/setup.sh
 

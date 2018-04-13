@@ -17,8 +17,10 @@ fi
 _MY_SCRIPT="${BASH_SOURCE[0]}"
 _MY_DIR=$(cd "$(dirname "$_MY_SCRIPT")" && pwd)
 # Avoids 1.7.x because of https://github.com/kubernetes/minikube/issues/2240
-_KUBERNETES_VERSION=v1.10.0
-_MINIKUBE_VERSION=v0.25.2
+_DEFAULT_K8S_VERSION=v1.10.0
+: "${K8S_VERSION:=$_DEFAULT_K8S_VERSION}"
+_DEFAULT_MINIKUBE_VERSION=v0.26.0
+: "${MINIKUBE_VERSION:=$_DEFAULT_MINIKUBE_VERSION}"
 _HELM_VERSION=v2.8.1
 
 _UNAME_OUT=$(uname -s)
@@ -42,13 +44,13 @@ mkdir -p bin tmp
 if [[ ! -x bin/kubectl ]]; then
   echo Downloading kubectl, which is a requirement for using minikube.
   curl -Lo bin/kubectl  \
-    https://storage.googleapis.com/kubernetes-release/release/${_KUBERNETES_VERSION}/bin/${_MY_OS}/amd64/kubectl
+    https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/${_MY_OS}/amd64/kubectl
   chmod +x bin/kubectl
 fi
 if [[ ! -x bin/minikube ]]; then
   echo Downloading minikube.
   curl -Lo bin/minikube  \
-    https://storage.googleapis.com/minikube/releases/${_MINIKUBE_VERSION}/minikube-${_MY_OS}-amd64
+    https://storage.googleapis.com/minikube/releases/${MINIKUBE_VERSION}/minikube-${_MY_OS}-amd64
   chmod +x bin/minikube
 fi
 if [[ ! -x bin/helm ]]; then
@@ -96,7 +98,7 @@ fi
 
 # The default bootstrapper kubeadm assumes CentOS. Travis is Debian.
 $_MINIKUBE config set bootstrapper localkube
-$_MINIKUBE start --kubernetes-version=${_KUBERNETES_VERSION}  \
+$_MINIKUBE start --kubernetes-version=${K8S_VERSION}  \
   ${_VM_DRIVER:-}
 # Fix the kubectl context, as it's often stale.
 $_MINIKUBE update-context
