@@ -116,6 +116,8 @@ k8s_single_node_ready
 echo Minikube addons:
 $_MINIKUBE addons list
 kubectl get storageclass
+echo Showing kube-system pods
+kubectl get -n kube-system pods
 
 helm init
 k8s_single_pod_ready -n kube-system -l name=tiller
