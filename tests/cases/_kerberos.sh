@@ -17,12 +17,11 @@ function run_test_case () {
     --set servers=1,heap=100m,resources.requests.memory=100m
   k8s_single_pod_ready -l app=zookeeper
 
-  _run helm install hdfs-journalnode-k8s  \
-    --name my-hdfs-journalnode
-  k8s_all_pods_ready 3 -l app=hdfs-journalnode
-
   _SECRET_CMD="kubectl create secret generic hdfs-kerberos-keytabs"
-  _HOSTS="hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local  \
+  _HOSTS="hdfs-journalnode-0.hdfs-journalnode.default.svc.cluster.local  \
+    hdfs-journalnode-1.hdfs-journalnode.default.svc.cluster.local  \
+    hdfs-journalnode-2.hdfs-journalnode.default.svc.cluster.local  \
+    hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local  \
     hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local  \
     $(kubectl get node --no-headers -o name | cut -d/ -f2)"
   for _HOST in $_HOSTS; do
@@ -36,6 +35,12 @@ function run_test_case () {
     _SECRET_CMD+=" --from-file=$_TEST_DIR/tmp/$_HOST.keytab"
   done
   _run $_SECRET_CMD
+
+  _run helm install hdfs-journalnode-k8s  \
+    --set kerberosEnabled=true  \
+    --set kerberosRealm=MYCOMPANY.COM  \
+    --name my-hdfs-journalnode
+  k8s_all_pods_ready 3 -l app=hdfs-journalnode
 
   # Disables hostNetwork so namenode pods on a single minikube node can avoid
   # port conflict
