@@ -138,6 +138,17 @@ spec:
               mountPath: /kerberos-keytab-copy
       {{- end }}
       restartPolicy: Always
+      {{- if .Values.kerberosEnabled }}
+      volumes:
+        - name: kerberos-config
+          configMap:
+            name: {{ .Values.kerberosConfigMap }}
+        - name: kerberos-keytabs
+          secret:
+            secretName: {{ .Values.kerberosKeytabsSecret }}
+        - name: kerberos-keytab-copy
+          emptyDir: {}
+      {{- end }}
       {{- if .Values.podSecurityContext.enabled }}
       securityContext:
         runAsUser: {{ .Values.podSecurityContext.runAsUser }}
