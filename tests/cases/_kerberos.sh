@@ -66,15 +66,22 @@ function run_test_case () {
   kubectl get pv
 
   _run helm install hdfs-client  \
-    --name my-hdfs-client
+    --name my-hdfs-client  \
+    --set kerberosEnabled=true
   k8s_single_pod_ready -l app=hdfs-client
   _CLIENT=$(kubectl get pods -l app=hdfs-client -o name| cut -d/ -f 2)
   echo Found client pod $_CLIENT
 
-  _run kubectl exec $_CLIENT -- hdfs dfsadmin -report
-  _run kubectl exec $_CLIENT -- hdfs haadmin -getServiceState nn0
-  _run kubectl exec $_CLIENT -- hdfs haadmin -getServiceState nn1
+  _run kubectl exec $_KDC -- kadmin.local -q  \
+    "addprinc -randkey user1@MYCOMPANY.COM"
+  _run kubectl exec $_KDC -- kadmin.local -q  \
+    "ktadd -norandkey -k /tmp/user1.keytab user1@MYCOMPANY.COM"
+  _run kubectl cp $_KDC:/tmp/user1.keytab $_TEST_DIR/tmp/user1.keytab
+  _run kubectl cp $_TEST_DIR/tmp/user1.keytab $_CLIENT:/tmp/user1.keytab
 
+  _run kubectl exec $_CLIENT -- apt install -y krb5-user
+
+  _run kubectl exec $_CLIENT -- kinit -t /tmp/user1.keytab user1@MYCOMPANY.COM
   _run kubectl exec $_CLIENT -- hadoop fs -rm -r -f /tmp
   _run kubectl exec $_CLIENT -- hadoop fs -mkdir /tmp
   _run kubectl exec $_CLIENT -- sh -c  \
