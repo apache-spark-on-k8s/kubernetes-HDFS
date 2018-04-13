@@ -102,7 +102,6 @@ $_MINIKUBE start --kubernetes-version=${K8S_VERSION}  \
   ${_VM_DRIVER:-}
 # Fix the kubectl context, as it's often stale.
 $_MINIKUBE update-context
-$_MINIKUBE addons list
 echo Minikube disks:
 if [[ "${USE_MINIKUBE_DRIVER_NONE:-}" = "true" ]]; then
   # minikube does not support ssh for --vm-driver=none
@@ -113,6 +112,10 @@ fi
 
 # Wait for Kubernetes to be up and ready.
 k8s_single_node_ready
+
+echo Minikube addons:
+$_MINIKUBE addons list
+kubectl get storageclass
 
 helm init
 k8s_single_pod_ready -n kube-system -l name=tiller
