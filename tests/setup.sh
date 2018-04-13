@@ -119,6 +119,11 @@ $_MINIKUBE addons list
 kubectl get storageclass
 echo Showing kube-system pods
 kubectl get -n kube-system pods
+
+kubectl log -n kube-system $_ADDON
+_ADDON=$(kubectl get pod -n kube-system -l component=kube-addon-manager | cut -d/ -f2)
+k8s_all_pods_ready 4 -n kube-system || true
+kubectl log -n kube-system $_ADDON
 k8s_all_pods_ready 4 -n kube-system
 
 helm init
