@@ -41,5 +41,7 @@ for _CASE in $_CASES; do
   echo Running test case: $_CASE
   source $_CASE
   run_test_case
-  $_TEST_DIR/cleanup.sh
+  if [[ "${SKIP_CLEANUP:-false}" = "false" ]]; then
+    cleanup_test_case
+  fi
 done

@@ -50,3 +50,15 @@ function run_test_case () {
     "(head -c 100M < /dev/urandom > /tmp/random-100M)"
   _run kubectl exec $_CLIENT -- hadoop fs -copyFromLocal /tmp/random-100M /tmp
 }
+
+function cleanup_test_case() {
+  local charts="my-hdfs-client  \
+    my-hdfs-datanode  \
+    my-hdfs-namenode  \
+    my-hdfs-journalnode  \
+    my-zk  \
+    my-krb5-server"
+  for chart in $charts; do
+    helm delete --purge $chart || true
+  done
+}
