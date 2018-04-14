@@ -6,6 +6,8 @@ env:
   - CASES=_kerberos.sh
 
 before_script:
+- sudo mount --make-shared /
+- sudo service docker restart
 - USE_MINIKUBE_DRIVER_NONE=true USE_SUDO_MINIKUBE=true tests/setup.sh
 
 script:
