@@ -17,6 +17,9 @@ fi
 _MY_SCRIPT="${BASH_SOURCE[0]}"
 _MY_DIR=$(cd "$(dirname "$_MY_SCRIPT")" && pwd)
 # Avoids 1.7.x because of https://github.com/kubernetes/minikube/issues/2240
+# Also avoids 1.9.4 because of
+# https://github.com/kubernetes/kubernetes/issues/61076#issuecomment-376660233
+# TODO: Try 1.9.x > 1.9.4 when a new minikube version supports that.
 _DEFAULT_K8S_VERSION=v1.10.0
 : "${K8S_VERSION:=$_DEFAULT_K8S_VERSION}"
 _DEFAULT_MINIKUBE_VERSION=v0.26.0
