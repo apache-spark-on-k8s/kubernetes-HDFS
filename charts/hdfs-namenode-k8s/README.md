@@ -48,6 +48,11 @@ See the other chart for `datanodes`.
         $ kubectl create configmap kerberos-config --from-file=/etc/krb5.conf
        ```
 
+       We have our own kerberos server in the `krb5-server` helm chart.
+       Currently, this is used mainly by the integration tests. But you may
+       choose to use this for your cluster as well. For details, see
+       the integration test case `tests/cases/_kerberos.sh`.
+
      - Generate per-host principal accounts and password keytab files for the namenode
        and datanode daemons. This is typically done in your Kerberos KDC host. For example,
        suppose the namenode will run on the k8s cluster node kube-n1.mycompany.com,

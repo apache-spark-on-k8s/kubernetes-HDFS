@@ -15,10 +15,15 @@ podSecurityContext:
   runAsUser: 0
   fsGroup: 1000
 
+# We use a 3rd party image built from https://github.com/gcavalcante8808/docker-krb5-server.
+# TODO: The pod currently prints out the admin account in plain text.
+# Supply an admin account password using a k8s secret.
+# TODO: The auto-generated passwords might be weak due to low entropy.
+# Increase entropy by running rngd or haveged.
+# TODO: Using latest tag is not desirable. The current image does not have specific tags.
+# Find a way to fix it.
 image:
   repository: gcavalcante8808/krb5-server
-  # TODO: Using latest tag is not desirable. The current image does not have specific tags.
-  # Find a way to fix it.
   tag: latest
   pullPolicy: IfNotPresent
 
