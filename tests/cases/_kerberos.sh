@@ -69,7 +69,7 @@ function run_test_case () {
   kubectl exec $_NN0 -- sh -c "(apt install -y krb5-user > /dev/null)"  \
     || true
   _run kubectl exec $_NN0 --   \
-    kinit -t /etc/security/hdfs.keytab  \
+    kinit -kt /etc/security/hdfs.keytab  \
     hdfs/hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local@MYCOMPANY.COM
   _run kubectl exec $_NN0 -- hdfs dfsadmin -report
   _run kubectl exec $_NN0 -- hdfs haadmin -getServiceState nn0
@@ -95,7 +95,7 @@ function run_test_case () {
   kubectl exec $_CLIENT -- sh -c "(apt install -y krb5-user > /dev/null)"  \
     || true
 
-  _run kubectl exec $_CLIENT -- kinit -t /tmp/user1.keytab user1@MYCOMPANY.COM
+  _run kubectl exec $_CLIENT -- kinit -kt /tmp/user1.keytab user1@MYCOMPANY.COM
   _run kubectl exec $_CLIENT -- sh -c  \
     "(head -c 100M < /dev/urandom > /tmp/random-100M)"
   _run kubectl exec $_CLIENT -- hadoop fs -ls /
