@@ -17,9 +17,21 @@ data:
         <name>hadoop.security.authentication</name>
         <value>kerberos</value>
       </property>
+      <!--
+      This is service level RPC authorization, which is separate from HDFS file
+      level ACLs.  This concerns who can talk to HDFS daemons including
+      datanodes talking to namenode.  As part of the authorization, namenode
+      tries to validate that DNS can uniquely traslate the datanode IP to the
+      hostname in the datanode Kerberos principal.  (i.e. The client IP is what
+      Kerberos has authenticated). This does not work well when both namenode
+      and datanodes are using the Kubernetes HostNetwork and namenode is using
+      the StatefulSet. The same cluster node IP can be mapped to two different
+      DNS names. So we disable this. Again this is only service level RPC
+      authorization and does not affect HDFS file level permission ACLs.
+      -->
       <property>
         <name>hadoop.security.authorization</name>
-        <value>true</value>
+        <value>false</value>
       </property>
       <property>
         <name>hadoop.rpc.protection</name>
