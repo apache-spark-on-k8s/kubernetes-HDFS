@@ -39,8 +39,7 @@ function run_test_case () {
   _run helm install hdfs-config-k8s  \
     --name my-hdfs-config  \
     --set fullnameOverride=hdfs-config  \
-    --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless.default.svc.cluster.local:2181
-  \
+    --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless.default.svc.cluster.local:2181 \
     --set kerberosEnabled=true  \
     --set kerberosRealm=MYCOMPANY.COM
 
