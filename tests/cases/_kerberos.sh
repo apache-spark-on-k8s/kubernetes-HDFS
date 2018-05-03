@@ -53,8 +53,7 @@ function run_test_case () {
   _run helm install hdfs-namenode-k8s  \
     --name my-hdfs-namenode  \
     --set kerberosEnabled=true  \
-    --set hostNetworkEnabled=false  \
-    --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless:2181
+    --set hostNetworkEnabled=false
   k8s_all_pods_ready 2 -l app=hdfs-namenode
 
   _run helm install hdfs-datanode-k8s  \

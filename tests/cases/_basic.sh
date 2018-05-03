@@ -21,8 +21,7 @@ function run_test_case () {
   # port conflict
   _run helm install hdfs-namenode-k8s  \
     --name my-hdfs-namenode  \
-    --set hostNetworkEnabled=false  \
-    --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless.default.svc.cluster.local:2181
+    --set hostNetworkEnabled=false
   k8s_all_pods_ready 2 -l app=hdfs-namenode
 
   _run helm install hdfs-datanode-k8s  \
