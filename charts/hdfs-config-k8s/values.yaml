@@ -32,6 +32,11 @@ journalQuorum: hdfs-journalnode-0.hdfs-journalnode.default.svc.cluster.local:848
 # Whether or not Kerberos support is enabled.
 kerberosEnabled: false
 
+# Effective only if Kerberos is enabled. Enable protection of datanodes using
+# the jsvc utility. See the reference doc at
+# https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Secure_DataNode
+jsvcEnabled: true
+
 # Required to be non-empty if Kerberos is enabled. Specify your Kerberos realm name.
 # This should match the realm name in your Kerberos config file.
 kerberosRealm: MYCOMPANY.COM
