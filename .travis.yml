@@ -1,10 +1,14 @@
 sudo: required
 
 env:
-  - USE_MINIKUBE_DRIVER_NONE=true USE_SUDO_MINIKUBE=true
+  - CASES=_basic.sh
+  - CASES=_kerberos.sh
 
 before_script:
-- tests/setup.sh
+# Required for K8s v1.10.x. See
+# https://github.com/kubernetes/kubernetes/issues/61058#issuecomment-372764783
+- sudo mount --make-shared / && sudo service docker restart
+- USE_MINIKUBE_DRIVER_NONE=true USE_SUDO_MINIKUBE=true tests/setup.sh
 
 script:
 - tests/run.sh

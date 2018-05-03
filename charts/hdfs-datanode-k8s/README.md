@@ -25,7 +25,9 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
      If enabling Kerberos, specify necessary options. For instance,
      ```
      $ helm install -n my-hdfs-datanode  \
-         --set kerberosEnabled=true,kerberosRealm=MYCOMPANY.COM hdfs-datanode-k8s
+         --set kerberosEnabled=true  \
+         --set kerberosRealm=MYCOMPANY.COM  \
+         hdfs-datanode-k8s
      ```
      The two variables above are required. For other variables, see values.yaml.
      If you have launched the non-HA namenode using

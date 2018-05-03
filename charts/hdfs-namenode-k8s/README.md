@@ -48,6 +48,11 @@ See the other chart for `datanodes`.
         $ kubectl create configmap kerberos-config --from-file=/etc/krb5.conf
        ```
 
+       We have our own kerberos server in the `krb5-server` helm chart.
+       Currently, this is used mainly by the integration tests. But you may
+       choose to use this for your cluster as well. For details, see
+       the integration test case `tests/cases/_kerberos.sh`.
+
      - Generate per-host principal accounts and password keytab files for the namenode
        and datanode daemons. This is typically done in your Kerberos KDC host. For example,
        suppose the namenode will run on the k8s cluster node kube-n1.mycompany.com,
@@ -56,23 +61,23 @@ See the other chart for `datanodes`.
 
        ```
         $ kadmin.local -q "addprinc -randkey hdfs/kube-n1.mycompany.com@MYCOMPANY.COM"
-        $ kadmin.local -q "addprinc -randkey http/kube-n1.mycompany.com@MYCOMPANY.COM"
+        $ kadmin.local -q "addprinc -randkey HTTP/kube-n1.mycompany.com@MYCOMPANY.COM"
         $ mkdir hdfs-keytabs
         $ kadmin.local -q "ktadd -norandkey  \
                   -k hdfs-keytabs/kube-n1.mycompany.com.keytab  \
                   hdfs/kube-n1.mycompany.com@MYCOMPANY.COM  \
-                  http/kube-n1.mycompany.com@MYCOMPANY.COM"
+                  HTTP/kube-n1.mycompany.com@MYCOMPANY.COM"
 
         $ kadmin.local -q "addprinc -randkey hdfs/kube-n2.mycompany.com@MYCOMPANY.COM"
-        $ kadmin.local -q "addprinc -randkey http/kube-n2.mycompany.com@MYCOMPANY.COM"
+        $ kadmin.local -q "addprinc -randkey HTTP/kube-n2.mycompany.com@MYCOMPANY.COM"
         $ kadmin.local -q "ktadd -norandkey  \
                   -k hdfs-keytabs/kube-n2.mycompany.com.keytab  \
                   hdfs/kube-n2.mycompany.com@MYCOMPANY.COM  \
-                  http/kube-n2.mycompany.com@MYCOMPANY.COM"
+                  HTTP/kube-n2.mycompany.com@MYCOMPANY.COM"
         $ kadmin.local -q "ktadd -norandkey  \
                   -k hdfs-keytabs/kube-n2.mycompany.com.keytab  \
                   hdfs/kube-n2.mycompany.com@MYCOMPANY.COM  \
-                  http/kube-n2.mycompany.com@MYCOMPANY.COM"
+                  HTTP/kube-n2.mycompany.com@MYCOMPANY.COM"
        ```
 
      - Create a k8s secret containing all the keytab files. This will be mounted
@@ -120,7 +125,9 @@ See the other chart for `datanodes`.
      If enabling Kerberos, specify necessary options. For instance,
      ```
      $ helm install -n my-hdfs-namenode  \
-         --set kerberosEnabled=true,kerberosRealm=MYCOMPANY.COM hdfs-namenode-k8s
+         --set kerberosEnabled=true  \
+         --set kerberosRealm=MYCOMPANY.COM  \
+         hdfs-namenode-k8s
      ```
      The two variables above are required. For other variables, see values.yaml.
 
@@ -128,7 +135,9 @@ See the other chart for `datanodes`.
      the namenodePinningEnabled option:
      ```
      $ helm install -n my-hdfs-namenode  \
-         --set kerberosEnabled=true,kerberosRealm=MYCOMPANY.COM,namenodePinningEnabled=true \
+         --set kerberosEnabled=true  \
+         --set kerberosRealm=MYCOMPANY.COM  \
+         --set namenodePinningEnabled=true \
          hdfs-namenode-k8s
      ```
 

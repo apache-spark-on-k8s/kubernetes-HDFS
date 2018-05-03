@@ -7,11 +7,15 @@ function _wait_for_ready () {
   local evidence="$1"
   shift
   local attempts=40
-  echo "Running: $@"
+  echo "Waiting till ready (count: $count): $@"
   while [[ "$count" != $("$@" 2>&1 | tail -n +2 | grep -c $evidence) ]];
   do
-    if [[ "$attempts" = 1 ]]; then
+    if [[ "$attempts" = "1" ]]; then
+      echo "Last run: $@"
       "$@" || true
+      local command="$@"
+      command="${command/get/describe}"
+      $command || true
     fi
     ((attempts--)) || return 1
     sleep 5
@@ -23,6 +27,7 @@ function _wait_for_ready () {
 function k8s_all_nodes_ready () {
   local count="$1"
   shift
+  _wait_for_ready "$count" "-v NotReady" kubectl get nodes
   _wait_for_ready "$count" Ready kubectl get nodes
 }
 
@@ -36,7 +41,8 @@ function k8s_single_node_ready () {
 function k8s_all_pods_ready () {
   local count="$1"
   shift
-  _wait_for_ready "$count" "-e 1/1 -e 2/2 -e 3/3 -e 4/4" kubectl get pods "$@"
+  local evidence="-e 1/1 -e 2/2 -e 3/3 -e 4/4"
+  _wait_for_ready "$count" "$evidence" kubectl get pods "$@"
 }
 
 function k8s_single_pod_ready () {
