@@ -34,47 +34,17 @@ spec:
         - name: hdfs-client
           image: uhopper/hadoop:2.7.2
           env:
-            # The following env vars are listed according to low-to-high precedence order.
-            # i.e. Whoever comes last will override the earlier value of the same variable.
-            {{- if .Values.kerberosEnabled }}
-            - name: CORE_CONF_hadoop_security_authentication
-              value: kerberos
-            - name: CORE_CONF_hadoop_security_authorization
-              value: "true"
-            - name: CORE_CONF_hadoop_rpc_protection
-              value: privacy
-            {{- end }}
-            {{- range $key, $value := .Values.customHadoopConfig }}
-            - name: {{ $key | quote }}
-              value: {{ $value | quote }}
-            {{- end }}
-            {{- if .Values.namenodeHAEnabled }}
-            - name: CORE_CONF_fs_defaultFS
-              value: hdfs://hdfs-k8s
-            - name: HDFS_CONF_dfs_nameservices
-              value: hdfs-k8s
-            - name: HDFS_CONF_dfs_ha_namenodes_hdfs___k8s
-              value: nn0,nn1
-            - name: HDFS_CONF_dfs_namenode_rpc___address_hdfs___k8s_nn0
-              value: hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020
-            - name: HDFS_CONF_dfs_namenode_rpc___address_hdfs___k8s_nn1
-              value: hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:8020
-            - name: HDFS_CONF_dfs_namenode_http___address_hdfs___k8s_nn0
-              value: hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:50070
-            - name: HDFS_CONF_dfs_namenode_http___address_hdfs___k8s_nn1
-              value: hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:50070
-            - name: HDFS_CONF_dfs_client_failover_proxy_provider_hdfs___k8s
-              value: org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider
-            {{- else }}
-            - name: CORE_CONF_fs_defaultFS
-              value: hdfs://hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020
-            {{- end }}
+            - name: HADOOP_CUSTOM_CONF_DIR
+              value: /etc/hadoop-custom-conf
             - name: MULTIHOMED_NETWORK
               value: "0"
           command: ['/bin/sh', '-c']
           args:
             - /entrypoint.sh /usr/bin/tail -f /var/log/dmesg
           volumeMounts:
+            - name: hdfs-config
+              mountPath: /etc/hadoop-custom-conf
+              readOnly: true
             {{- if .Values.kerberosEnabled }}
             - name: kerberos-config
               mountPath: /etc/krb5.conf
@@ -83,6 +53,9 @@ spec:
             {{- end }}
       restartPolicy: Always
       volumes:
+        - name: hdfs-config
+          configMap:
+            name: {{ .Values.hdfsConfigMap }}
         {{- if .Values.kerberosEnabled }}
         - name: kerberos-config
           configMap:

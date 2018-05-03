@@ -156,7 +156,7 @@ data:
       </property>
       <property>
         <name>dfs.ha.fencing.methods</name>
-        <value>"shell(/bin/true)"</value>
+        <value>shell(/bin/true)</value>
       </property>
       <property>
         <name>dfs.journalnode.edits.dir</name>

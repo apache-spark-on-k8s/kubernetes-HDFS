@@ -36,10 +36,17 @@ function run_test_case () {
   done
   _run $_SECRET_CMD
 
-  _run helm install hdfs-journalnode-k8s  \
+  _run helm install hdfs-config-k8s  \
+    --name my-hdfs-config  \
+    --set fullnameOverride=hdfs-config  \
+    --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless.default.svc.cluster.local:2181
+  \
     --set kerberosEnabled=true  \
-    --set kerberosRealm=MYCOMPANY.COM  \
-    --name my-hdfs-journalnode
+    --set kerberosRealm=MYCOMPANY.COM
+
+  _run helm install hdfs-journalnode-k8s  \
+    --name my-hdfs-journalnode  \
+    --set kerberosEnabled=true
   k8s_all_pods_ready 3 -l app=hdfs-journalnode
 
   # Disables hostNetwork so namenode pods on a single minikube node can avoid
@@ -47,7 +54,6 @@ function run_test_case () {
   _run helm install hdfs-namenode-k8s  \
     --name my-hdfs-namenode  \
     --set kerberosEnabled=true  \
-    --set kerberosRealm=MYCOMPANY.COM  \
     --set hostNetworkEnabled=false  \
     --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless:2181
   k8s_all_pods_ready 2 -l app=hdfs-namenode
@@ -55,7 +61,6 @@ function run_test_case () {
   _run helm install hdfs-datanode-k8s  \
     --name my-hdfs-datanode  \
     --set kerberosEnabled=true  \
-    --set kerberosRealm=MYCOMPANY.COM  \
     --set "dataNodeHostPath={/mnt/sda1/hdfs-data}"
   k8s_single_pod_ready -l name=hdfs-datanode
 

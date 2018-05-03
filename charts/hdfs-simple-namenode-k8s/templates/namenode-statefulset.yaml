@@ -51,14 +51,8 @@ spec:
         - name: hdfs-namenode
           image: uhopper/hadoop-namenode:2.7.2
           env:
-            # The following env vars are listed according to low-to-high precedence order.
-            # i.e. Whoever comes last will override the earlier value of the same variable.
-            {{- range $key, $value := .Values.customHadoopConfig }}
-            - name: {{ $key | quote }}
-              value: {{ $value | quote }}
-            {{- end }}
-            - name: HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check
-              value: "false"
+            - name: HADOOP_CUSTOM_CONF_DIR
+              value: /etc/hadoop-custom-conf
             - name: CLUSTER_NAME
               value: hdfs-k8s
           ports:
@@ -67,6 +61,9 @@ spec:
           volumeMounts:
             - name: hdfs-name
               mountPath: /hadoop/dfs/name
+            - name: hdfs-config
+              mountPath: /etc/hadoop-custom-conf
+              readOnly: true
       # Pin the pod to a node. You can label your node like below:
       #   $ kubectl label nodes YOUR-NODE hdfs-namenode-selector=hdfs-namenode-0
       nodeSelector:
@@ -76,3 +73,6 @@ spec:
         - name: hdfs-name
           hostPath:
             path: {{ .Values.nameNodeHostPath }}
+        - name: hdfs-config
+          configMap:
+            name: {{ .Values.hdfsConfigMap }}

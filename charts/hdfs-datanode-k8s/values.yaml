@@ -22,22 +22,12 @@
 dataNodeHostPath:
   - /hdfs-data
 
-# Custom hadoop config keys passed through env variables to hadoop uhopper images.
-# See https://hub.docker.com/r/uhopper/hadoop/ to get more details
-# Please note that these are not hadoop env variables, but docker env variables that
-# will be transformed into hadoop config keys
-# HDFS_CONF_dfs_datanode_data_dir and CORE_CONF_fs_defaultFS need special handling and
-# they're already set by the chart so any value coming from below config will be ignored
-customHadoopConfig: {}
-  # Set variables through a hash where env variable is the key, e.g.
-  # HDFS_CONF_dfs_datanode_use_datanode_hostname: "false"
+# Name of the k8s config map containing Hadoop config files such as core-site.xml
+# and hdfs-site.xml.
+hdfsConfigMap: hdfs-config
 
 # Whether or not Kerberos support is enabled.
 kerberosEnabled: false
-
-# Required to be non-empty if Kerberos is enabled. Specify your Kerberos realm name.
-# This should match the realm name in your Kerberos config file.
-kerberosRealm: ""
 
 # Effective only if Kerberos is enabled. Name of the k8s config map containing
 # the kerberos config file.
@@ -59,6 +49,3 @@ kerberosKeytabsSecret: hdfs-kerberos-keytabs
 # the jsvc utility. See the reference doc at
 # https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Secure_DataNode
 jsvcEnabled: true
-
-# Whether or not to expect namenodes in the HA setup.
-namenodeHAEnabled: true
