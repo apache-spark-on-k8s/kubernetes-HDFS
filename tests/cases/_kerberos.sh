@@ -113,6 +113,7 @@ function cleanup_test_case() {
     my-hdfs-datanode  \
     my-hdfs-namenode  \
     my-hdfs-journalnode  \
+    my-hdfs-config  \
     my-zk  \
     my-krb5-server"
   for chart in $charts; do
