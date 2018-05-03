@@ -37,6 +37,10 @@ data:
         <name>hadoop.rpc.protection</name>
         <value>privacy</value>
       </property>
+      <property>
+        <name>hadoop.user.group.static.mapping.overrides</name>
+        <value>hdfs=root;</value>
+      </property>
     {{- end }}
     {{- range $key, $value := .Values.customHadoopConfig.coreSite }}
       <property>
