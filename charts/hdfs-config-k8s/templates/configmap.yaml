@@ -191,22 +191,8 @@ data:
         <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
         <value>false</value>
       </property>
-      {{/*
-      The below uses two loops to make sure the last item does not have comma. It uses index 0
-      for the last item since that is the only special index that helm template gives us.
-      */}}
       <property>
         <name>dfs.datanode.data.dir</name>
-        <value>{{- range $index, $path := .Values.dataNodeHostPath }}
-          {{- if ne $index 0 }}
-            /hadoop/dfs/data/{{ $index }},
-          {{- end }}
-        {{- end }}
-        {{- range $index, $path := .Values.dataNodeHostPath }}
-          {{- if eq $index 0 }}
-            /hadoop/dfs/data/{{ $index }}
-          {{- end }}
-        {{- end }}
-        </value>
+        <value>{{ template "datanode-data-dirs" . }}</value>
       </property>
     </configuration>

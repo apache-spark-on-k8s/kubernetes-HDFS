@@ -11,6 +11,7 @@ function run_test_case () {
   _run helm install hdfs-config-k8s  \
     --name my-hdfs-config  \
     --set fullnameOverride=hdfs-config  \
+    --set "dataNodeHostPath={/mnt/sda1/hdfs-data0,/mnt/sda1/hdfs-data1}"  \
     --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless.default.svc.cluster.local:2181
 
   _run helm install hdfs-journalnode-k8s  \
@@ -26,7 +27,7 @@ function run_test_case () {
 
   _run helm install hdfs-datanode-k8s  \
     --name my-hdfs-datanode  \
-    --set "dataNodeHostPath={/mnt/sda1/hdfs-data}"
+    --set "dataNodeHostPath={/mnt/sda1/hdfs-data0,/mnt/sda1/hdfs-data1}"
   k8s_single_pod_ready -l name=hdfs-datanode
 
   echo All pods:

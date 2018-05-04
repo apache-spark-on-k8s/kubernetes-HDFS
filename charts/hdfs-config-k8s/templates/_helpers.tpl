@@ -44,3 +44,21 @@ Create the kerberos principal for HTTP services
 {{- define "http-principal" -}}
 {{- printf "HTTP/_HOST@%s" .Values.kerberosRealm -}}
 {{- end -}}
+
+{{/*
+Create the datanode data dir list.  The below uses two loops to make sure the
+last item does not have comma. It uses index 0 for the last item since that is
+the only special index that helm template gives us.
+*/}}
+{{- define "datanode-data-dirs" -}}
+{{- range $index, $path := .Values.dataNodeHostPath -}}
+  {{- if ne $index 0 -}}
+    /hadoop/dfs/data/{{ $index }},
+  {{- end -}}
+{{- end -}}
+{{- range $index, $path := .Values.dataNodeHostPath -}}
+  {{- if eq $index 0 -}}
+    /hadoop/dfs/data/{{ $index }}
+  {{- end -}}
+{{- end -}}
+{{- end -}}

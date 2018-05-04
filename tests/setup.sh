@@ -123,15 +123,16 @@ kubectl get storageclass
 echo Showing kube-system pods
 kubectl get -n kube-system pods
 
-_ADDON=$(kubectl get pod -n kube-system -l component=kube-addon-manager --no-headers -o name| cut -d/ -f2)
-echo Addon-manager log:
-kubectl logs -n kube-system $_ADDON
-k8s_all_pods_ready 4 -n kube-system || true
-echo Addon-manager describe:
-kubectl describe pod -n kube-system $_ADDON
-echo Addon-manager log:
-kubectl logs -n kube-system $_ADDON
-k8s_all_pods_ready 4 -n kube-system
+(k8s_single_pod_ready -n kube-system -l component=kube-addon-manager) ||
+  (_ADDON=$(kubectl get pod -n kube-system -l component=kube-addon-manager
+      --no-headers -o name| cut -d/ -f2);
+   echo Addon-manager describe:;
+   kubectl describe pod -n kube-system $_ADDON;
+   echo Addon-manager log:;
+   kubectl logs -n kube-system $_ADDON;
+   exit 1)
+k8s_single_pod_ready -n kube-system -l k8s-app=kube-dns
+k8s_single_pod_ready -n kube-system storage-provisioner
 
 helm init
 k8s_single_pod_ready -n kube-system -l name=tiller
