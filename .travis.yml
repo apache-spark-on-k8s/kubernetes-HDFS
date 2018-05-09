@@ -3,6 +3,7 @@ sudo: required
 env:
   - CASES=_basic.sh
   - CASES=_kerberos.sh
+  - CASES=_single-namenode.sh
 
 before_script:
 # Required for K8s v1.10.x. See
