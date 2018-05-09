@@ -44,8 +44,8 @@ data:
     {{- end }}
     {{- range $key, $value := .Values.customHadoopConfig.coreSite }}
       <property>
-        <name>$key</name>
-        <value>$value</value>
+        <name>{{ $key }}</name>
+        <value>{{ $value }}</value>
       </property>
     {{- end }}
     {{- if .Values.namenodeHAEnabled }}
@@ -133,8 +133,8 @@ data:
     {{- end }}
     {{- range $key, $value := .Values.customHadoopConfig.hdfsSite }}
       <property>
-        <name>$key</name>
-        <value>$value</value>
+        <name>{{ $key }}</name>
+        <value>{{ $value }}</value>
       </property>
     {{- end }}
     {{- if .Values.namenodeHAEnabled }}

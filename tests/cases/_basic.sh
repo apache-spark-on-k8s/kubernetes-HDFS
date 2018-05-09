@@ -12,7 +12,8 @@ function run_test_case () {
     --name my-hdfs-config  \
     --set fullnameOverride=hdfs-config  \
     --set "dataNodeHostPath={/mnt/sda1/hdfs-data0,/mnt/sda1/hdfs-data1}"  \
-    --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless.default.svc.cluster.local:2181
+    --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless:2181  \
+    --values ${_TEST_DIR}/values/custom-hadoop-config.yaml
 
   _run helm install hdfs-journalnode-k8s  \
     --name my-hdfs-journalnode
