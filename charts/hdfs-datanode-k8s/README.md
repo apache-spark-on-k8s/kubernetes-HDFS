@@ -29,7 +29,6 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
          --set kerberosRealm=MYCOMPANY.COM  \
          hdfs-datanode-k8s
      ```
-     The two variables above are required. For other variables, see values.yaml.
      If you have launched the non-HA namenode using
      the `hdfs-simple-namenode-k8s` chart, set the namenodeHAEnabled option to
      false.
@@ -37,8 +36,7 @@ HDFS `datanodes` running inside a kubernetes cluster. See the other chart for
      $ helm install -n my-hdfs-datanode  \
          --set namenodeHAEnabled=false hdfs-datanode-k8s
      ```
-
-  4. Confirm the daemons are launched.
+     Confirm the daemons are launched.
      ```
      $ kubectl get pods | grep hdfs-datanode-
      hdfs-datanode-ajdcz 1/1 Running 0 7m
