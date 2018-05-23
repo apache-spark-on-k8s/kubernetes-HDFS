@@ -39,15 +39,29 @@ global:
   dataNodeHostPath:
     - /hdfs-data
 
-  # Whether or not to expect namenodes in the HA setup.
-  namenodeHAEnabled: true
-
   # Parameters for determining which Unix user and group IDs to use in pods.
   # Persistent volume permission may need to match these.
   podSecurityContext:
     enabled: false
     runAsUser: 0
     fsGroup: 1000
+
+  # Whether or not to expect namenodes in the HA setup.
+  namenodeHAEnabled: true
+
+  # The number of zookeeper server to have in the quorum.
+  # This should match zookeeper.servers above. Used only when
+  # namenodeHAEnabled is set.
+  zookeeperServers: 3
+
+  # How many journal nodes to launch as a quorum. Used only when
+  # namenodeHAEnabled is set.
+  journalnodeQuorumSize: 3
+
+  # Override zookeeper quorum address. Zookeeper is used for determining which namenode
+  # instance is active. Separated by the comma character. Used only when
+  # namenodeHAEnabled is set.
+  # zookeeperQuorumOverride: zk-0.zk-svc.default.svc.cluster.local:2181,zk-1.zk-svc.default.svc.cluster.local:2181,zk-2.zk-svc.default.svc.cluster.local:2181
 
   # Whether or not Kerberos support is enabled.
   kerberosEnabled: false
@@ -76,25 +90,3 @@ global:
   # the jsvc utility. See the reference doc at
   # https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Secure_DataNode
   jsvcEnabled: true
-
-# ------------------------------------------------------------------------------
-# Common configmap
-# ------------------------------------------------------------------------------
-
-# Custom hadoop config keys passed to the hdfs configmap as extra keys.
-customHadoopConfig:
-
-   # Custom hadoop config entries for core-site.xml.
-   coreSite: {}
-    # Set config key and value pairs, e.g.
-    # hadoop.http.authentication.type: kerberos
-
-   # Custom hadoop config entries for hdfs-site.xml.
-   hdfsSite: {}
-    # Set config key and value pairs, e.g.
-    # dfs.datanode.use.datanode.hostname: "false"
-
-# Override zookeeper quorum address. Zookeeper is used for determining which namenode
-# instance is active. Separated by the comma character. Used only when
-# namenodeHAEnabled is set.
-# zookeeperQuorumOverride: zk-0.zk-svc.default.svc.cluster.local:2181,zk-1.zk-svc.default.svc.cluster.local:2181,zk-2.zk-svc.default.svc.cluster.local:2181

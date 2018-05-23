@@ -1,1 +1,4 @@
 # Default values for template variables.
+
+# Size of editata persistent volume per journalnode instance.
+editdataVolumeSize: 20Gi
