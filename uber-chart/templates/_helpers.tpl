@@ -1,41 +1,38 @@
 {{/* vim: set filetype=mustache: */}}
 {{/*
-Expand the name of the chart.
+Create a short app name.
 */}}
 {{- define "hdfs-k8s.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{- printf "hdfs" -}}
 {{- end -}}
 
 {{/*
-Create a default fully qualified app name.
+Create a fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "hdfs-k8s.fullname" -}}
-{{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- $name := "hdfs" -}}
 {{- if contains $name .Release.Name -}}
 {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end -}}
-{{- end -}}
 
 {{/*
-Define the name of the configmap.
+Create chart name and version as used by the subchart label.
 */}}
-{{- define "hdfs-config-k8s.name" -}}
-{{- template "hdfs-k8s.fullname" . -}}
-{{- end -}}
-
-{{/*
-Create chart name and version as used by the chart label.
-*/}}
-{{- define "hdfs-k8s.chart" -}}
+{{- define "hdfs-k8s.subchart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "hdfs-k8s.config.fullname" -}}
+{{- template "hdfs-k8s.fullname" . -}}-config
+{{- end -}}
+
+{{- define "hdfs-k8s.journalnode.fullname" -}}
+{{- template "hdfs-k8s.fullname" . -}}-journalnode
 {{- end -}}
 
 {{/*
@@ -82,16 +79,16 @@ sure the last item does not have the delimiter. It uses index 0 for the last
 item since that is the only special index that helm template gives us.
 */}}
 {{- define "journalnode-quorum" -}}
-{{- $release := .Release.Name -}}
+{{- $service := include "hdfs-k8s.journalnode.fullname" . -}}
 {{- $replicas := .Values.global.journalnodeQuorumSize | int -}}
 {{- range $i, $e := until $replicas -}}
   {{- if ne $i 0 -}}
-    {{- printf "%s-journalnode-%d.%s-journalnode:8485;" $release $i $release -}}
+    {{- printf "%s-%d.%s:8485;" $service $i $service -}}
   {{- end -}}
 {{- end -}}
 {{- range $i, $e := until $replicas -}}
   {{- if eq $i 0 -}}
-    {{- printf "%s-journalnode-%d.%s-journalnode:8485" $release $i $release -}}
+    {{- printf "%s-%d.%s:8485" $service $i $service -}}
   {{- end -}}
 {{- end -}}
 {{- end -}}

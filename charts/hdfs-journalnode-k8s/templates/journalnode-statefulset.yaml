@@ -2,9 +2,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "hdfs-journalnode-k8s.fullname" . }}
+  name: {{ template "hdfs-k8s.journalnode.fullname" . }}
   labels:
-    app: hdfs-journalnode
+    app: {{ template "hdfs-k8s.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
   annotations:
     # TODO: Deprecated. Replace tolerate-unready-endpoints with
     # v1.Service.PublishNotReadyAddresses.
@@ -17,34 +19,39 @@ spec:
     name: http
   clusterIP: None
   selector:
-    app: hdfs-journalnode
+    app: {{ template "hdfs-k8s.journalnode.fullname" . }}
 ---
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
-  name: hdfs-journalnode
+  name: {{ template "hdfs-k8s.journalnode.fullname" . }}
+  labels:
+    app: {{ template "hdfs-k8s.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
 spec:
   selector:
     matchLabels:
-      app: hdfs-journalnode
-  minAvailable: {{ div .Values.quorumSize 2 | add1 }}
+      app: {{ template "hdfs-k8s.journalnode.fullname" . }}
+  minAvailable: {{ div .Values.global.journalnodeQuorumSize 2 | add1 }}
 ---
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
-  name: hdfs-journalnode
+  name: {{ template "hdfs-k8s.journalnode.fullname" . }}
+  labels:
+    app: {{ template "hdfs-k8s.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
 spec:
-  serviceName: "hdfs-journalnode"
-  # Create a StatefulSet. The journalnode DNS names will be like
-  # hdfs-journalnode-0.hdfs-journalnode.default.svc.cluster.local,
-  # hdfs-journalnode-1.hdfs-journalnode.default.svc.cluster.local,
-  # hdfs-journalnode-2.hdfs-journalnode.default.svc.cluster.local
-  replicas: {{ .Values.quorumSize }}
+  serviceName: {{ template "hdfs-k8s.journalnode.fullname" . }}
+  replicas: {{ .Values.global.journalnodeQuorumSize }}
   template:
     metadata:
       labels:
-        app: hdfs-journalnode
+        app: {{ template "hdfs-k8s.journalnode.fullname" . }}
     spec:
+      {{- if .Values.global.affinityEnabled }}
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -53,8 +60,9 @@ spec:
                   - key: "app"
                     operator: In
                     values:
-                    - hfds-journalnode
+                      - {{ template "hdfs-k8s.journalnode.fullname" . }}
               topologyKey: "kubernetes.io/hostname"
+      {{- end }}
       containers:
         - name: hdfs-journalnode
           image: uhopper/hadoop-namenode:2.7.2
@@ -105,7 +113,7 @@ spec:
       volumes:
         - name: hdfs-config
           configMap:
-            name: {{ template "hdfs-config-k8s.name" . }}
+            name: {{ template "hdfs-k8s.config.fullname" . }}
         {{- if .Values.global.kerberosEnabled }}
         - name: kerberos-config
           configMap:

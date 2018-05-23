@@ -102,6 +102,7 @@ spec:
       {{- else }}
       dnsPolicy: ClusterFirst
       {{- end }}
+      {{- if .Values.global.affinityEnabled }}
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -112,6 +113,7 @@ spec:
                     values:
                     - hfds-namenode
               topologyKey: "kubernetes.io/hostname"
+      {{- end }}
       containers:
         # TODO: Support hadoop version as option.
         - name: hdfs-namenode

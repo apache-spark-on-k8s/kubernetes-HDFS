@@ -1,12 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "hdfs-config-k8s.name" . }}
+  name: {{ template "hdfs-k8s.config.fullname" . }}
   labels:
     app: {{ template "hdfs-k8s.name" . }}
-    chart: {{ template "hdfs-k8s.chart" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
 data:
   core-site.xml: |
     <?xml version="1.0"?>
