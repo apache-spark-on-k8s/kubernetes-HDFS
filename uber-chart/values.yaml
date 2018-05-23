@@ -16,17 +16,6 @@ zookeeper:
   # The number of zookeeper server to have in the quorum.
   servers: 3
 
-# ------------------------------------------------------------------------------
-# Journalnode:
-# ------------------------------------------------------------------------------
-journalnode:
-
-  # How many journal nodes to launch as a quorum.
-  quorumSize: 3
-
-  # Size of editata persistent volume per journalnode instance.
-  editdataVolumeSize: 20Gi
-
 
 # ------------------------------------------------------------------------------
 # Global values affecting all sub-charts:
@@ -54,14 +43,14 @@ global:
   # namenodeHAEnabled is set.
   zookeeperServers: 3
 
-  # How many journal nodes to launch as a quorum. Used only when
-  # namenodeHAEnabled is set.
-  journalnodeQuorumSize: 3
-
   # Override zookeeper quorum address. Zookeeper is used for determining which namenode
   # instance is active. Separated by the comma character. Used only when
   # namenodeHAEnabled is set.
   # zookeeperQuorumOverride: zk-0.zk-svc.default.svc.cluster.local:2181,zk-1.zk-svc.default.svc.cluster.local:2181,zk-2.zk-svc.default.svc.cluster.local:2181
+
+  # How many journal nodes to launch as a quorum. Used only when
+  # namenodeHAEnabled is set.
+  journalnodeQuorumSize: 3
 
   # Whether or not Kerberos support is enabled.
   kerberosEnabled: false

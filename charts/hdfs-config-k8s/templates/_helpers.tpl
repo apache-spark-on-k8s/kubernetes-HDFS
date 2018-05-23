@@ -62,7 +62,7 @@ the only special index that helm template gives us.
 {{- .Values.global.zookeeperQuorumOverride -}}
 {{- else -}}
 {{- $release := .Release.Name -}}
-{{- $replicas := .Values.zookeeper.servers | int -}}
+{{- $replicas := .Values.global.zookeeperServers | int -}}
 {{- range $i, $e := until $replicas -}}
   {{- if ne $i 0 -}}
     {{- printf "%s-zookeeper-%d.%s-zookeeper-headless:2181" $release $i $release -}}
@@ -83,7 +83,7 @@ item since that is the only special index that helm template gives us.
 */}}
 {{- define "journalnode-quorum" -}}
 {{- $release := .Release.Name -}}
-{{- $replicas := .Values.journalnode.quorumSize | int -}}
+{{- $replicas := .Values.global.journalnodeQuorumSize | int -}}
 {{- range $i, $e := until $replicas -}}
   {{- if ne $i 0 -}}
     {{- printf "%s-journalnode-%d.%s-journalnode:8485;" $release $i $release -}}
