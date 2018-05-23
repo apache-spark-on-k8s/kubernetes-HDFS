@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "hdfs-config-k8s.fullname" . }}
+  name: {{ template "hdfs-config-k8s.name" . }}
   labels:
-    app: {{ template "hdfs-config-k8s.name" . }}
-    chart: {{ template "hdfs-config-k8s.chart" . }}
+    app: {{ template "hdfs-k8s.name" . }}
+    chart: {{ template "hdfs-k8s.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 data:
@@ -12,7 +12,7 @@ data:
     <?xml version="1.0"?>
     <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
     <configuration>
-    {{- if .Values.kerberosEnabled }}
+    {{- if .Values.global.kerberosEnabled }}
       <property>
         <name>hadoop.security.authentication</name>
         <value>kerberos</value>
@@ -48,14 +48,14 @@ data:
         <value>{{ $value }}</value>
       </property>
     {{- end }}
-    {{- if .Values.namenodeHAEnabled }}
+    {{- if .Values.global.namenodeHAEnabled }}
       <property>
         <name>fs.defaultFS</name>
         <value>hdfs://hdfs-k8s</value>
       </property>
       <property>
         <name>ha.zookeeper.quorum</name>
-        <value>{{ .Values.zookeeperQuorum }}</value>
+        <value>{{ template "zookeeper-quorum" . }}</value>
       </property>
     {{- else }}
       <property>
@@ -68,7 +68,7 @@ data:
     <?xml version="1.0"?>
     <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
     <configuration>
-    {{- if .Values.kerberosEnabled }}
+    {{- if .Values.global.kerberosEnabled }}
       <property>
         <name>dfs.block.access.token.enable</name>
         <value>true</value>
@@ -120,7 +120,7 @@ data:
         <name>dfs.datanode.keytab.file</name>
         <value>/etc/security/hdfs.keytab</value>
       </property>
-      {{- if .Values.jsvcEnabled }}
+      {{- if .Values.global.jsvcEnabled }}
       <property>
         <name>dfs.datanode.address</name>
         <value>0.0.0.0:1004</value>
@@ -137,7 +137,7 @@ data:
         <value>{{ $value }}</value>
       </property>
     {{- end }}
-    {{- if .Values.namenodeHAEnabled }}
+    {{- if .Values.global.namenodeHAEnabled }}
       <property>
         <name>dfs.nameservices</name>
         <value>hdfs-k8s</value>
@@ -164,7 +164,7 @@ data:
       </property>
       <property>
         <name>dfs.namenode.shared.edits.dir</name>
-        <value>qjournal://{{ .Values.journalQuorum }}/hdfs-k8s</value>
+        <value>qjournal://{{ template "journalnode-quorum" . }}/hdfs-k8s</value>
       </property>
       <property>
         <name>dfs.ha.automatic-failover.enabled</name>
@@ -193,6 +193,6 @@ data:
       </property>
       <property>
         <name>dfs.datanode.data.dir</name>
-        <value>{{ template "datanode-data-dirs" . }}</value>
+        <value>{{ join "," .Values.global.dataNodeHostPath }}</value>
       </property>
     </configuration>

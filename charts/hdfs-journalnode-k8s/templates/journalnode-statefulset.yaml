@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: hdfs-journalnode
+  name: {{ template "hdfs-journalnode-k8s.fullname" . }}
   labels:
     app: hdfs-journalnode
   annotations:
@@ -74,16 +74,16 @@ spec:
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
-           {{- if .Values.kerberosEnabled }}
+           {{- if .Values.global.kerberosEnabled }}
             - name: kerberos-config
               mountPath: /etc/krb5.conf
-              subPath: {{ .Values.kerberosConfigFileName }}
+              subPath: {{ .Values.global.kerberosConfigFileName }}
               readOnly: true
             - name: kerberos-keytab-copy
               mountPath: /etc/security/
               readOnly: true
             {{- end }}
-     {{- if .Values.kerberosEnabled }}
+     {{- if .Values.global.kerberosEnabled }}
       initContainers:
         - name: copy-kerberos-keytab
           image: busybox:1.27.1
@@ -105,21 +105,21 @@ spec:
       volumes:
         - name: hdfs-config
           configMap:
-            name: {{ .Values.hdfsConfigMap }}
-        {{- if .Values.kerberosEnabled }}
+            name: {{ template "hdfs-config-k8s.name" . }}
+        {{- if .Values.global.kerberosEnabled }}
         - name: kerberos-config
           configMap:
-            name: {{ .Values.kerberosConfigMap }}
+            name: {{ .Values.global.kerberosConfigMap }}
         - name: kerberos-keytabs
           secret:
-            secretName: {{ .Values.kerberosKeytabsSecret }}
+            secretName: {{ .Values.global.kerberosKeytabsSecret }}
         - name: kerberos-keytab-copy
           emptyDir: {}
         {{- end }}
-      {{- if .Values.podSecurityContext.enabled }}
+      {{- if .Values.global.podSecurityContext.enabled }}
       securityContext:
-        runAsUser: {{ .Values.podSecurityContext.runAsUser }}
-        fsGroup: {{ .Values.podSecurityContext.fsGroup }}
+        runAsUser: {{ .Values.global.podSecurityContext.runAsUser }}
+        fsGroup: {{ .Values.global.podSecurityContext.fsGroup }}
       {{- end }}
   volumeClaimTemplates:
   - metadata:
