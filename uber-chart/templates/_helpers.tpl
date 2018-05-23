@@ -50,24 +50,24 @@ Create the kerberos principal for HTTP services
 {{- end -}}
 
 {{/*
-Create the zookeeper quorum server list.  The below uses two loops to make sure the
-last item does not have comma. It uses index 0 for the last item since that is
-the only special index that helm template gives us.
+Create the zookeeper quorum server list.  The below uses two loops to make
+sure the last item does not have comma. It uses index 0 for the last item
+since that is the only special index that helm template gives us.
 */}}
 {{- define "zookeeper-quorum" -}}
 {{- if .Values.global.zookeeperQuorumOverride -}}
 {{- .Values.global.zookeeperQuorumOverride -}}
 {{- else -}}
-{{- $release := .Release.Name -}}
+{{- $service := printf "%s-zookeeper" .Release.Name -}}
 {{- $replicas := .Values.global.zookeeperServers | int -}}
 {{- range $i, $e := until $replicas -}}
   {{- if ne $i 0 -}}
-    {{- printf "%s-zookeeper-%d.%s-zookeeper-headless:2181" $release $i $release -}}
+    {{- printf "%s-%d.%s-headless:2181," $service $i $service -}}
   {{- end -}}
 {{- end -}}
 {{- range $i, $e := until $replicas -}}
   {{- if eq $i 0 -}}
-    {{- printf "%s-zookeeper-%d.%s-zookeeper-headless:2181" $release $i $release -}}
+    {{- printf "%s-%d.%s-headless:2181" $service $i $service -}}
   {{- end -}}
 {{- end -}}
 {{- end -}}
