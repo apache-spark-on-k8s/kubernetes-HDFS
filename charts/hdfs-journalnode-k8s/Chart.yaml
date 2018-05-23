@@ -1,4 +1,4 @@
 apiVersion: v1
-name: hdfs-journalnode-k8s
+name: journalnode
 version: 0.1.0
-description: Journal nodes used by HDFS on Kubernetes.
+description: Journalnode quorum used by HDFS on Kubernetes.

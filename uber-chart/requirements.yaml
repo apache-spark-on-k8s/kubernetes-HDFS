@@ -3,7 +3,7 @@ dependencies:
     version: "0.6.3"
     repository: "https://kubernetes-charts-incubator.storage.googleapis.com/"
     condition: global.namenodeHAEnabled
-  - name: hdfs-journalnode-k8s
+  - name: journalnode
     version: "0.1.0"
     repository: "file://../charts/hdfs-journalnode-k8s"
     condition: global.namenodeHAEnabled

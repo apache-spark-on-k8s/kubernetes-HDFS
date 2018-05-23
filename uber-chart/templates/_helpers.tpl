@@ -77,16 +77,16 @@ the only special index that helm template gives us.
 {{- end -}}
 
 {{/*
-Create the journalnode quorum server list.  The below uses two loops to make sure the
-last item does not have comma. It uses index 0 for the last item since that is
-the only special index that helm template gives us.
+Create the journalnode quorum server list.  The below uses two loops to make
+sure the last item does not have the delimiter. It uses index 0 for the last
+item since that is the only special index that helm template gives us.
 */}}
 {{- define "journalnode-quorum" -}}
 {{- $release := .Release.Name -}}
-{{- $replicas := .Values.hdfs-journalnode-k8s.quorumSize | int -}}
+{{- $replicas := .Values.journalnode.quorumSize | int -}}
 {{- range $i, $e := until $replicas -}}
   {{- if ne $i 0 -}}
-    {{- printf "%s-journalnode-%d.%s-journalnode:8485," $release $i $release -}}
+    {{- printf "%s-journalnode-%d.%s-journalnode:8485;" $release $i $release -}}
   {{- end -}}
 {{- end -}}
 {{- range $i, $e := until $replicas -}}

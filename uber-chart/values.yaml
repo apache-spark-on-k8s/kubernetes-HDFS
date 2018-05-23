@@ -19,7 +19,7 @@ zookeeper:
 # ------------------------------------------------------------------------------
 # Journalnode:
 # ------------------------------------------------------------------------------
-hdfs-journalnode-k8s:
+journalnode:
 
   # How many journal nodes to launch as a quorum.
   quorumSize: 3
