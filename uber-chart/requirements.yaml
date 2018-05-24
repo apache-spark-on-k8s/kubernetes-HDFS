@@ -10,3 +10,7 @@ dependencies:
     version: "0.1.0"
     repository: "file://../charts/hdfs-journalnode-k8s"
     condition: global.namenodeHAEnabled
+  - name: hdfs-namenode-k8s
+    version: "0.1.0"
+    repository: "file://../charts/hdfs-namenode-k8s"
+    condition: global.namenodeHAEnabled

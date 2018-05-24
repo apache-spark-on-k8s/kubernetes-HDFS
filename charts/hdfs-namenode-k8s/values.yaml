@@ -39,33 +39,3 @@ namenodePinningEnabled: false
 # cluster node physical IPs associated with data nodes.
 # We currently disable this only for CI on minikube.
 hostNetworkEnabled: true
-
-# Parameters for determining which Unix user and group IDs to use in pods.
-# Persistent volume permission may need to match these.
-podSecurityContext:
-  enabled: false
-  runAsUser: 0
-  fsGroup: 1000
-
-# Name of the k8s config map containing Hadoop config files such as core-site.xml
-# and hdfs-site.xml.
-hdfsConfigMap: hdfs-config
-
-# Whether or not Kerberos support is enabled.
-kerberosEnabled: false
-
-# Effective only if Kerberos is enabled. Name of the k8s config map containing
-# the kerberos config file.
-kerberosConfigMap: kerberos-config
-
-# Effective only if Kerberos is enabled. Name of the kerberos config file inside
-# the config map.
-kerberosConfigFileName: krb5.conf
-
-# Effective only if Kerberos is enabled. Name of the k8s secret containing
-# the kerberos keytab files of per-host HDFS principals. The secret should
-# have multiple data items. Each data item name should be formatted as:
-#    `HOST-NAME.keytab`
-# where HOST-NAME should match the cluster node
-# host name that each per-host hdfs principal is associated with.
-kerberosKeytabsSecret: hdfs-kerberos-keytabs
