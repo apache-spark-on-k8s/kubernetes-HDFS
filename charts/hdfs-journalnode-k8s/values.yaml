@@ -50,3 +50,16 @@ kerberosConfigFileName: krb5.conf
 # where HOST-NAME should match the cluster node
 # host name that each per-host hdfs principal is associated with.
 kerberosKeytabsSecret: hdfs-kerberos-keytabs
+
+# Node labels and tolerations for pod assignment
+nodeSelector: {}
+tolerations: []
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: "app"
+              operator: In
+              values:
+              - hfds-journalnode

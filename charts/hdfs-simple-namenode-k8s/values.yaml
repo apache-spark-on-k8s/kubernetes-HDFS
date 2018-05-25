@@ -29,3 +29,8 @@ nameNodeHostPath: /hdfs-name
 customHadoopConfig: {}
   # Set variables through a hash where env variable is the key, e.g.
   # HDFS_CONF_dfs_datanode_use_datanode_hostname: "false"
+
+# Node labels and tolerations for pod assignment
+nodeSelector: {}
+tolerations: []
+affinity: {}
