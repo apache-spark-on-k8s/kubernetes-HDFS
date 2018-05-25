@@ -59,7 +59,7 @@ data:
     {{- else }}
       <property>
         <name>fs.defaultFS</name>
-        <value>hdfs://hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020</value>
+        <value>hdfs://{{ template "namenode-svc-0" . }}:8020</value>
       </property>
     {{- end }}
     </configuration>
@@ -147,19 +147,19 @@ data:
       </property>
       <property>
         <name>dfs.namenode.rpc-address.hdfs-k8s.nn0</name>
-        <value>hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020</value>
+        <value>{{ template "namenode-svc-0" . }}:8020</value>
       </property>
       <property>
         <name>dfs.namenode.rpc-address.hdfs-k8s.nn1</name>
-        <value>hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:8020</value>
+        <value>{{ template "namenode-svc-1" . }}:8020</value>
       </property>
       <property>
         <name>dfs.namenode.http-address.hdfs-k8s.nn0</name>
-        <value>hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:50070</value>
+        <value>{{ template "namenode-svc-0" . }}:50070</value>
       </property>
       <property>
         <name>dfs.namenode.http-address.hdfs-k8s.nn1</name>
-        <value>hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:50070</value>
+        <value>{{ template "namenode-svc-1" . }}:50070</value>
       </property>
       <property>
         <name>dfs.namenode.shared.edits.dir</name>

@@ -59,18 +59,33 @@ data:
   # For standby namenode, the initialization steps will simply receieve
   # the first batch of metadata updates from the journal node.
   format-and-run.sh: |
-    #!/bin/bash -x
+    #!/usr/bin/env bash
+
+    # Exit on error. Append "|| true" if you expect an error.
+    set -o errexit
+    # Exit on error inside any functions or subshells.
+    set -o errtrace
+    # Do not allow use of undefined vars. Use ${VAR:-} to use an undefined VAR
+    set -o nounset
+    # Catch an error in command pipes. e.g. mysqldump fails (but gzip succeeds)
+    # in `mysqldump |gzip`
+    set -o pipefail
+    # Turn on traces, useful while debugging but commented out by default
+    set -o xtrace
+
     _HDFS_BIN=$HADOOP_PREFIX/bin/hdfs
-    if [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-0 ]]
+    if [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = "$NAMENODE_POD_0" ]]
     then
+      # FIXME. Wipe out the dir in case some commands in this block fail.
       $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -format  \
-          -nonInteractive hdfs-k8s || exit 1
+          -nonInteractive hdfs-k8s
       $_HDFS_BIN --config $HADOOP_CONF_DIR zkfc -formatZK  \
-          -nonInteractive || exit 1
-    elif [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-1 ]]
+          -nonInteractive
+    elif [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = "$NAMENODE_POD_1" ]]
     then
+      # FIXME. Wipe out the dir in case some commands in this block fail.
       $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -bootstrapStandby  \
-          -nonInteractive || exit 1
+          -nonInteractive
     fi
     $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start zkfc
     $_HDFS_BIN --config $HADOOP_CONF_DIR namenode
@@ -78,7 +93,7 @@ data:
   # A start script that will just hang indefinitely. A user can then get
   # inside the pod and debug. Or a user can conduct a custom manual operations.
   do-nothing.sh: |
-    #!/bin/bash -x
+    #!/usr/bin/env bash
     /usr/bin/tail -f /var/log/dmesg
 
   # A start script that has user specified content. Can be used to conduct
@@ -139,6 +154,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: NAMENODE_POD_0
+              value: {{ template "namenode-pod-0" . }}
+            - name: NAMENODE_POD_1
+              value: {{ template "namenode-pod-1" . }}
           command: ['/bin/sh', '-c']
           # The start script is provided by a config map.
           args:

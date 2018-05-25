@@ -96,3 +96,31 @@ item since that is the only special index that helm template gives us.
   {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Construct the name of the namenode pod 0.
+*/}}
+{{- define "namenode-pod-0" -}}
+{{- template "hdfs-k8s.namenode.fullname" . -}}-0
+{{- end -}}
+
+{{/*
+Construct the name of the namenode pod 0.
+*/}}
+{{- define "namenode-svc-0" -}}
+{{- template "namenode-pod-0" . -}}.{{- template "hdfs-k8s.namenode.fullname" . -}}
+{{- end -}}
+
+{{/*
+Construct the name of the namenode pod 1.
+*/}}
+{{- define "namenode-pod-1" -}}
+{{- template "hdfs-k8s.namenode.fullname" . -}}-1
+{{- end -}}
+
+{{/*
+Construct the name of the namenode pod 1.
+*/}}
+{{- define "namenode-svc-1" -}}
+{{- template "namenode-pod-1" . -}}.{{- template "hdfs-k8s.namenode.fullname" . -}}
+{{- end -}}
