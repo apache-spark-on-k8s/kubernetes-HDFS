@@ -63,3 +63,4 @@ affinity:
               operator: In
               values:
               - hfds-journalnode
+        topologyKey: "kubernetes.io/hostname"
