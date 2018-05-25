@@ -74,18 +74,21 @@ data:
     set -o xtrace
 
     _HDFS_BIN=$HADOOP_PREFIX/bin/hdfs
-    if [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = "$NAMENODE_POD_0" ]]
-    then
-      # FIXME. Wipe out the dir in case some commands in this block fail.
-      $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -format  \
-          -nonInteractive hdfs-k8s
-      $_HDFS_BIN --config $HADOOP_CONF_DIR zkfc -formatZK  \
-          -nonInteractive
-    elif [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = "$NAMENODE_POD_1" ]]
-    then
-      # FIXME. Wipe out the dir in case some commands in this block fail.
-      $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -bootstrapStandby  \
-          -nonInteractive
+    _METADATA_DIR=/hadoop/dfs/name/current
+    ls -ld $_METADATA_DIR || true
+    if [[ ! -d $_METADATA_DIR ]]; then
+      if [[ "$MY_POD" = "$NAMENODE_POD_0" ]]; then
+        $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -format  \
+            -nonInteractive hdfs-k8s ||  \
+            (rm -rf $_METADATA_DIR; /usr/bin/tail -f /var/log/dmesg)
+        $_HDFS_BIN --config $HADOOP_CONF_DIR zkfc -formatZK  \
+            -nonInteractive ||  \
+            (rm -rf $_METADATA_DIR; /usr/bin/tail -f /var/log/dmesg)
+      elif [[ "$MY_POD" = "$NAMENODE_POD_1" ]]; then
+        $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -bootstrapStandby  \
+            -nonInteractive ||  \
+            (rm -rf $_METADATA_DIR; /usr/bin/tail -f /var/log/dmesg)
+      fi
     fi
     $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start zkfc
     $_HDFS_BIN --config $HADOOP_CONF_DIR namenode
