@@ -66,4 +66,10 @@ namenodeHAEnabled: true
 # Node labels and tolerations for pod assignment
 nodeSelector: {}
 tolerations: []
-affinity: {}
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+          - key: hdfs-datanode-exclude
+            operator: DoesNotExist
