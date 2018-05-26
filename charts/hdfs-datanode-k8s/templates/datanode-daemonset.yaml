@@ -36,15 +36,15 @@ spec:
               value: /jsvc-home
             {{- end }}
           livenessProbe:
-            initialDelaySeconds: 30
-            httpGet:
-              host: 127.0.0.1
-              path: /
+            exec:
+              # Check if datanode registered with the namenode and got non-null cluster ID.
               {{- if and .Values.global.kerberosEnabled .Values.global.jsvcEnabled }}
-              port: 1006
+              command: [ "/bin/sh", "-c", "curl -s http://localhost:50075/jmx?qry=Hadoop:service=DataNode,name=DataNodeInfo | grep ClusterId | grep -q -v null"]
               {{- else }}
-              port: 50075
+              command: [ "/bin/sh", "-c", "curl -s http://localhost:1006/jmx?qry=Hadoop:service=DataNode,name=DataNodeInfo | grep ClusterId | grep -q -v null"]
               {{- end }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
           securityContext:
             privileged: true
           volumeMounts:
