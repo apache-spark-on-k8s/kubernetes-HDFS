@@ -3,7 +3,7 @@
 Create a short app name.
 */}}
 {{- define "hdfs-k8s.name" -}}
-{{- printf "hdfs" -}}
+hdfs
 {{- end -}}
 
 {{/*
@@ -27,20 +27,40 @@ Create chart name and version as used by the subchart label.
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{- define "hdfs-k8s.config.name" -}}
+{{- template "hdfs-k8s.name" . -}}-config
+{{- end -}}
+
 {{- define "hdfs-k8s.config.fullname" -}}
 {{- template "hdfs-k8s.fullname" . -}}-config
+{{- end -}}
+
+{{- define "hdfs-k8s.journalnode.name" -}}
+{{- template "hdfs-k8s.name" . -}}-journalnode
 {{- end -}}
 
 {{- define "hdfs-k8s.journalnode.fullname" -}}
 {{- template "hdfs-k8s.fullname" . -}}-journalnode
 {{- end -}}
 
+{{- define "hdfs-k8s.namenode.name" -}}
+{{- template "hdfs-k8s.name" . -}}-namenode
+{{- end -}}
+
 {{- define "hdfs-k8s.namenode.fullname" -}}
 {{- template "hdfs-k8s.fullname" . -}}-namenode
 {{- end -}}
 
+{{- define "hdfs-k8s.datanode.name" -}}
+{{- template "hdfs-k8s.name" . -}}-datanode
+{{- end -}}
+
 {{- define "hdfs-k8s.datanode.fullname" -}}
 {{- template "hdfs-k8s.fullname" . -}}-datanode
+{{- end -}}
+
+{{- define "hdfs-k8s.client.name" -}}
+{{- template "hdfs-k8s.name" . -}}-client
 {{- end -}}
 
 {{- define "hdfs-k8s.client.fullname" -}}

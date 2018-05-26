@@ -4,18 +4,20 @@ kind: Deployment
 metadata:
   name: {{ template "hdfs-k8s.client.fullname" . }}
   labels:
-    app: {{ template "hdfs-k8s.name" . }}
+    app: {{ template "hdfs-k8s.client.name" . }}
     chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ template "hdfs-k8s.client.fullname" . }}
+      app: {{ template "hdfs-k8s.client.name" . }}
+      release: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ template "hdfs-k8s.client.fullname" . }}
+        app: {{ template "hdfs-k8s.client.name" . }}
+        release: {{ .Release.Name }}
     spec:
       containers:
         - name: hdfs-client

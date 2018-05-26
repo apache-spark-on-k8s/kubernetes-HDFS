@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ template "hdfs-k8s.config.fullname" . }}
   labels:
-    app: {{ template "hdfs-k8s.name" . }}
+    app: {{ template "hdfs-k8s.client.name" . }}
     chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
 data:

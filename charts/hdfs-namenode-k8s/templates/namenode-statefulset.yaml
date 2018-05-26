@@ -4,7 +4,7 @@ kind: Service
 metadata:
   name: {{ template "hdfs-k8s.namenode.fullname" . }}
   labels:
-    app: {{ template "hdfs-k8s.name" . }}
+    app: {{ template "hdfs-k8s.namenode.name" . }}
     chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
   annotations:
@@ -19,30 +19,33 @@ spec:
     name: http
   clusterIP: None
   selector:
-    app: {{ template "hdfs-k8s.namenode.fullname" . }}
+    app: {{ template "hdfs-k8s.namenode.name" . }}
+    release: {{ .Release.Name }}
 ---
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
   name: {{ template "hdfs-k8s.namenode.fullname" . }}
   labels:
-    app: {{ template "hdfs-k8s.name" . }}
+    app: {{ template "hdfs-k8s.namenode.name" . }}
     chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
 spec:
   selector:
     matchLabels:
-      app: {{ template "hdfs-k8s.namenode.fullname" . }}
+      app: {{ template "hdfs-k8s.namenode.name" . }}
+      release: {{ .Release.Name }}
   minAvailable: 1
 ---
-# Provides a number of namenode start scripts that meet different needs.
+# Provides namenode helper scripts. Most of them are start scripts
+# that meet different needs.
 # TODO: Support upgrade of metadata in case a new Hadoop version requires it.
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "hdfs-k8s.namenode.fullname" . }}-start-scripts
+  name: {{ template "hdfs-k8s.namenode.fullname" . }}-scripts
   labels:
-    app: {{ template "hdfs-k8s.name" . }}
+    app: {{ template "hdfs-k8s.namenode.name" . }}
     chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
 data:
@@ -60,7 +63,6 @@ data:
   # the first batch of metadata updates from the journal node.
   format-and-run.sh: |
     #!/usr/bin/env bash
-
     # Exit on error. Append "|| true" if you expect an error.
     set -o errexit
     # Exit on error inside any functions or subshells.
@@ -70,7 +72,7 @@ data:
     # Catch an error in command pipes. e.g. mysqldump fails (but gzip succeeds)
     # in `mysqldump |gzip`
     set -o pipefail
-    # Turn on traces, useful while debugging but commented out by default
+    # Turn on traces, useful while debugging.
     set -o xtrace
 
     _HDFS_BIN=$HADOOP_PREFIX/bin/hdfs
@@ -113,7 +115,7 @@ kind: StatefulSet
 metadata:
   name: {{ template "hdfs-k8s.namenode.fullname" . }}
   labels:
-    app: {{ template "hdfs-k8s.name" . }}
+    app: {{ template "hdfs-k8s.namenode.name" . }}
     chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
 spec:
@@ -122,7 +124,8 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ template "hdfs-k8s.namenode.fullname" . }}
+        app: {{ template "hdfs-k8s.namenode.name" . }}
+        release: {{ .Release.Name }}
     spec:
       {{- if .Values.hostNetworkEnabled }}
       # Use hostNetwork so datanodes connect to namenode without going through an overlay network
@@ -145,7 +148,11 @@ spec:
                   - key: "app"
                     operator: In
                     values:
-                      - {{ template "hdfs-k8s.namenode.fullname" . }}
+                      - {{ template "hdfs-k8s.namenode.name" . }}
+                  - key: "release"
+                    operator: In
+                    values:
+                      - {{ .Release.Name }}
               topologyKey: "kubernetes.io/hostname"
       {{- end }}
       containers:
@@ -169,18 +176,18 @@ spec:
           command: ['/bin/sh', '-c']
           # The start script is provided by a config map.
           args:
-            - /entrypoint.sh "/nn-start/{{ .Values.namenodeStartScript }}"
+            - /entrypoint.sh "/nn-scripts/{{ .Values.namenodeStartScript }}"
           ports:
           - containerPort: 8020
             name: fs
           - containerPort: 50070
             name: http
           volumeMounts:
+            - name: nn-scripts
+              mountPath: /nn-scripts
+              readOnly: true
             - name: metadatadir
               mountPath: /hadoop/dfs/name
-            - name: nn-start
-              mountPath: /nn-start
-              readOnly: true
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
@@ -223,9 +230,9 @@ spec:
       {{- end }}
       restartPolicy: Always
       volumes:
-        - name: nn-start
+        - name: nn-scripts
           configMap:
-            name: {{ template "hdfs-k8s.namenode.fullname" . }}-start-scripts
+            name: {{ template "hdfs-k8s.namenode.fullname" . }}-scripts
             defaultMode: 0744
         - name: hdfs-config
           configMap:

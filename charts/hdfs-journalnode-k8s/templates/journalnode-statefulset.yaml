@@ -4,7 +4,7 @@ kind: Service
 metadata:
   name: {{ template "hdfs-k8s.journalnode.fullname" . }}
   labels:
-    app: {{ template "hdfs-k8s.name" . }}
+    app: {{ template "hdfs-k8s.journalnode.name" . }}
     chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
   annotations:
@@ -19,20 +19,22 @@ spec:
     name: http
   clusterIP: None
   selector:
-    app: {{ template "hdfs-k8s.journalnode.fullname" . }}
+    app: {{ template "hdfs-k8s.journalnode.name" . }}
+    release: {{ .Release.Name }}
 ---
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
   name: {{ template "hdfs-k8s.journalnode.fullname" . }}
   labels:
-    app: {{ template "hdfs-k8s.name" . }}
+    app: {{ template "hdfs-k8s.journalnode.name" . }}
     chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
 spec:
   selector:
     matchLabels:
-      app: {{ template "hdfs-k8s.journalnode.fullname" . }}
+      app: {{ template "hdfs-k8s.journalnode.name" . }}
+      release: {{ .Release.Name }}
   minAvailable: {{ div .Values.global.journalnodeQuorumSize 2 | add1 }}
 ---
 apiVersion: apps/v1beta1
@@ -40,7 +42,7 @@ kind: StatefulSet
 metadata:
   name: {{ template "hdfs-k8s.journalnode.fullname" . }}
   labels:
-    app: {{ template "hdfs-k8s.name" . }}
+    app: {{ template "hdfs-k8s.journalnode.name" . }}
     chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
 spec:
@@ -49,7 +51,8 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ template "hdfs-k8s.journalnode.fullname" . }}
+        app: {{ template "hdfs-k8s.journalnode.name" . }}
+        release: {{ .Release.Name }}
     spec:
       {{- if .Values.global.affinityEnabled }}
       affinity:
@@ -60,7 +63,11 @@ spec:
                   - key: "app"
                     operator: In
                     values:
-                      - {{ template "hdfs-k8s.journalnode.fullname" . }}
+                      - {{ template "hdfs-k8s.journalnode.name" . }}
+                  - key: "release"
+                    operator: In
+                    values:
+                      - {{ .Release.Name }}
               topologyKey: "kubernetes.io/hostname"
       {{- end }}
       containers:

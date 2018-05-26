@@ -33,6 +33,8 @@ function _run () {
 
 kubectl cluster-info
 cd $_CHART_DIR
+rm -rf hdfs-k8s/charts hdfs-k8s/requirements.lock
+_run helm dependency build hdfs-k8s
 
 _DEFAULT_CASES="*"
 : "${CASES:=$_DEFAULT_CASES}"

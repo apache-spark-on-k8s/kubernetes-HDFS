@@ -1,3 +1,37 @@
+# Provides datanode helper scripts.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "hdfs-k8s.datanode.fullname" . }}-scripts
+  labels:
+    app: {{ template "hdfs-k8s.datanode.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
+data:
+  check-status.sh: |
+    #!/usr/bin/env bash
+    # Exit on error. Append "|| true" if you expect an error.
+    set -o errexit
+    # Exit on error inside any functions or subshells.
+    set -o errtrace
+    # Do not allow use of undefined vars. Use ${VAR:-} to use an undefined VAR
+    set -o nounset
+    # Catch an error in command pipes. e.g. mysqldump fails (but gzip succeeds)
+    # in `mysqldump |gzip`
+    set -o pipefail
+    # Turn on traces, useful while debugging.
+    set -o xtrace
+
+    # Check if datanode registered with the namenode and got non-null cluster ID.
+    _PORTS="50075 1006"
+    _URL_PATH="jmx?qry=Hadoop:service=DataNode,name=DataNodeInfo"
+    _CLUSTER_ID=""
+    for _PORT in $_PORTS; do
+      _CLUSTER_ID+=$(curl -s http://localhost:${_PORT}/$_URL_PATH |  \
+          grep ClusterId) || true
+    done
+    echo $_CLUSTER_ID | grep -q -v null
+---
 # Deleting a daemonset may need some trick. See
 # https://github.com/kubernetes/kubernetes/issues/33245#issuecomment-261250489
 apiVersion: extensions/v1beta1
@@ -5,14 +39,15 @@ kind: DaemonSet
 metadata:
   name: {{ template "hdfs-k8s.datanode.fullname" . }}
   labels:
-    app: {{ template "hdfs-k8s.name" . }}
+    app: {{ template "hdfs-k8s.datanode.name" . }}
     chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
 spec:
   template:
     metadata:
       labels:
-        app: {{ template "hdfs-k8s.datanode.fullname" . }}
+        app: {{ template "hdfs-k8s.datanode.name" . }}
+        release: {{ .Release.Name }}
     spec:
       hostNetwork: true
       hostPID: true
@@ -37,17 +72,22 @@ spec:
             {{- end }}
           livenessProbe:
             exec:
-              # Check if datanode registered with the namenode and got non-null cluster ID.
-              {{- if and .Values.global.kerberosEnabled .Values.global.jsvcEnabled }}
-              command: [ "/bin/sh", "-c", "curl -s http://localhost:1006/jmx?qry=Hadoop:service=DataNode,name=DataNodeInfo | grep ClusterId | grep -q -v null"]
-              {{- else }}
-              command: [ "/bin/sh", "-c", "curl -s http://localhost:50075/jmx?qry=Hadoop:service=DataNode,name=DataNodeInfo | grep ClusterId | grep -q -v null"]
-              {{- end }}
+              command:
+                - /dn-scripts/check-status.sh
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            exec:
+              command:
+                - /dn-scripts/check-status.sh
             initialDelaySeconds: 60
             periodSeconds: 30
           securityContext:
             privileged: true
           volumeMounts:
+            - name: dn-scripts
+              mountPath: /dn-scripts
+              readOnly: true
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
@@ -106,6 +146,10 @@ spec:
                   operator: DoesNotExist
       restartPolicy: Always
       volumes:
+        - name: dn-scripts
+          configMap:
+            name: {{ template "hdfs-k8s.datanode.fullname" . }}-scripts
+            defaultMode: 0744
         {{- range $index, $path := .Values.global.dataNodeHostPath }}
         - name: hdfs-data-{{ $index }}
           hostPath:
