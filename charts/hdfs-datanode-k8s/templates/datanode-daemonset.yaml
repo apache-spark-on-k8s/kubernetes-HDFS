@@ -39,9 +39,9 @@ spec:
             exec:
               # Check if datanode registered with the namenode and got non-null cluster ID.
               {{- if and .Values.global.kerberosEnabled .Values.global.jsvcEnabled }}
-              command: [ "/bin/sh", "-c", "curl -s http://localhost:50075/jmx?qry=Hadoop:service=DataNode,name=DataNodeInfo | grep ClusterId | grep -q -v null"]
-              {{- else }}
               command: [ "/bin/sh", "-c", "curl -s http://localhost:1006/jmx?qry=Hadoop:service=DataNode,name=DataNodeInfo | grep ClusterId | grep -q -v null"]
+              {{- else }}
+              command: [ "/bin/sh", "-c", "curl -s http://localhost:50075/jmx?qry=Hadoop:service=DataNode,name=DataNodeInfo | grep ClusterId | grep -q -v null"]
               {{- end }}
             initialDelaySeconds: 60
             periodSeconds: 30
