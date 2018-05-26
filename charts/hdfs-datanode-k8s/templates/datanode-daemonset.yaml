@@ -3,12 +3,16 @@
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: hdfs-datanode
+  name: {{ template "hdfs-k8s.datanode.fullname" . }}
+  labels:
+    app: {{ template "hdfs-k8s.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
 spec:
   template:
     metadata:
       labels:
-        name: hdfs-datanode
+        app: {{ template "hdfs-k8s.datanode.fullname" . }}
     spec:
       hostNetwork: true
       hostPID: true
@@ -21,7 +25,7 @@ spec:
               value: /etc/hadoop-custom-conf
             - name: MULTIHOMED_NETWORK
               value: "0"
-            {{- if and .Values.kerberosEnabled .Values.jsvcEnabled }}
+            {{- if and .Values.global.kerberosEnabled .Values.global.jsvcEnabled }}
             - name: HADOOP_SECURE_DN_USER
               value: root
             - name: JSVC_OUTFILE
@@ -36,7 +40,7 @@ spec:
             httpGet:
               host: 127.0.0.1
               path: /
-              {{- if and .Values.kerberosEnabled .Values.jsvcEnabled }}
+              {{- if and .Values.global.kerberosEnabled .Values.global.jsvcEnabled }}
               port: 1006
               {{- else }}
               port: 50075
@@ -47,24 +51,24 @@ spec:
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
-            {{- range $index, $path := .Values.dataNodeHostPath }}
+            {{- range $index, $path := .Values.global.dataNodeHostPath }}
             - name: hdfs-data-{{ $index }}
               mountPath: /hadoop/dfs/data/{{ $index }}
             {{- end }}
-            {{- if .Values.kerberosEnabled }}
+            {{- if .Values.global.kerberosEnabled }}
             - name: kerberos-config
               mountPath: /etc/krb5.conf
-              subPath: {{ .Values.kerberosConfigFileName }}
+              subPath: {{ .Values.global.kerberosConfigFileName }}
               readOnly: true
             - name: kerberos-keytab-copy
               mountPath: /etc/security/
               readOnly: true
-            {{- if .Values.jsvcEnabled }}
+            {{- if .Values.global.jsvcEnabled }}
             - name: jsvc-home
               mountPath: /jsvc-home
             {{- end }}
             {{- end }}
-      {{- if .Values.kerberosEnabled }}
+      {{- if .Values.global.kerberosEnabled }}
       initContainers:
         - name: copy-kerberos-keytab
           image: busybox:1.27.1
@@ -81,7 +85,7 @@ spec:
               mountPath: /kerberos-keytabs
             - name: kerberos-keytab-copy
               mountPath: /kerberos-keytab-copy
-        {{- if .Values.jsvcEnabled }}
+        {{- if .Values.global.jsvcEnabled }}
         - name: copy-jsvc
           # Pull by digest because the image doesn't have tags to pin.
           image: mschlimb/jsvc@sha256:bf20eb9a319e9a2f87473d8da7418d21503a97528b932800b6b8417cd31e30ef
@@ -98,28 +102,28 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               - matchExpressions:
-                - key: hdfs-datanode-exclude
+                - key: {{ template "hdfs-k8s.datanode.fullname" . }}-exclude
                   operator: DoesNotExist
       restartPolicy: Always
       volumes:
-        {{- range $index, $path := .Values.dataNodeHostPath }}
+        {{- range $index, $path := .Values.global.dataNodeHostPath }}
         - name: hdfs-data-{{ $index }}
           hostPath:
             path: {{ $path }}
         {{- end }}
         - name: hdfs-config
           configMap:
-            name: {{ .Values.hdfsConfigMap }}
-        {{- if .Values.kerberosEnabled }}
+            name: {{ template "hdfs-k8s.config.fullname" . }}
+        {{- if .Values.global.kerberosEnabled }}
         - name: kerberos-config
           configMap:
             name: {{ .Values.kerberosConfigMap }}
         - name: kerberos-keytabs
           secret:
-            secretName: {{ .Values.kerberosKeytabsSecret }}
+            secretName: {{ .Values.global.kerberosKeytabsSecret }}
         - name: kerberos-keytab-copy
           emptyDir: {}
-        {{- if .Values.jsvcEnabled }}
+        {{- if .Values.global.jsvcEnabled }}
         - name: jsvc-home
           emptyDir: {}
         {{- end }}

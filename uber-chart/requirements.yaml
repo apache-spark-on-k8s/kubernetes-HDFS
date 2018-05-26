@@ -14,3 +14,6 @@ dependencies:
     version: "0.1.0"
     repository: "file://../charts/hdfs-namenode-k8s"
     condition: global.namenodeHAEnabled
+  - name: hdfs-datanode-k8s
+    version: "0.1.0"
+    repository: "file://../charts/hdfs-datanode-k8s"
