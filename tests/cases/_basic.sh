@@ -1,47 +1,32 @@
 #!/usr/bin/env bash
 
 function run_test_case () {
-  _run helm install zookeeper  \
-    --name my-zk  \
-    --version 0.6.3 \
-    --repo https://kubernetes-charts-incubator.storage.googleapis.com/  \
-    --set servers=1,heap=100m,resources.requests.memory=100m
-  k8s_single_pod_ready -l app=zookeeper
 
-  _run helm install hdfs-config-k8s  \
-    --name my-hdfs-config  \
-    --set fullnameOverride=hdfs-config  \
-    --set "dataNodeHostPath={/mnt/sda1/hdfs-data0,/mnt/sda1/hdfs-data1}"  \
-    --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless:2181  \
-    --values ${_TEST_DIR}/values/custom-hadoop-config.yaml
+  _run helm install -n my-hdfs hdfs-k8s  \
+    --set zookeeper.servers=1  \
+    --set zookeeper.heap=100m  \
+    --set zookeeper.resources.requests.memory=100m  \
+    --set global.zookeeperServers=1  \
+    --set global.affinityEnabled=false  \
+    --set "global.dataNodeHostPath={/mnt/sda1/hdfs-data0,/mnt/sda1/hdfs-data1}"  \
+    # Disables hostNetwork so namenode pods on a single minikube node can avoid
+    # port conflict
+    --set hdfs-namenode-k8s.hostNetworkEnabled=false  \
+    --values ${_TEST_DIR}/values/custom-hadoop-config.yaml  \
 
-  _run helm install hdfs-journalnode-k8s  \
-    --name my-hdfs-journalnode
-  k8s_all_pods_ready 3 -l app=hdfs-journalnode
-
-  # Disables hostNetwork so namenode pods on a single minikube node can avoid
-  # port conflict
-  _run helm install hdfs-namenode-k8s  \
-    --name my-hdfs-namenode  \
-    --set hostNetworkEnabled=false
-  k8s_all_pods_ready 2 -l app=hdfs-namenode
-
-  _run helm install hdfs-datanode-k8s  \
-    --name my-hdfs-datanode  \
-    --set "dataNodeHostPath={/mnt/sda1/hdfs-data0,/mnt/sda1/hdfs-data1}"
-  k8s_single_pod_ready -l name=hdfs-datanode
+  k8s_single_pod_ready -l app=my-hdfs-zookeeper
+  k8s_all_pods_ready 3 -l app=my-hdfs-journalnode
+  k8s_all_pods_ready 2 -l app=my-hdfs-namenode
+  k8s_single_pod_ready -l name=my-hdfs-datanode
+  k8s_single_pod_ready -l app=my-hdfs-client
+  _CLIENT=$(kubectl get pods -l app=my-hdfs-client -o name| cut -d/ -f 2)
+  echo Found client pod $_CLIENT
 
   echo All pods:
   kubectl get pods
 
   echo All persistent volumes:
   kubectl get pv
-
-  _run helm install hdfs-client  \
-    --name my-hdfs-client
-  k8s_single_pod_ready -l app=hdfs-client
-  _CLIENT=$(kubectl get pods -l app=hdfs-client -o name| cut -d/ -f 2)
-  echo Found client pod $_CLIENT
 
   _run kubectl exec $_CLIENT -- hdfs dfsadmin -report
   _run kubectl exec $_CLIENT -- hdfs haadmin -getServiceState nn0

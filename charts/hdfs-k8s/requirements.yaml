@@ -1,0 +1,19 @@
+dependencies:
+  - name: zookeeper
+    version: "0.6.3"
+    repository: "https://kubernetes-charts-incubator.storage.googleapis.com/"
+  - name: hdfs-config-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-config-k8s"
+  - name: hdfs-journalnode-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-journalnode-k8s"
+  - name: hdfs-namenode-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-namenode-k8s"
+  - name: hdfs-datanode-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-datanode-k8s"
+  - name: hdfs-client-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-client"

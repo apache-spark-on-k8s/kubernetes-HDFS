@@ -43,6 +43,10 @@ Create chart name and version as used by the subchart label.
 {{- template "hdfs-k8s.fullname" . -}}-datanode
 {{- end -}}
 
+{{- define "hdfs-k8s.client.fullname" -}}
+{{- template "hdfs-k8s.fullname" . -}}-client
+{{- end -}}
+
 {{/*
 Create the kerberos principal suffix for core HDFS services
 */}}
