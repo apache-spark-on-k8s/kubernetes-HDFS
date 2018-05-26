@@ -80,14 +80,16 @@ data:
       if [[ "$MY_POD" = "$NAMENODE_POD_0" ]]; then
         $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -format  \
             -nonInteractive hdfs-k8s ||  \
-            (rm -rf $_METADATA_DIR; /usr/bin/tail -f /var/log/dmesg)
-        $_HDFS_BIN --config $HADOOP_CONF_DIR zkfc -formatZK  \
-            -nonInteractive ||  \
-            (rm -rf $_METADATA_DIR; /usr/bin/tail -f /var/log/dmesg)
+            (rm -rf $_METADATA_DIR; exit 1)
+        _OUT=$($_HDFS_BIN --config $HADOOP_CONF_DIR zkfc -formatZK  \
+            -nonInteractive 2>&1) ||  \
+            (rm -rf $_METADATA_DIR; exit 1)
+        # zkfc masks fatal exceptions and returns exit code 0
+        grep -q "FATAL" $_OUT && (rm -rf $_METADATA_DIR; exit 1)
       elif [[ "$MY_POD" = "$NAMENODE_POD_1" ]]; then
         $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -bootstrapStandby  \
             -nonInteractive ||  \
-            (rm -rf $_METADATA_DIR; /usr/bin/tail -f /var/log/dmesg)
+            (rm -rf $_METADATA_DIR; exit 1)
       fi
     fi
     $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start zkfc
@@ -97,7 +99,7 @@ data:
   # inside the pod and debug. Or a user can conduct a custom manual operations.
   do-nothing.sh: |
     #!/usr/bin/env bash
-    /usr/bin/tail -f /var/log/dmesg
+    tail -f /var/log/dmesg
 
   # A start script that has user specified content. Can be used to conduct
   # ad-hoc operation as specified by a user.
