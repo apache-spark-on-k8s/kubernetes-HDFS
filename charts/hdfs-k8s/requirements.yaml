@@ -1,7 +1,7 @@
 dependencies:
   - name: zookeeper
     version: "0.6.3"
-    repository: "https://kubernetes-charts-incubator.storage.googleapis.com/"
+    repository: https://kubernetes-charts-incubator.storage.googleapis.com/
   - name: hdfs-config-k8s
     version: "0.1.0"
     repository: "file://../hdfs-config-k8s"
