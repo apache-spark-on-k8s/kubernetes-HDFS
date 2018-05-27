@@ -52,8 +52,6 @@ See [reference](https://github.com/kubernetes/examples/blob/master/staging/podse
 `Datanodes` are using `hostNetwork` to register to `namenode` using
 physical IPs.
 
-Note they run under the `default` namespace.
-
 ### Credits
 
 This chart is using public Hadoop docker images hosted by

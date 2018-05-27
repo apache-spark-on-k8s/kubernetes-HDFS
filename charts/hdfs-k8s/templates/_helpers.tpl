@@ -82,6 +82,15 @@ Create the kerberos principal for HTTP services
 {{- end -}}
 
 {{/*
+Create the domain name part of services.
+The HDFS config file should specify FQDN of services. Otherwise, Kerberos
+login may fail.
+*/}}
+{{- define "svc-domain" -}}
+{{- printf "%s.svc.cluster.local" .Release.Namespace -}}
+{{- end -}}
+
+{{/*
 Create the zookeeper quorum server list.  The below uses two loops to make
 sure the last item does not have comma. It uses index 0 for the last item
 since that is the only special index that helm template gives us.
@@ -91,15 +100,16 @@ since that is the only special index that helm template gives us.
 {{- .Values.global.zookeeperQuorumOverride -}}
 {{- else -}}
 {{- $service := printf "%s-zookeeper" .Release.Name -}}
+{{- $domain := include "svc-domain" . -}}
 {{- $replicas := .Values.global.zookeeperServers | int -}}
 {{- range $i, $e := until $replicas -}}
   {{- if ne $i 0 -}}
-    {{- printf "%s-%d.%s-headless:2181," $service $i $service -}}
+    {{- printf "%s-%d.%s-headless.%s:2181," $service $i $service $domain -}}
   {{- end -}}
 {{- end -}}
 {{- range $i, $e := until $replicas -}}
   {{- if eq $i 0 -}}
-    {{- printf "%s-%d.%s-headless:2181" $service $i $service -}}
+    {{- printf "%s-%d.%s-headless.%s:2181" $service $i $service $domain -}}
   {{- end -}}
 {{- end -}}
 {{- end -}}
@@ -112,15 +122,16 @@ item since that is the only special index that helm template gives us.
 */}}
 {{- define "journalnode-quorum" -}}
 {{- $service := include "hdfs-k8s.journalnode.fullname" . -}}
+{{- $domain := include "svc-domain" . -}}
 {{- $replicas := .Values.global.journalnodeQuorumSize | int -}}
 {{- range $i, $e := until $replicas -}}
   {{- if ne $i 0 -}}
-    {{- printf "%s-%d.%s:8485;" $service $i $service -}}
+    {{- printf "%s-%d.%s.%s:8485;" $service $i $service $domain -}}
   {{- end -}}
 {{- end -}}
 {{- range $i, $e := until $replicas -}}
   {{- if eq $i 0 -}}
-    {{- printf "%s-%d.%s:8485" $service $i $service -}}
+    {{- printf "%s-%d.%s.%s:8485" $service $i $service $domain -}}
   {{- end -}}
 {{- end -}}
 {{- end -}}
@@ -136,7 +147,10 @@ Construct the name of the namenode pod 0.
 Construct the name of the namenode pod 0.
 */}}
 {{- define "namenode-svc-0" -}}
-{{- template "namenode-pod-0" . -}}.{{- template "hdfs-k8s.namenode.fullname" . -}}
+{{- $pod := include "namenode-pod-0" . -}}
+{{- $service := include "hdfs-k8s.namenode.fullname" . -}}
+{{- $domain := include "svc-domain" . -}}
+{{- printf "%s.%s.%s" $pod $service $domain -}}
 {{- end -}}
 
 {{/*
@@ -150,5 +164,8 @@ Construct the name of the namenode pod 1.
 Construct the name of the namenode pod 1.
 */}}
 {{- define "namenode-svc-1" -}}
-{{- template "namenode-pod-1" . -}}.{{- template "hdfs-k8s.namenode.fullname" . -}}
+{{- $pod := include "namenode-pod-1" . -}}
+{{- $service := include "hdfs-k8s.namenode.fullname" . -}}
+{{- $domain := include "svc-domain" . -}}
+{{- printf "%s.%s.%s" $pod $service $domain -}}
 {{- end -}}

@@ -161,7 +161,7 @@ spec:
         {{- if .Values.global.kerberosEnabled }}
         - name: kerberos-config
           configMap:
-            name: {{ .Values.kerberosConfigMap }}
+            name: {{ .Values.global.kerberosConfigMap }}
         - name: kerberos-keytabs
           secret:
             secretName: {{ .Values.global.kerberosKeytabsSecret }}

@@ -8,11 +8,11 @@ function run_test_case () {
     --set zookeeper.servers=1  \
     --set zookeeper.heap=100m  \
     --set zookeeper.resources.requests.memory=100m  \
+    --set hdfs-namenode-k8s.hostNetworkEnabled=false  \
     --set global.zookeeperServers=1  \
     --set global.affinityEnabled=false  \
     --set "global.dataNodeHostPath={/mnt/sda1/hdfs-data0,/mnt/sda1/hdfs-data1}"  \
-    --set hdfs-namenode-k8s.hostNetworkEnabled=false  \
-    --values ${_TEST_DIR}/values/custom-hadoop-config.yaml  \
+    --values ${_TEST_DIR}/values/custom-hadoop-config.yaml
 
   k8s_single_pod_ready -l app=zookeeper,release=my-hdfs
   k8s_all_pods_ready 3 -l app=hdfs-journalnode,release=my-hdfs
@@ -21,7 +21,7 @@ function run_test_case () {
   k8s_single_pod_ready -l app=hdfs-client,release=my-hdfs
   _CLIENT=$(kubectl get pods -l app=hdfs-client,release=my-hdfs -o name |  \
       cut -d/ -f 2)
-  echo Found client pod $_CLIENT
+  echo Found client pod: $_CLIENT
 
   echo All pods:
   kubectl get pods
