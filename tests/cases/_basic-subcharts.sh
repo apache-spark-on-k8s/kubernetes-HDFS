@@ -3,39 +3,39 @@
 function run_test_case () {
   _run helm install -n my-hdfs-zookeeper hdfs-k8s  \
     --values ${_TEST_DIR}/values/common.yaml  \
-    --set tags.all-subcharts=false  \
-    --set subchart.zookeeper=true  \
+    --set tags.ha=false  \
+    --set condition.subchart.zookeeper=true  \
     --set zookeeper.fullnameOverride=my-hdfs-zookeeper  \
     --set global.fullnameOverride=my-hdfs
 
   _run helm install -n my-hdfs-config hdfs-k8s  \
     --values ${_TEST_DIR}/values/common.yaml  \
-    --set tags.all-subcharts=false  \
-    --set subchart.config=true  \
+    --set tags.ha=false  \
+    --set condition.subchart.config=true  \
     --set global.fullnameOverride=my-hdfs
 
   _run helm install -n my-hdfs-journalnode hdfs-k8s  \
     --values ${_TEST_DIR}/values/common.yaml  \
-    --set tags.all-subcharts=false  \
-    --set subchart.journalnode=true  \
+    --set tags.ha=false  \
+    --set condition.subchart.journalnode=true  \
     --set global.fullnameOverride=my-hdfs
 
   _run helm install -n my-hdfs-namenode hdfs-k8s  \
     --values ${_TEST_DIR}/values/common.yaml  \
-    --set tags.all-subcharts=false  \
-    --set subchart.namenode=true  \
+    --set tags.ha=false  \
+    --set condition.subchart.namenode=true  \
     --set global.fullnameOverride=my-hdfs
 
   _run helm install -n my-hdfs-datanode hdfs-k8s  \
     --values ${_TEST_DIR}/values/common.yaml  \
-    --set tags.all-subcharts=false  \
-    --set subchart.datanode=true  \
+    --set tags.ha=false  \
+    --set condition.subchart.datanode=true  \
     --set global.fullnameOverride=my-hdfs
 
   _run helm install -n my-hdfs-client hdfs-k8s  \
     --values ${_TEST_DIR}/values/common.yaml  \
-    --set tags.all-subcharts=false  \
-    --set subchart.client=true  \
+    --set tags.ha=false  \
+    --set condition.subchart.client=true  \
     --set global.fullnameOverride=my-hdfs
 
   k8s_single_pod_ready -l app=zookeeper,release=my-hdfs-zookeeper

@@ -5,36 +5,17 @@ function run_test_case () {
   _NODE=$(kubectl get node --no-headers -o name | cut -d/ -f2)
   kubectl label nodes $_NODE hdfs-namenode-selector=hdfs-namenode-0
 
-  _run helm install -n my-hdfs-config hdfs-k8s  \
-    --set tags.all-subcharts=false  \
-    --set subchart.config=true  \
-    --set global.fullnameOverride=my-hdfs  \
-    --set global.namenodeHAEnabled=false
-
-  _run helm install -n my-hdfs-namenode hdfs-k8s  \
-    --set tags.all-subcharts=false  \
-    --set subchart.simple-namenode=true  \
-    --set global.fullnameOverride=my-hdfs  \
+  _run helm install -n my-hdfs hdfs-k8s  \
+    --set tags.ha=false  \
+    --set tags.simple=true  \
     --set global.namenodeHAEnabled=false  \
-    --set "hdfs-simple-namenode-k8s.nameNodeHostPath=/mnt/sda1/hdfs-name"
-
-  _run helm install -n my-hdfs-datanode hdfs-k8s  \
-    --set tags.all-subcharts=false  \
-    --set subchart.datanode=true  \
-    --set global.fullnameOverride=my-hdfs  \
-    --set global.namenodeHAEnabled=false  \
+    --set "hdfs-simple-namenode-k8s.nameNodeHostPath=/mnt/sda1/hdfs-name"  \
     --set "hdfs-datanode-k8s.dataNodeHostPath={/mnt/sda1/hdfs-data}"
 
-  _run helm install -n my-hdfs-client hdfs-k8s  \
-    --set tags.all-subcharts=false  \
-    --set subchart.client=true  \
-    --set global.fullnameOverride=my-hdfs  \
-    --set global.namenodeHAEnabled=false
-
-  k8s_single_pod_ready -l app=hdfs-namenode,release=my-hdfs-namenode
-  k8s_single_pod_ready -l app=hdfs-datanode,release=my-hdfs-datanode
-  k8s_single_pod_ready -l app=hdfs-client,release=my-hdfs-client
-  _CLIENT=$(kubectl get pods -l app=hdfs-client,release=my-hdfs-client -o name |  \
+  k8s_single_pod_ready -l app=hdfs-namenode,release=my-hdfs
+  k8s_single_pod_ready -l app=hdfs-datanode,release=my-hdfs
+  k8s_single_pod_ready -l app=hdfs-client,release=my-hdfs
+  _CLIENT=$(kubectl get pods -l app=hdfs-client,release=my-hdfs -o name |  \
       cut -d/ -f 2)
   echo Found client pod: $_CLIENT
 
@@ -51,13 +32,7 @@ function run_test_case () {
 }
 
 function cleanup_test_case() {
-  local charts="my-hdfs-client  \
-    my-hdfs-datanode  \
-    my-hdfs-namenode  \
-    my-hdfs-config"
-  for chart in $charts; do
-    helm delete --purge $chart || true
-  done
+  helm delete --purge my-hdfs
 
   _NODE=$(kubectl get node --no-headers -o name | cut -d/ -f2)
   kubectl label nodes $_NODE hdfs-namenode-selector-
