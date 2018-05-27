@@ -11,10 +11,11 @@ zookeeper:
   resources: ~
 
   # The JVM heap size to allocate to Zookeeper
-  heap: "1G"
+  env:
+    ZK_HEAP_SIZE: 1G
 
   # The number of zookeeper server to have in the quorum.
-  servers: 3
+  replicaCount: 3
 
 
 # ------------------------------------------------------------------------------
@@ -39,9 +40,9 @@ global:
   namenodeHAEnabled: true
 
   # The number of zookeeper server to have in the quorum.
-  # This should match zookeeper.servers above. Used only when
+  # This should match zookeeper.replicaCount above. Used only when
   # namenodeHAEnabled is set.
-  zookeeperServers: 3
+  zookeeperQuorumSize: 3
 
   # Override zookeeper quorum address. Zookeeper is used for determining which namenode
   # instance is active. Separated by the comma character. Used only when

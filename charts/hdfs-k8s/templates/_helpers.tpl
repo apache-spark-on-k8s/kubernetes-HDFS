@@ -139,7 +139,7 @@ since that is the only special index that helm template gives us.
 {{- else -}}
 {{- $service := include "zookeeper-fullname" . -}}
 {{- $domain := include "svc-domain" . -}}
-{{- $replicas := .Values.global.zookeeperServers | int -}}
+{{- $replicas := .Values.global.zookeeperQuorumSize | int -}}
 {{- range $i, $e := until $replicas -}}
   {{- if ne $i 0 -}}
     {{- printf "%s-%d.%s-headless.%s:2181," $service $i $service $domain -}}
