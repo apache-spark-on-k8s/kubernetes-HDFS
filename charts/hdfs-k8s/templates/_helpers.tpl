@@ -31,7 +31,7 @@ Create chart name and version as used by the subchart label.
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "zookeeper.fullname" -}}
+{{- define "zookeeper-fullname" -}}
 {{- $fullname := include "hdfs-k8s.fullname" . -}}
 {{- if contains "zookeeper" $fullname -}}
 {{- printf "%s" $fullname -}}

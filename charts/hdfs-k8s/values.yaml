@@ -85,7 +85,7 @@ global:
 
 # Conditions and tags for triggering subcharts.
 subchart:
-  single-namenode: false
+  simple-namenode: false
 
 tags:
   # Trigger all subcharts by default
