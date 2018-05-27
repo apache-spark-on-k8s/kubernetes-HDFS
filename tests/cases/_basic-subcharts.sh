@@ -39,7 +39,7 @@ function run_test_case () {
     --set global.fullnameOverride=my-hdfs
 
   k8s_single_pod_ready -l app=zookeeper,release=my-hdfs-zookeeper
-  k8s_all_pods_ready 3 -l app=hdfs-journalnode,release=my-hdfs-zookeeper
+  k8s_all_pods_ready 3 -l app=hdfs-journalnode,release=my-hdfs-journalnode
   k8s_all_pods_ready 2 -l app=hdfs-namenode,release=my-hdfs-namenode
   k8s_single_pod_ready -l app=hdfs-datanode,release=my-hdfs-datanode
   k8s_single_pod_ready -l app=hdfs-client,release=my-hdfs-client
