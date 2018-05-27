@@ -4,9 +4,7 @@ env:
   - CASES=_basic.sh
   - CASES=_basic-subcharts.sh
   - CASES=_kerberos.sh
-  - CASES=_kerberos-subcharts.sh
   - CASES=_single-namenode.sh
-  - CASES=_single-namenode-subcharts.sh
 
 before_script:
 # Required for K8s v1.10.x. See
