@@ -81,7 +81,7 @@ function run_test_case () {
 }
 
 function cleanup_test_case() {
-  kubectl delete configmap kerberos-config || true
-  kubectl delete secret my-hdfs-kerberos-keytabs || true
+  kubectl delete configmap my-hdfs-krb5-config || true
+  kubectl delete secret my-hdfs-krb5-keytabs || true
   helm delete --purge my-hdfs || true
 }

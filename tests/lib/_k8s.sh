@@ -6,7 +6,7 @@ function _wait_for_ready () {
   shift
   local evidence="$1"
   shift
-  local attempts=40
+  local attempts=60
   echo "Waiting till ready (count: $count): $@"
   while [[ "$count" != $("$@" 2>&1 | tail -n +2 | grep -c $evidence) ]];
   do
