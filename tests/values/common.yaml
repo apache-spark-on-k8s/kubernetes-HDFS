@@ -1,0 +1,21 @@
+# Common values.
+
+zookeeper:
+  servers: 1
+  heap: 100m
+  resources:
+    requests:
+      memory: 100m
+
+# Disables hostNetwork so namenode pods on a single minikube node can avoid
+# port conflict.
+hdfs-namenode-k8s:
+  hostNetworkEnabled: false
+
+global:
+  zookeeperServers: 1
+  # Disables affinity so multiple member pods can launch on a single minikube
+  # node.
+  affinityEnabled: false
+  dataNodeHostPath:
+    -/mnt/sda1/hdfs-data

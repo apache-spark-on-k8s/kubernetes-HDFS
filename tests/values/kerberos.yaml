@@ -1,0 +1,5 @@
+# Values for enabling Kerberos.
+
+global:
+  kerberosEnabled: true
+  kerberosRealm: MYCOMPANY.COM

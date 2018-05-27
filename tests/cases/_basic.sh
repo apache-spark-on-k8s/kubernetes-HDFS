@@ -1,18 +1,10 @@
 #!/usr/bin/env bash
 
 function run_test_case () {
-
-  # Disables hostNetwork so namenode pods on a single minikube node can avoid
-  # port conflict.
   _run helm install -n my-hdfs hdfs-k8s  \
-    --set zookeeper.servers=1  \
-    --set zookeeper.heap=100m  \
-    --set zookeeper.resources.requests.memory=100m  \
-    --set hdfs-namenode-k8s.hostNetworkEnabled=false  \
-    --set global.zookeeperServers=1  \
-    --set global.affinityEnabled=false  \
-    --set "global.dataNodeHostPath={/mnt/sda1/hdfs-data0,/mnt/sda1/hdfs-data1}"  \
-    --values ${_TEST_DIR}/values/custom-hadoop-config.yaml
+    --values ${_TEST_DIR}/values/common.yaml  \
+    --values ${_TEST_DIR}/values/custom-hadoop-config.yaml  \
+    --set "global.dataNodeHostPath={/mnt/sda1/hdfs-data0,/mnt/sda1/hdfs-data1}"
 
   k8s_single_pod_ready -l app=zookeeper,release=my-hdfs
   k8s_all_pods_ready 3 -l app=hdfs-journalnode,release=my-hdfs

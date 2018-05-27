@@ -82,3 +82,11 @@ global:
   # the jsvc utility. See the reference doc at
   # https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Secure_DataNode
   jsvcEnabled: true
+
+# Conditions and tags for triggering subcharts.
+subchart:
+  single-namenode: false
+
+tags:
+  # Trigger all subcharts by default
+  all-subcharts: true

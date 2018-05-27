@@ -29,18 +29,9 @@ function run_test_case () {
   done
   _run $_SECRET_CMD
 
-  # Disables hostNetwork so namenode pods on a single minikube node can avoid
-  # port conflict.
   _run helm install -n my-hdfs hdfs-k8s  \
-    --set zookeeper.servers=1  \
-    --set zookeeper.heap=100m  \
-    --set zookeeper.resources.requests.memory=100m  \
-    --set hdfs-namenode-k8s.hostNetworkEnabled=false  \
-    --set global.zookeeperServers=1  \
-    --set global.affinityEnabled=false  \
-    --set "global.dataNodeHostPath={/mnt/sda1/hdfs-data}"  \
-    --set global.kerberosEnabled=true  \
-    --set global.kerberosRealm=MYCOMPANY.COM  \
+    --values ${_TEST_DIR}/values/common.yaml  \
+    --values ${_TEST_DIR}/values/kerberos.yaml  \
     --set global.kerberosKeytabsSecret=my-hdfs-kerberos-keytabs
 
   k8s_single_pod_ready -l app=zookeeper,release=my-hdfs
