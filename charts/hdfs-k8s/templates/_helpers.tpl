@@ -12,11 +12,15 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "hdfs-k8s.fullname" -}}
-{{- $name := "hdfs" -}}
+{{- if .Values.global.fullnameOverride -}}
+{{- .Values.global.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := include "hdfs-k8s.name" . -}}
 {{- if contains $name .Release.Name -}}
 {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -27,12 +31,26 @@ Create chart name and version as used by the subchart label.
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{- define "zookeeper.fullname" -}}
+{{- $fullname := include "hdfs-k8s.fullname" . -}}
+{{- if contains "zookeeper" $fullname -}}
+{{- printf "%s" $fullname -}}
+{{- else -}}
+{{- printf "%s-zookeeper" $fullname | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "hdfs-k8s.config.name" -}}
 {{- template "hdfs-k8s.name" . -}}-config
 {{- end -}}
 
 {{- define "hdfs-k8s.config.fullname" -}}
-{{- template "hdfs-k8s.fullname" . -}}-config
+{{- $fullname := include "hdfs-k8s.fullname" . -}}
+{{- if contains "config" $fullname -}}
+{{- printf "%s" $fullname -}}
+{{- else -}}
+{{- printf "%s-config" $fullname | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "hdfs-k8s.journalnode.name" -}}
@@ -40,7 +58,12 @@ Create chart name and version as used by the subchart label.
 {{- end -}}
 
 {{- define "hdfs-k8s.journalnode.fullname" -}}
-{{- template "hdfs-k8s.fullname" . -}}-journalnode
+{{- $fullname := include "hdfs-k8s.fullname" . -}}
+{{- if contains "journalnode" $fullname -}}
+{{- printf "%s" $fullname -}}
+{{- else -}}
+{{- printf "%s-journalnode" $fullname | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "hdfs-k8s.namenode.name" -}}
@@ -48,7 +71,12 @@ Create chart name and version as used by the subchart label.
 {{- end -}}
 
 {{- define "hdfs-k8s.namenode.fullname" -}}
-{{- template "hdfs-k8s.fullname" . -}}-namenode
+{{- $fullname := include "hdfs-k8s.fullname" . -}}
+{{- if contains "namenode" $fullname -}}
+{{- printf "%s" $fullname -}}
+{{- else -}}
+{{- printf "%s-namenode" $fullname | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "hdfs-k8s.datanode.name" -}}
@@ -56,7 +84,12 @@ Create chart name and version as used by the subchart label.
 {{- end -}}
 
 {{- define "hdfs-k8s.datanode.fullname" -}}
-{{- template "hdfs-k8s.fullname" . -}}-datanode
+{{- $fullname := include "hdfs-k8s.fullname" . -}}
+{{- if contains "datanode" $fullname -}}
+{{- printf "%s" $fullname -}}
+{{- else -}}
+{{- printf "%s-datanode" $fullname | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "hdfs-k8s.client.name" -}}
@@ -64,7 +97,12 @@ Create chart name and version as used by the subchart label.
 {{- end -}}
 
 {{- define "hdfs-k8s.client.fullname" -}}
-{{- template "hdfs-k8s.fullname" . -}}-client
+{{- $fullname := include "hdfs-k8s.fullname" . -}}
+{{- if contains "client" $fullname -}}
+{{- printf "%s" $fullname -}}
+{{- else -}}
+{{- printf "%s-client" $fullname | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -99,7 +137,7 @@ since that is the only special index that helm template gives us.
 {{- if .Values.global.zookeeperQuorumOverride -}}
 {{- .Values.global.zookeeperQuorumOverride -}}
 {{- else -}}
-{{- $service := printf "%s-zookeeper" .Release.Name -}}
+{{- $service := include "zookeeper-fullname" . -}}
 {{- $domain := include "svc-domain" . -}}
 {{- $replicas := .Values.global.zookeeperServers | int -}}
 {{- range $i, $e := until $replicas -}}

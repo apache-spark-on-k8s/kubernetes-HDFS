@@ -18,4 +18,4 @@ global:
   # node.
   affinityEnabled: false
   dataNodeHostPath:
-    -/mnt/sda1/hdfs-data
+    - /mnt/sda1/hdfs-data

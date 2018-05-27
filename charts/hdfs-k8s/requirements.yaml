@@ -23,6 +23,11 @@ dependencies:
     condition: subchart.namenode
     tags:
       - all-subcharts
+  - name: hdfs-simple-namenode-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-simple-namenode-k8s"
+    # Non-HA namenode. Disabled by default
+    condition: subchart.simple-namenode
   - name: hdfs-datanode-k8s
     version: "0.1.0"
     repository: "file://../hdfs-datanode-k8s"
