@@ -4,7 +4,7 @@ function run_test_case () {
   _run helm install -n my-hdfs hdfs-k8s  \
     --values ${_TEST_DIR}/values/common.yaml  \
     --values ${_TEST_DIR}/values/kerberos.yaml  \
-    --set condition.subchart.krb5=true
+    --set tags.kerberos=true
 
   # The above helm command launches all components. However, core HDFS
   # componensts such as namenodes and datanodes are blocked by a expected

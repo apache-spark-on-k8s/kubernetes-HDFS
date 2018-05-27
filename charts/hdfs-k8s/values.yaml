@@ -88,9 +88,11 @@ global:
   # https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Secure_DataNode
   jsvcEnabled: true
 
-# Tags for triggering a group of relevant subcharts.
+# Tags and conditions for triggering a group of relevant subcharts.
 tags:
   # Trigger all subcharts required for high availability. Enabled by default.
   ha: true
+  # Trigger all subcharts required for using Kerberos. Disabled by default.
+  kerberos: false
   # Trigger all subcharts required for non-HA setup. Disabled by default.
   simple: false
