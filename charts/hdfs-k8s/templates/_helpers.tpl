@@ -53,6 +53,19 @@ Create chart name and version as used by the subchart label.
 {{- end -}}
 {{- end -}}
 
+{{- define "hdfs-k8s.krb5.name" -}}
+{{- template "hdfs-k8s.name" . -}}-krb5
+{{- end -}}
+
+{{- define "hdfs-k8s.krb5.fullname" -}}
+{{- $fullname := include "hdfs-k8s.fullname" . -}}
+{{- if contains "config" $fullname -}}
+{{- printf "%s" $fullname -}}
+{{- else -}}
+{{- printf "%s-krb5" $fullname | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "hdfs-k8s.journalnode.name" -}}
 {{- template "hdfs-k8s.name" . -}}-journalnode
 {{- end -}}
@@ -120,6 +133,31 @@ Create the kerberos principal for HTTP services
 {{- end -}}
 
 {{/*
+Create the name for a Kubernetes Configmap containing a Kerberos config file.
+*/}}
+{{- define "krb5-configmap" -}}
+{{- if .Values.global.kerberosConfigMapOverride -}}
+{{- .Values.global.kerberosConfigMapOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := include "hdfs-k8s.krb5.fullname" . -}}
+{{- printf "%s-config" $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create the name for a Kubernetes Secret containing Kerberos keytabs.
+*/}}
+{{- define "krb5-keytabs-secret" -}}
+{{- if .Values.global.kerberosKeytabsSecretOverride -}}
+{{- .Values.global.kerberosKeytabsSecretOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := include "hdfs-k8s.krb5.fullname" . -}}
+{{- printf "%s-keytabs" $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
 Create the domain name part of services.
 The HDFS config file should specify FQDN of services. Otherwise, Kerberos
 login may fail.
@@ -154,6 +192,23 @@ since that is the only special index that helm template gives us.
 {{- end -}}
 
 {{/*
+Construct the name of the Kerberos KDC pod 0.
+*/}}
+{{- define "krb5-pod-0" -}}
+{{- template "hdfs-k8s.krb5.fullname" . -}}-0
+{{- end -}}
+
+{{/*
+Construct the full name of the Kerberos KDC statefulset member 0.
+*/}}
+{{- define "krb5-svc-0" -}}
+{{- $pod := include "krb5-pod-0" . -}}
+{{- $service := include "hdfs-k8s.krb5.fullname" . -}}
+{{- $domain := include "svc-domain" . -}}
+{{- printf "%s.%s.%s" $pod $service $domain -}}
+{{- end -}}
+
+{{/*
 Create the journalnode quorum server list.  The below uses two loops to make
 sure the last item does not have the delimiter. It uses index 0 for the last
 item since that is the only special index that helm template gives us.
@@ -182,7 +237,7 @@ Construct the name of the namenode pod 0.
 {{- end -}}
 
 {{/*
-Construct the name of the namenode pod 0.
+Construct the full name of the namenode statefulset member 0.
 */}}
 {{- define "namenode-svc-0" -}}
 {{- $pod := include "namenode-pod-0" . -}}
@@ -199,7 +254,7 @@ Construct the name of the namenode pod 1.
 {{- end -}}
 
 {{/*
-Construct the name of the namenode pod 1.
+Construct the full name of the namenode statefulset member 1.
 */}}
 {{- define "namenode-svc-1" -}}
 {{- $pod := include "namenode-pod-1" . -}}

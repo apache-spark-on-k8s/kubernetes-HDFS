@@ -47,6 +47,7 @@ global:
   # Override zookeeper quorum address. Zookeeper is used for determining which namenode
   # instance is active. Separated by the comma character. Used only when
   # namenodeHAEnabled is set.
+  #
   # zookeeperQuorumOverride: zk-0.zk-svc.default.svc.cluster.local:2181,zk-1.zk-svc.default.svc.cluster.local:2181,zk-2.zk-svc.default.svc.cluster.local:2181
 
   # How many journal nodes to launch as a quorum. Used only when
@@ -59,21 +60,24 @@ global:
   # Whether or not Kerberos support is enabled.
   kerberosEnabled: false
 
-  # Effective only if Kerberos is enabled. Name of the k8s config map containing
-  # the kerberos config file.
-  kerberosConfigMap: kerberos-config
+  # Effective only if Kerberos is enabled. Override th name of the k8s
+  # ConfigMap containing the kerberos config file.
+  #
+  # kerberosConfigMapOverride: kerberos-config
 
   # Effective only if Kerberos is enabled. Name of the kerberos config file inside
   # the config map.
   kerberosConfigFileName: krb5.conf
 
-  # Effective only if Kerberos is enabled. Name of the k8s secret containing
-  # the kerberos keytab files of per-host HDFS principals. The secret should
-  # have multiple data items. Each data item name should be formatted as:
+  # Effective only if Kerberos is enabled. Override the name of the k8s Secret
+  # containing the kerberos keytab files of per-host HDFS principals.
+  # The secret should have multiple data items. Each data item name
+  # should be formatted as:
   #    `HOST-NAME.keytab`
   # where HOST-NAME should match the cluster node
   # host name that each per-host hdfs principal is associated with.
-  kerberosKeytabsSecret: hdfs-kerberos-keytabs
+  #
+  # kerberosKeytabsSecretOverride: hdfs-kerberos-keytabs
 
   # Required to be non-empty if Kerberos is enabled. Specify your Kerberos realm name.
   # This should match the realm name in your Kerberos config file.

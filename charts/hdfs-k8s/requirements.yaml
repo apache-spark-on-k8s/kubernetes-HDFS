@@ -12,6 +12,10 @@ dependencies:
     tags:
       - ha
       - simple
+  - name: hdfs-krb5-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-krb5-k8s"
+    condition: condition.subchart.kerberos
   - name: hdfs-journalnode-k8s
     version: "0.1.0"
     repository: "file://../hdfs-journalnode-k8s"
@@ -40,7 +44,7 @@ dependencies:
       - simple
   - name: hdfs-client-k8s
     version: "0.1.0"
-    repository: "file://../hdfs-client"
+    repository: "file://../hdfs-client-k8s"
     condition: condition.subchart.client
     tags:
       - ha

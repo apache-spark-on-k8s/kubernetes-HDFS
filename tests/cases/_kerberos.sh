@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 
 function run_test_case () {
-  _run helm install krb5-server  \
-    --name my-krb5-server
-  k8s_single_pod_ready -l app=krb5-server
+  _run helm install -n my-hdfs hdfs-k8s  \
+    --values ${_TEST_DIR}/values/common.yaml  \
+    --values ${_TEST_DIR}/values/kerberos.yaml  \
+    --set condition.subchart.krb5=true
 
-  _KDC=$(kubectl get pod -l app=krb5-server --no-headers -o name | cut -d/ -f2)
+  # The above helm command launches all components. However, core HDFS
+  # componensts such as namenodes and datanodes are blocked by a expected
+  # Kerberos configmap and secret. So we create them here.
+  k8s_single_pod_ready -l app=hdfs-krb5,release=my-hdfs
+  _KDC=$(kubectl get pod -l app=hdfs-krb5,release=my-hdfs --no-headers  \
+      -o name | cut -d/ -f2)
   _run kubectl cp $_KDC:/etc/krb5.conf $_TEST_DIR/tmp/krb5.conf
-  _run kubectl create configmap kerberos-config  \
+  _run kubectl create configmap my-hdfs-krb5-config  \
     --from-file=$_TEST_DIR/tmp/krb5.conf
 
-  _SECRET_CMD="kubectl create secret generic my-hdfs-kerberos-keytabs"
+  _SECRET_CMD="kubectl create secret generic my-hdfs-krb5-keytabs"
   _HOSTS="my-hdfs-journalnode-0.my-hdfs-journalnode.default.svc.cluster.local  \
     my-hdfs-journalnode-1.my-hdfs-journalnode.default.svc.cluster.local  \
     my-hdfs-journalnode-2.my-hdfs-journalnode.default.svc.cluster.local  \
@@ -28,11 +34,6 @@ function run_test_case () {
     _SECRET_CMD+=" --from-file=$_TEST_DIR/tmp/$_HOST.keytab"
   done
   _run $_SECRET_CMD
-
-  _run helm install -n my-hdfs hdfs-k8s  \
-    --values ${_TEST_DIR}/values/common.yaml  \
-    --values ${_TEST_DIR}/values/kerberos.yaml  \
-    --set global.kerberosKeytabsSecret=my-hdfs-kerberos-keytabs
 
   k8s_single_pod_ready -l app=zookeeper,release=my-hdfs
   k8s_all_pods_ready 3 -l app=hdfs-journalnode,release=my-hdfs
@@ -83,5 +84,4 @@ function cleanup_test_case() {
   kubectl delete configmap kerberos-config || true
   kubectl delete secret my-hdfs-kerberos-keytabs || true
   helm delete --purge my-hdfs || true
-  helm delete --purge my-krb5-server || true
 }

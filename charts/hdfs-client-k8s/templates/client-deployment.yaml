@@ -48,5 +48,5 @@ spec:
         {{- if .Values.global.kerberosEnabled }}
         - name: kerberos-config
           configMap:
-            name: {{ .Values.global.kerberosConfigMap }}
+            name: {{ template "krb5-configmap" . }}
         {{- end }}
