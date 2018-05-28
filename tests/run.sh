@@ -42,8 +42,8 @@ function _helm_diff_and_install () {
     echo Blessing $tmpfile
     cp -f $tmpfile $gold
   else
-    echo Comparing $tmpfile against $gold
-    if [[ "${FORCE_DIFF_CRASH:-false}" = "true" ]]; then
+    echo Comparing $gold and $tmpfile
+    if [[ "${CRASH_ON_DIFF:-false}" = "true" ]]; then
       diff $gold $tmpfile
     else
       diff $gold $tmpfile || true
