@@ -1,38 +1,44 @@
 #!/usr/bin/env bash
 
 function run_test_case () {
-  _run helm install -n my-hdfs-zookeeper hdfs-k8s  \
+  _run helm install hdfs-k8s  \
+    -n my-hdfs-zookeeper  \
     --values ${_TEST_DIR}/values/common.yaml  \
     --set tags.ha=false  \
     --set condition.subchart.zookeeper=true  \
     --set zookeeper.fullnameOverride=my-hdfs-zookeeper  \
     --set global.fullnameOverride=my-hdfs
 
-  _run helm install -n my-hdfs-config hdfs-k8s  \
+  _run helm install hdfs-k8s  \
+    -n my-hdfs-config  \
     --values ${_TEST_DIR}/values/common.yaml  \
     --set tags.ha=false  \
     --set condition.subchart.config=true  \
     --set global.fullnameOverride=my-hdfs
 
-  _run helm install -n my-hdfs-journalnode hdfs-k8s  \
+  _run helm install hdfs-k8s  \
+    -n my-hdfs-journalnode  \
     --values ${_TEST_DIR}/values/common.yaml  \
     --set tags.ha=false  \
     --set condition.subchart.journalnode=true  \
     --set global.fullnameOverride=my-hdfs
 
-  _run helm install -n my-hdfs-namenode hdfs-k8s  \
+  _run helm install hdfs-k8s  \
+    -n my-hdfs-namenode  \
     --values ${_TEST_DIR}/values/common.yaml  \
     --set tags.ha=false  \
     --set condition.subchart.namenode=true  \
     --set global.fullnameOverride=my-hdfs
 
-  _run helm install -n my-hdfs-datanode hdfs-k8s  \
+  _run helm install hdfs-k8s  \
+    -n my-hdfs-datanode  \
     --values ${_TEST_DIR}/values/common.yaml  \
     --set tags.ha=false  \
     --set condition.subchart.datanode=true  \
     --set global.fullnameOverride=my-hdfs
 
-  _run helm install -n my-hdfs-client hdfs-k8s  \
+  _run helm install hdfs-k8s  \
+    -n my-hdfs-client \
     --values ${_TEST_DIR}/values/common.yaml  \
     --set tags.ha=false  \
     --set condition.subchart.client=true  \

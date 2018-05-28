@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 function run_test_case () {
-  _run helm install -n my-hdfs hdfs-k8s  \
+  _helm_diff_and_install ${_TEST_DIR}/gold/kerberos.gold  \
+    hdfs-k8s  \
+    -n my-hdfs  \
     --values ${_TEST_DIR}/values/common.yaml  \
     --values ${_TEST_DIR}/values/kerberos.yaml  \
     --set tags.kerberos=true
