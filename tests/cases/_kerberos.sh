@@ -52,7 +52,7 @@ function run_test_case () {
   echo All persistent volumes:
   kubectl get pv
 
-  _NN0=$(kubectl get pods -l app=hdfs-client,release=my-hdfs -o name |  \
+  _NN0=$(kubectl get pods -l app=hdfs-namenode,release=my-hdfs -o name |  \
     head -1 |  \
     cut -d/ -f2)
   kubectl exec $_NN0 -- sh -c "(apt install -y krb5-user > /dev/null)"  \
