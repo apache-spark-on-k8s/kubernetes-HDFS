@@ -1,98 +1,96 @@
-# Default values for hdfs.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-# ------------------------------------------------------------------------------
-# Zookeeper:
-# ------------------------------------------------------------------------------
+## ------------------------------------------------------------------------------
+## Zookeeper:
+## ------------------------------------------------------------------------------
 zookeeper:
-  # Configure Zookeeper resource requests and limits
-  # ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ## Configure Zookeeper resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   resources: ~
 
-  # The JVM heap size to allocate to Zookeeper
+  ## The JVM heap size to allocate to Zookeeper
   env:
     ZK_HEAP_SIZE: 1G
 
-  # The number of zookeeper server to have in the quorum.
+  ## The number of zookeeper server to have in the quorum.
   replicaCount: 3
 
 
-# ------------------------------------------------------------------------------
-# Global values affecting all sub-charts:
-# ------------------------------------------------------------------------------
+## ------------------------------------------------------------------------------
+## Global values affecting all sub-charts:
+## ------------------------------------------------------------------------------
 global:
-  # A list of the local disk directories on cluster nodes that will contain the datanode
-  # blocks. These paths will be mounted to the datanode as K8s HostPath volumes.
-  # In a command line, the list should be enclosed in '{' and '}'.
-  # e.g. --set "dataNodeHostPath={/hdfs-data,/hdfs-data1}"
+  ## A list of the local disk directories on cluster nodes that will contain the datanode
+  ## blocks. These paths will be mounted to the datanode as K8s HostPath volumes.
+  ## In a command line, the list should be enclosed in '{' and '}'.
+  ## e.g. --set "dataNodeHostPath={/hdfs-data,/hdfs-data1}"
   dataNodeHostPath:
     - /hdfs-data
 
-  # Parameters for determining which Unix user and group IDs to use in pods.
-  # Persistent volume permission may need to match these.
+  ## Parameters for determining which Unix user and group IDs to use in pods.
+  ## Persistent volume permission may need to match these.
   podSecurityContext:
     enabled: false
     runAsUser: 0
     fsGroup: 1000
 
-  # Whether or not to expect namenodes in the HA setup.
+  ## Whether or not to expect namenodes in the HA setup.
   namenodeHAEnabled: true
 
-  # The number of zookeeper server to have in the quorum.
-  # This should match zookeeper.replicaCount above. Used only when
-  # namenodeHAEnabled is set.
+  ## The number of zookeeper server to have in the quorum.
+  ## This should match zookeeper.replicaCount above. Used only when
+  ## namenodeHAEnabled is set.
   zookeeperQuorumSize: 3
 
-  # Override zookeeper quorum address. Zookeeper is used for determining which namenode
-  # instance is active. Separated by the comma character. Used only when
-  # namenodeHAEnabled is set.
-  #
+  ## Override zookeeper quorum address. Zookeeper is used for determining which namenode
+  ## instance is active. Separated by the comma character. Used only when
+  ## namenodeHAEnabled is set.
+  ##
   # zookeeperQuorumOverride: zk-0.zk-svc.default.svc.cluster.local:2181,zk-1.zk-svc.default.svc.cluster.local:2181,zk-2.zk-svc.default.svc.cluster.local:2181
 
-  # How many journal nodes to launch as a quorum. Used only when
-  # namenodeHAEnabled is set.
+  ## How many journal nodes to launch as a quorum. Used only when
+  ## namenodeHAEnabled is set.
   journalnodeQuorumSize: 3
 
-  # Whether or not to enable affinity setting.
+  ## Whether or not to enable affinity setting.
   affinityEnabled: true
 
-  # Whether or not Kerberos support is enabled.
+  ## Whether or not Kerberos support is enabled.
   kerberosEnabled: false
 
-  # Effective only if Kerberos is enabled. Override th name of the k8s
-  # ConfigMap containing the kerberos config file.
-  #
+  ## Effective only if Kerberos is enabled. Override th name of the k8s
+  ## ConfigMap containing the kerberos config file.
+  ##
   # kerberosConfigMapOverride: kerberos-config
 
-  # Effective only if Kerberos is enabled. Name of the kerberos config file inside
-  # the config map.
+  ## Effective only if Kerberos is enabled. Name of the kerberos config file inside
+  ## the config map.
   kerberosConfigFileName: krb5.conf
 
-  # Effective only if Kerberos is enabled. Override the name of the k8s Secret
-  # containing the kerberos keytab files of per-host HDFS principals.
-  # The secret should have multiple data items. Each data item name
-  # should be formatted as:
-  #    `HOST-NAME.keytab`
-  # where HOST-NAME should match the cluster node
-  # host name that each per-host hdfs principal is associated with.
-  #
+  ## Effective only if Kerberos is enabled. Override the name of the k8s Secret
+  ## containing the kerberos keytab files of per-host HDFS principals.
+  ## The secret should have multiple data items. Each data item name
+  ## should be formatted as:
+  ##    `HOST-NAME.keytab`
+  ## where HOST-NAME should match the cluster node
+  ## host name that each per-host hdfs principal is associated with.
+  ##
   # kerberosKeytabsSecretOverride: hdfs-kerberos-keytabs
 
-  # Required to be non-empty if Kerberos is enabled. Specify your Kerberos realm name.
-  # This should match the realm name in your Kerberos config file.
+  ## Required to be non-empty if Kerberos is enabled. Specify your Kerberos realm name.
+  ## This should match the realm name in your Kerberos config file.
   kerberosRealm: MYCOMPANY.COM
 
-  # Effective only if Kerberos is enabled. Enable protection of datanodes using
-  # the jsvc utility. See the reference doc at
-  # https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Secure_DataNode
+  ## Effective only if Kerberos is enabled. Enable protection of datanodes using
+  ## the jsvc utility. See the reference doc at
+  ## https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Secure_DataNode
   jsvcEnabled: true
 
-# Tags and conditions for triggering a group of relevant subcharts.
+## Tags and conditions for triggering a group of relevant subcharts.
 tags:
-  # Trigger all subcharts required for high availability. Enabled by default.
+  ## Trigger all subcharts required for high availability. Enabled by default.
   ha: true
-  # Trigger all subcharts required for using Kerberos. Disabled by default.
+
+  ## Trigger all subcharts required for using Kerberos. Disabled by default.
   kerberos: false
-  # Trigger all subcharts required for non-HA setup. Disabled by default.
+
+  ## Trigger all subcharts required for non-HA setup. Disabled by default.
   simple: false

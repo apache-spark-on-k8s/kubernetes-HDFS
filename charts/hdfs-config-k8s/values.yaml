@@ -1,12 +1,9 @@
-# Default values for hdfs-config-k8s.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-# Custom hadoop config keys passed to the hdfs configmap as extra keys.
+## Custom hadoop config keys passed to the hdfs configmap as extra keys.
 customHadoopConfig:
    coreSite: {}
-    # Set config key and value pairs, e.g.
+    ## Set config key and value pairs, e.g.
     # hadoop.http.authentication.type: kerberos
+
    hdfsSite: {}
-    # Set config key and value pairs, e.g.
+    ## Set config key and value pairs, e.g.
     # dfs.datanode.use.datanode.hostname: "false"

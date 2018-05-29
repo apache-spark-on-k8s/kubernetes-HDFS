@@ -77,20 +77,37 @@ the main chart using:
 ```
 
 Zookeeper, journalnodes and namenodes need persistent volumes for storing
-metadata. The helm charts currently rely on a default storage volume class.
-Each daemon type requires certain minimum size for persistent volumes:
+metadata. The helm charts do not set the storage class name by default. Nor
+it does use persistent volume selectors. This means it will rely on
+a provisioner for default storage volume class, or it will match existing
+persistent volumes entirely depending on the size requirements. To
+override these, you can specify volume classes or selectors. See below for
+details.
 
-  - namenodes: Each of the two namenodes needs at least a 100 GB volume.
-    i.e. Yon need two 100 GB volumes. This
-    can be overridden by the `hdfs-namenode-k8s.metadataVolumeSize` option.
+  - namenodes: Each of the two namenodes needs at least a 100 GB volume.  i.e.
+    Yon need two 100 GB volumes. This can be overridden by the
+    `hdfs-namenode-k8s.persistence.size` option.
+    You can also override the storage class or the selector using
+    `hdfs-namenode-k8s.persistence.storageClass`, or
+    `hdfs-namenode-k8s.persistence.selector` respectively. For details, see the
+    values.yaml file inside `hdfs-namenode-k8s` chart dir.
   - zookeeper: You need three > 5 GB volumes. i.e. Each of the two zookeeper
     servers will need at least 5 GB in the volume. Can be overridden by
-    the `zookeeper.persistence.size` option.
+    the `zookeeper.persistence.size` option. You can also override
+    the storage class using `zookeeper.persistence.storageClass`.
   - journalnodes: Each of the three journalnodes will need at least 20 GB in
-    the volume. Can be overridden by the
-    `hdfs-journalnode-k8s.editdataVolumeSize`.
-
-FIXME. Support storageClass override.
+    the volume. The size be overridden by the
+    `hdfs-journalnode-k8s.persistence.size` option.
+    You can also override the storage class or the selector using
+    `hdfs-journalnode-k8s.persistence.storageClass`, or
+    `hdfs-journalnode-k8s.persistence.selector` respectively. For details, see the
+    values.yaml file inside `hdfs-journalnode-k8s` chart dir.
+  - kerberos: The single Kerberos server will need at least 20 GB in the volume.
+    The size be overridden by the `hdfs-krb5-k8s.persistence.size` option.
+    You can also override the storage class or the selector using
+    `hdfs-krb5-k8s.persistence.storageClass`, or
+    `hdfs-krb5-k8s.persistence.selector` respectively. For details, see the
+    values.yaml file inside `hdfs-krb5-k8s` chart dir.
 
 Then launch the main chart. Specify the chart release name say "my-hdfs",
 which will be the prefix of the K8s resource names for the HDFS components.
