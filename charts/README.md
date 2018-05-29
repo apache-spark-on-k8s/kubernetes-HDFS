@@ -44,18 +44,19 @@ Here is the list of all charts.
     (https://kubernetes-charts-incubator.storage.googleapis.com/)
     as a dependency and launhces zookeeper daemons. Zookeeper makes sure
     only one namenode is active in the HA setup, while the other namenode
-    becomes standby.
+    becomes standby. By default, we will launch three zookeeper servers.
   - hdfs-journalnode-k8s: a statefulset and other K8s components for launching
     HDFS journalnode quorums, which ensures the file system metadata are
     properly shared among the two namenode daemons in the HA setup.
+    By default, we will launch three journalnode servers.
   - hdfs-client-k8s: a pod that is configured to run Hadoop client commands
     for accessing HDFS.
   - hdfs-krb5-k8s: a size-1 statefulset and other K8s components for launching
     a Kerberos server, which can be used to secure HDFS. Disabled by default.
   - hdfs-simple-namenode-k8s: Disabled by default. A simpler variant of the
-    namenode that runs only one namenode. i.e. This does not support persistent
-    volumes, nor HA. It does not support Kerberos either. You may prefer this
-    if you want the simplest possible setup.
+    namenode that runs only one namenode. i.e. This does not support
+    HA. It does not support Kerberos nor persistent volumes either.
+    You may prefer this if you want the simplest possible setup.
 
 # Prerequisite
 
@@ -76,9 +77,20 @@ the main chart using:
 ```
 
 Zookeeper, journalnodes and namenodes need persistent volumes for storing
-metadata. For namenodes, each volume should have at least 100 GB.
-FIXME. Add more details on the persistent volume preparation.
+metadata. The helm charts currently rely on a default storage volume class.
+Each daemon type requires certain minimum size for persistent volumes:
 
+  - namenodes: Each of the two namenodes needs at least a 100 GB volume.
+    i.e. Yon need two 100 GB volumes. This
+    can be overridden by the `hdfs-namenode-k8s.metadataVolumeSize` option.
+  - zookeeper: You need three > 5 GB volumes. i.e. Each of the two zookeeper
+    servers will need at least 5 GB in the volume. Can be overridden by
+    the `zookeeper.persistence.size` option.
+  - journalnodes: Each of the three journalnodes will need at least 20 GB in
+    the volume. Can be overridden by the
+    `hdfs-journalnode-k8s.editdataVolumeSize`.
+
+FIXME. Support storageClass override.
 
 Then launch the main chart. Specify the chart release name say "my-hdfs",
 which will be the prefix of the K8s resource names for the HDFS components.
