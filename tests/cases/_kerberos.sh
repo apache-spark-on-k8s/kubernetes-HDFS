@@ -28,7 +28,8 @@ function run_test_case () {
           -e "s/<\/value>//"  \
           -e "s/:8020//"  \
           -e "s/qjournal:\/\///"  \
-          -e "s/:8485;/ /g")
+          -e "s/:8485;/ /g"  \
+          -e "s/:8485\/hdfs-k8s//")
 
   echo Adding service principals for hosts $_HOSTS
   _SECRET_CMD="kubectl create secret generic my-hdfs-krb5-keytabs"
