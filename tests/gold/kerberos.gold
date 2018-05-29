@@ -92,7 +92,6 @@ hdfs-datanode-k8s:
       runAsUser: 0
     zookeeperQuorumSize: 1
 hdfs-journalnode-k8s:
-  editdataVolumeSize: 20Gi
   global:
     affinityEnabled: false
     dataNodeHostPath:
@@ -108,8 +107,10 @@ hdfs-journalnode-k8s:
       fsGroup: 1000
       runAsUser: 0
     zookeeperQuorumSize: 1
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 20Gi
 hdfs-krb5-k8s:
-  dataVolumeSize: 20Gi
   global:
     affinityEnabled: false
     dataNodeHostPath:
@@ -129,6 +130,9 @@ hdfs-krb5-k8s:
     pullPolicy: IfNotPresent
     repository: gcavalcante8808/krb5-server
     tag: latest
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 20Gi
   service:
     port: 88
     type: ClusterIP
@@ -154,9 +158,11 @@ hdfs-namenode-k8s:
       runAsUser: 0
     zookeeperQuorumSize: 1
   hostNetworkEnabled: false
-  metadataVolumeSize: 100Gi
   namenodePinningEnabled: false
   namenodeStartScript: format-and-run.sh
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 100Gi
 tags:
   ha: true
   kerberos: true
@@ -1009,13 +1015,14 @@ spec:
         - name: kerberos-keytab-copy
           emptyDir: {}
   volumeClaimTemplates:
-  - metadata:
-      name: editdir
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 20Gi
+    - metadata:
+        name: editdir
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "20Gi"
 ---
 # Source: hdfs/charts/hdfs-krb5-k8s/templates/statefulset.yaml
 apiVersion: apps/v1beta1
@@ -1063,13 +1070,14 @@ spec:
               port: kdc-tcp
       restartPolicy: Always
   volumeClaimTemplates:
-  - metadata:
-      name: datadir
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 20Gi
+    - metadata:
+        name: datadir
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "20Gi"
 ---
 # Source: hdfs/charts/hdfs-namenode-k8s/templates/namenode-statefulset.yaml
 apiVersion: apps/v1beta1
@@ -1167,13 +1175,14 @@ spec:
         - name: kerberos-keytab-copy
           emptyDir: {}
   volumeClaimTemplates:
-  - metadata:
-      name: metadatadir
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 100Gi
+    - metadata:
+        name: metadatadir
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "100Gi"
 ---
 # Source: hdfs/charts/zookeeper/templates/statefulset.yaml
 apiVersion: apps/v1beta1

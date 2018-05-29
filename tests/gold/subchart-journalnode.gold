@@ -1,0 +1,178 @@
+
+
+
+NAME:   my-hdfs-journalnode
+REVISION: 1
+CHART: hdfs-0.1.0
+USER-SUPPLIED VALUES:
+condition:
+  subchart:
+    journalnode: true
+global:
+  affinityEnabled: false
+  dataNodeHostPath:
+  - /mnt/sda1/hdfs-data
+  fullnameOverride: my-hdfs
+  zookeeperQuorumSize: 1
+hdfs-namenode-k8s:
+  hostNetworkEnabled: false
+tags:
+  ha: false
+zookeeper:
+  env:
+    ZK_HEAP_SIZE: 100m
+  replicaCount: 1
+  resources:
+    requests:
+      memory: 100m
+
+COMPUTED VALUES:
+condition:
+  subchart:
+    journalnode: true
+global:
+  affinityEnabled: false
+  dataNodeHostPath:
+  - /mnt/sda1/hdfs-data
+  fullnameOverride: my-hdfs
+  journalnodeQuorumSize: 3
+  jsvcEnabled: true
+  kerberosConfigFileName: krb5.conf
+  kerberosEnabled: false
+  kerberosRealm: MYCOMPANY.COM
+  namenodeHAEnabled: true
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1000
+    runAsUser: 0
+  zookeeperQuorumSize: 1
+hdfs-journalnode-k8s:
+  global:
+    affinityEnabled: false
+    dataNodeHostPath:
+    - /mnt/sda1/hdfs-data
+    fullnameOverride: my-hdfs
+    journalnodeQuorumSize: 3
+    jsvcEnabled: true
+    kerberosConfigFileName: krb5.conf
+    kerberosEnabled: false
+    kerberosRealm: MYCOMPANY.COM
+    namenodeHAEnabled: true
+    podSecurityContext:
+      enabled: false
+      fsGroup: 1000
+      runAsUser: 0
+    zookeeperQuorumSize: 1
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 20Gi
+hdfs-namenode-k8s:
+  hostNetworkEnabled: false
+tags:
+  ha: false
+  kerberos: false
+  simple: false
+zookeeper:
+  env:
+    ZK_HEAP_SIZE: 100m
+  replicaCount: 1
+  resources:
+    requests:
+      memory: 100m
+
+HOOKS:
+MANIFEST:
+
+---
+# Source: hdfs/charts/hdfs-journalnode-k8s/templates/journalnode-statefulset.yaml
+# A headless service to create DNS records.
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-hdfs-journalnode
+  labels:
+    app: hdfs-journalnode
+    chart: hdfs-journalnode-k8s-0.1.0
+    release: my-hdfs-journalnode
+  annotations:
+    # TODO: Deprecated. Replace tolerate-unready-endpoints with
+    # v1.Service.PublishNotReadyAddresses.
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  ports:
+  - port: 8485
+    name: jn
+  - port: 8480
+    name: http
+  clusterIP: None
+  selector:
+    app: hdfs-journalnode
+    release: my-hdfs-journalnode
+---
+# Source: hdfs/charts/hdfs-journalnode-k8s/templates/journalnode-statefulset.yaml
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: my-hdfs-journalnode
+  labels:
+    app: hdfs-journalnode
+    chart: hdfs-journalnode-k8s-0.1.0
+    release: my-hdfs-journalnode
+spec:
+  serviceName: my-hdfs-journalnode
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: hdfs-journalnode
+        release: my-hdfs-journalnode
+    spec:
+      containers:
+        - name: hdfs-journalnode
+          image: uhopper/hadoop-namenode:2.7.2
+          env:
+            - name: HADOOP_CUSTOM_CONF_DIR
+              value: /etc/hadoop-custom-conf
+          command: ["/entrypoint.sh"]
+          args: ["/opt/hadoop-2.7.2/bin/hdfs", "--config", "/etc/hadoop", "journalnode"]
+          ports:
+          - containerPort: 8485
+            name: jn
+          - containerPort: 8480
+            name: http
+          volumeMounts:
+            - name: editdir
+              mountPath: /hadoop/dfs/journal
+            - name: hdfs-config
+              mountPath: /etc/hadoop-custom-conf
+              readOnly: true
+      restartPolicy: Always
+      volumes:
+        - name: hdfs-config
+          configMap:
+            name: my-hdfs-config
+  volumeClaimTemplates:
+    - metadata:
+        name: editdir
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "20Gi"
+---
+# Source: hdfs/charts/hdfs-journalnode-k8s/templates/journalnode-statefulset.yaml
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: my-hdfs-journalnode
+  labels:
+    app: hdfs-journalnode
+    chart: hdfs-journalnode-k8s-0.1.0
+    release: my-hdfs-journalnode
+spec:
+  selector:
+    matchLabels:
+      app: hdfs-journalnode
+      release: my-hdfs-journalnode
+  minAvailable: 2

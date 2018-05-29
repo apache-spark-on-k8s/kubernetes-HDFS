@@ -5,7 +5,9 @@ function run_test_case () {
   _NODE=$(kubectl get node --no-headers -o name | cut -d/ -f2)
   kubectl label nodes $_NODE hdfs-namenode-selector=hdfs-namenode-0
 
-  _run helm install -n my-hdfs hdfs-k8s  \
+  _helm_diff_and_install ${_TEST_DIR}/gold/single-namenode.gold  \
+    hdfs-k8s  \
+    -n my-hdfs  \
     --set tags.ha=false  \
     --set tags.simple=true  \
     --set global.namenodeHAEnabled=false  \

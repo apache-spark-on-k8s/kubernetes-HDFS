@@ -105,7 +105,6 @@ hdfs-datanode-k8s:
       runAsUser: 0
     zookeeperQuorumSize: 1
 hdfs-journalnode-k8s:
-  editdataVolumeSize: 20Gi
   global:
     affinityEnabled: false
     dataNodeHostPath:
@@ -122,6 +121,9 @@ hdfs-journalnode-k8s:
       fsGroup: 1000
       runAsUser: 0
     zookeeperQuorumSize: 1
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 20Gi
 hdfs-namenode-k8s:
   customRunScript: |
     #!/bin/bash -x
@@ -145,9 +147,11 @@ hdfs-namenode-k8s:
       runAsUser: 0
     zookeeperQuorumSize: 1
   hostNetworkEnabled: false
-  metadataVolumeSize: 100Gi
   namenodePinningEnabled: false
   namenodeStartScript: format-and-run.sh
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 100Gi
 tags:
   ha: true
   kerberos: false
@@ -804,13 +808,14 @@ spec:
           configMap:
             name: my-hdfs-config
   volumeClaimTemplates:
-  - metadata:
-      name: editdir
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 20Gi
+    - metadata:
+        name: editdir
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "20Gi"
 ---
 # Source: hdfs/charts/hdfs-namenode-k8s/templates/namenode-statefulset.yaml
 apiVersion: apps/v1beta1
@@ -877,13 +882,14 @@ spec:
           configMap:
             name: my-hdfs-config
   volumeClaimTemplates:
-  - metadata:
-      name: metadatadir
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 100Gi
+    - metadata:
+        name: metadatadir
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "100Gi"
 ---
 # Source: hdfs/charts/zookeeper/templates/statefulset.yaml
 apiVersion: apps/v1beta1
