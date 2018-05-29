@@ -18,13 +18,20 @@ function run_test_case () {
   _run kubectl create configmap my-hdfs-krb5-config  \
     --from-file=$_TEST_DIR/tmp/krb5.conf
 
+  _HOSTS=$(kubectl get nodes  \
+    -o=jsonpath='{.items[*].status.addresses[?(@.type == "Hostname")].address}')
+  _HOSTS+=$(kubectl describe configmap my-hdfs-config |  \
+      grep -A 1 -e dfs.namenode.rpc-address.hdfs-k8s  \
+          -e dfs.namenode.shared.edits.dir |  
+      grep "<value>" |
+      sed -e "s/<value>//"  \
+          -e "s/<\/value>//"  \
+          -e "s/:8020//"  \
+          -e "s/qjournal:\/\///"  \
+          -e "s/:8485;/ /g")
+
+  echo Adding service principals for hosts $_HOSTS
   _SECRET_CMD="kubectl create secret generic my-hdfs-krb5-keytabs"
-  _HOSTS="my-hdfs-journalnode-0.my-hdfs-journalnode.default.svc.cluster.local  \
-    my-hdfs-journalnode-1.my-hdfs-journalnode.default.svc.cluster.local  \
-    my-hdfs-journalnode-2.my-hdfs-journalnode.default.svc.cluster.local  \
-    my-hdfs-namenode-0.my-hdfs-namenode.default.svc.cluster.local  \
-    my-hdfs-namenode-1.my-hdfs-namenode.default.svc.cluster.local  \
-    $(kubectl get node --no-headers -o name | cut -d/ -f2)"
   for _HOST in $_HOSTS; do
     _run kubectl exec $_KDC -- kadmin.local -q  \
       "addprinc -randkey hdfs/$_HOST@MYCOMPANY.COM"
@@ -35,6 +42,7 @@ function run_test_case () {
     _run kubectl cp $_KDC:/tmp/$_HOST.keytab $_TEST_DIR/tmp/$_HOST.keytab
     _SECRET_CMD+=" --from-file=$_TEST_DIR/tmp/$_HOST.keytab"
   done
+  echo Adding a K8s secret containing Kerberos keytab files
   _run $_SECRET_CMD
 
   k8s_single_pod_ready -l app=zookeeper,release=my-hdfs
