@@ -60,16 +60,18 @@ spec:
       labels:
         app: hdfs-journalnode
     spec:
+      {{- if .Values.affinity }}
       affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: "app"
-                    operator: In
-                    values:
-                    - hfds-journalnode
-              topologyKey: "kubernetes.io/hostname"
+{{ toYaml .Values.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
       containers:
         - name: hdfs-journalnode
           image: uhopper/hadoop-namenode:2.7.2

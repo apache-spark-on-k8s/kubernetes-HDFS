@@ -39,9 +39,6 @@ zookeeperQuorum: zk-0.zk-svc.default.svc.cluster.local:2181,zk-1.zk-svc.default.
 # a standby namenode. Separated by the semicolon character.
 journalQuorum: hdfs-journalnode-0.hdfs-journalnode.default.svc.cluster.local:8485;hdfs-journalnode-1.hdfs-journalnode.default.svc.cluster.local:8485;hdfs-journalnode-2.hdfs-journalnode.default.svc.cluster.local:8485
 
-# Whether or not to enable pinning of namenode pods to labeled k8s cluster nodes.
-namenodePinningEnabled: false
-
 # Whether or not to use hostNetwork in namenode pods. Disabling this will break
 # data locality as namenode will see pod virtual IPs and fails to equate them with
 # cluster node physical IPs associated with data nodes.
@@ -87,3 +84,17 @@ kerberosConfigFileName: krb5.conf
 # where HOST-NAME should match the cluster node
 # host name that each per-host hdfs principal is associated with.
 kerberosKeytabsSecret: hdfs-kerberos-keytabs
+
+# Node labels and tolerations for pod assignment
+nodeSelector: {}
+tolerations: []
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: "app"
+              operator: In
+              values:
+              - hfds-namenode
+        topologyKey: "kubernetes.io/hostname"

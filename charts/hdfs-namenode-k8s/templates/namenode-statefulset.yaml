@@ -117,16 +117,18 @@ spec:
       {{- else }}
       dnsPolicy: ClusterFirst
       {{- end }}
+      {{- if .Values.affinity }}
       affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: "app"
-                    operator: In
-                    values:
-                    - hfds-namenode
-              topologyKey: "kubernetes.io/hostname"
+{{ toYaml .Values.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
       containers:
         # TODO: Support hadoop version as option.
         - name: hdfs-namenode
@@ -242,12 +244,6 @@ spec:
               mountPath: /kerberos-keytabs
             - name: kerberos-keytab-copy
               mountPath: /kerberos-keytab-copy
-      {{- end }}
-      {{- if .Values.namenodePinningEnabled }}
-      # Pin namenode pods to a set of nodes. You can label your node like below:
-      #   $ kubectl label nodes YOUR-NODE hdfs-namenode-selector=hdfs-namenode
-      nodeSelector:
-        hdfs-namenode-selector: hdfs-namenode
       {{- end }}
       restartPolicy: Always
       volumes:
