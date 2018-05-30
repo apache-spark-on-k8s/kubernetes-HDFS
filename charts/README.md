@@ -53,10 +53,11 @@ Here is the list of all charts.
     for accessing HDFS.
   - hdfs-krb5-k8s: a size-1 statefulset and other K8s components for launching
     a Kerberos server, which can be used to secure HDFS. Disabled by default.
-  - hdfs-simple-namenode-k8s: Disabled by default. A simpler variant of the
-    namenode that runs only one namenode. i.e. This does not support
-    HA. It does not support Kerberos nor persistent volumes either.
-    You may prefer this if you want the simplest possible setup.
+  - hdfs-simple-namenode-k8s: Disabled by default. A simpler setup of the
+    namenode that launches only one namenode. i.e. This does not support HA. It
+    does not support Kerberos nor persistent volumes either. As it does not
+    support HA, we also don't need zookeeper nor journal nodes.  You may prefer
+    this if you want the simplest possible setup.
 
 # Prerequisite
 
@@ -77,12 +78,16 @@ the main chart using:
 ```
 
 Zookeeper, journalnodes and namenodes need persistent volumes for storing
-metadata. The helm charts do not set the storage class name by default. Nor
-it does use persistent volume selectors. This means it will rely on
-a provisioner for default storage volume class, or it will match existing
-persistent volumes entirely depending on the size requirements. To
-override these, you can specify volume classes or selectors. See below for
-details.
+metadata. By default, the helm charts do not set the storage class name for
+dynamically provisioned voluesm. Nor it does use persistent volume selectors for
+static persistent volumes.
+
+This means it will rely on a provisioner for default storage volume class for
+dynamic volumes. Or if your cluster has statically provisioned volumes, the
+chart will match existing volumes entirely based on on the size requirements. To
+override this default behavior, you can specify storage volume classes for
+dynamic volumes, or volume selectors for static volumes. See below for how to
+set these options.
 
   - namenodes: Each of the two namenodes needs at least a 100 GB volume.  i.e.
     Yon need two 100 GB volumes. This can be overridden by the
@@ -318,8 +323,7 @@ a datanode. To prevent this, label the cluster nodes with
 ### Launching a setup with a non-HA namenode
 
 You may want non-HA namenode since it is the simplest possible setup.
-The non-HA setup does not even use persistent vlumes. So you don't even
-need to prepare persistent volumes.
+Note this won't launch zookeepers nor journalnodes.
 
 The single namenode is supposed to be pinned to a cluster host using a node
 label.  Attach a label to one of your K8s cluster node.
@@ -328,7 +332,9 @@ label.  Attach a label to one of your K8s cluster node.
   $ kubectl label nodes YOUR-CLUSTER-NODE hdfs-namenode-selector=hdfs-namenode-0
 ```
 
-Then, launch the chart while setting options to turn off HA.
+The non-HA setup does not even use persistent vlumes. So you don't even
+need to prepare persistent volumes. So, just launch the chart while
+setting options to turn off HA.
 
 ```
   $ helm install -n my-hdfs charts/hdfs-k8s  \
