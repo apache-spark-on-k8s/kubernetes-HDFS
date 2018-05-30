@@ -189,7 +189,6 @@ First, create a configmap containing the common Kerberos config file:
   _run kubectl cp $_KDC:/etc/krb5.conf $_MY_DIR/tmp/krb5.conf
   _run kubectl create configmap my-hdfs-krb5-config  \
     --from-file=$_MY_DIR/tmp/krb5.conf
-
 ```
 
 Second, create the service principals and passwords. Kerberos requires service
@@ -198,6 +197,7 @@ cluster nodes' physical host names say kube-n1.mycompany.com, while others are
 associated with Kubernetes virtual service names, for instance
 my-hdfs-namenode-0.my-hdfs-namenode.default.svc.cluster.local. You can get
 the list of these host names like:
+
 ```
   $ _HOSTS=$(kubectl get nodes  \
     -o=jsonpath='{.items[*].status.addresses[?(@.type == "Hostname")].address}')
@@ -210,8 +210,8 @@ the list of these host names like:
           -e "s/<\/value>//"  \
           -e "s/:8020//"  \
           -e "s/qjournal:\/\///"  \
-          -e "s/:8485;/ /g")
-
+          -e "s/:8485;/ /g"  \
+          -e "s/:8485\/hdfs-k8s//")
 ```
 
 Then generate per-host principal accounts and password keytab files.
