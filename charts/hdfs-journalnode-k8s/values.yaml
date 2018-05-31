@@ -14,3 +14,8 @@ persistence:
   #     volume-type: hdfs-ssd
   accessMode: ReadWriteOnce
   size: 20Gi
+
+## Node labels and tolerations for pod assignment
+nodeSelector: {}
+tolerations: []
+affinity: {}

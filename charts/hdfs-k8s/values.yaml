@@ -50,8 +50,8 @@ global:
   ## namenodeHAEnabled is set.
   journalnodeQuorumSize: 3
 
-  ## Whether or not to enable affinity setting.
-  affinityEnabled: true
+  ## Whether or not to enable default affinity setting.
+  defaultAffinityEnabled: true
 
   ## Whether or not Kerberos support is enabled.
   kerberosEnabled: false

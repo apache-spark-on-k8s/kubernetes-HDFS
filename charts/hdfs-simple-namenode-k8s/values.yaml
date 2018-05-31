@@ -2,3 +2,8 @@
 ## fsimage and edit logs. This will be mounted to the namenode as a k8s HostPath
 ## volume.
 nameNodeHostPath: /hdfs-name
+
+## Node labels and tolerations for pod assignment
+nodeSelector: {}
+tolerations: []
+affinity: {}

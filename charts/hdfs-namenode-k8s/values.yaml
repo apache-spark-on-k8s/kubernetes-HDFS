@@ -31,11 +31,13 @@ persistence:
 
   size: 100Gi
 
-## Whether or not to enable pinning of namenode pods to labeled k8s cluster nodes.
-namenodePinningEnabled: false
-
 ## Whether or not to use hostNetwork in namenode pods. Disabling this will break
 ## data locality as namenode will see pod virtual IPs and fails to equate them with
 ## cluster node physical IPs associated with data nodes.
 ## We currently disable this only for CI on minikube.
 hostNetworkEnabled: true
+
+## Node labels and tolerations for pod assignment
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -54,7 +54,10 @@ spec:
         app: {{ template "hdfs-k8s.journalnode.name" . }}
         release: {{ .Release.Name }}
     spec:
-      {{- if .Values.global.affinityEnabled }}
+      {{- if .Values.affinity }}
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}
+      {{- else if .Values.global.defaultAffinityEnabled }}
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -70,6 +73,13 @@ spec:
                       - {{ .Release.Name }}
               topologyKey: "kubernetes.io/hostname"
       {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
       containers:
         - name: hdfs-journalnode
           image: uhopper/hadoop-namenode:2.7.2

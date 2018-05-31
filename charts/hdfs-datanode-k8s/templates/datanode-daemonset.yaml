@@ -49,6 +49,26 @@ spec:
         app: {{ template "hdfs-k8s.datanode.name" . }}
         release: {{ .Release.Name }}
     spec:
+      {{- if .Values.affinity }}
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}
+      {{- else if .Values.global.defaultAffinityEnabled }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: {{ template "hdfs-k8s.datanode.fullname" . }}-exclude
+                  operator: DoesNotExist
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
       hostNetwork: true
       hostPID: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -137,13 +157,6 @@ spec:
               mountPath: /jsvc-home
         {{- end }}
       {{- end }}
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                - key: {{ template "hdfs-k8s.datanode.fullname" . }}-exclude
-                  operator: DoesNotExist
       restartPolicy: Always
       volumes:
         - name: dn-scripts

@@ -4,6 +4,7 @@ title: HDFS charts
 ---
 
 # HDFS charts
+
 Helm charts for launching HDFS daemons in a K8s cluster. The main entry-point
 chart is `hdfs-k8s`, which is a uber-chart that specifies other charts as
 dependency subcharts. This means you can launch all HDFS components using
@@ -300,12 +301,11 @@ by those outside clients, Kerberos expects the namenode addresses to be stable.
   $ kubectl label nodes YOUR-HOST-2 hdfs-namenode-selector=hdfs-namenode
 ```
 
-You should add `hdfs-namenode-k8s.namenodePinningEnabled` option to the helm
-chart command:
+You should add the nodeSelector option to the helm chart command:
 
 ```
   $ helm install -n my-hdfs charts/hdfs-k8s  \
-     --set hdfs-namenode-k8s.namenodePinningEnabled=true \
+     --set hdfs-namenode-k8s.nodeSelector.hdfs-namenode-selector=hdfs-namenode \
      ...
 ```
 
@@ -333,14 +333,17 @@ label.  Attach a label to one of your K8s cluster node.
 ```
 
 The non-HA setup does not even use persistent vlumes. So you don't even
-need to prepare persistent volumes. So, just launch the chart while
-setting options to turn off HA.
+need to prepare persistent volumes. Instead, it is using hostPath volume
+of the pinned cluster node. So, just launch the chart while
+setting options to turn off HA. You should add the nodeSelector option
+so that the single namenode would find the hostPath volume of the same cluster
+node when the pod restarts.
 
 ```
   $ helm install -n my-hdfs charts/hdfs-k8s  \
       --set tags.ha=false  \
       --set tags.simple=true  \
-      --set global.namenodeHAEnabled=false  \
+      --set hdfs-simple-namenode-k8s.nodeSelector.hdfs-namenode-selector=hdfs-namenode-0 \
 ```
 
 # Security
