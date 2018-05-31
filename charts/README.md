@@ -5,7 +5,8 @@ title: HDFS charts
 
 # HDFS charts
 Helm charts for launching HDFS daemons in a K8s cluster. Note that the HDFS
-charts are currently being heavily revised and are subject to change.
+charts are currently in pre-alpha quality. They are also being heavily revised
+and are subject to change.
 
 # Prerequisite
 
@@ -26,8 +27,8 @@ The HDFS daemons should be launched in the following order.
      [hdfs-datanode-k8s/README.md](hdfs-datanode-k8s/README.md)
      for how to launch.
 
-Kerberos is supported. See the `kerberosEnabled` option in the namenode and
-datanode charts.
+Kerberos is supported in the HA setup with the `kerberosEnabled` option.
+For more details, see the namenode `README.md`.
 
 There is also a HDFS client chart `hdfs-client` that can be convenient for
 testing.

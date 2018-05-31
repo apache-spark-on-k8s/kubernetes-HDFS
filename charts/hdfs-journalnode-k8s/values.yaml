@@ -28,12 +28,12 @@ podSecurityContext:
   runAsUser: 0
   fsGroup: 1000
 
+# Name of the k8s config map containing Hadoop config files such as core-site.xml
+# and hdfs-site.xml.
+hdfsConfigMap: hdfs-config
+
 # Whether or not Kerberos support is enabled.
 kerberosEnabled: false
-
-# Required to be non-empty if Kerberos is enabled. Specify your Kerberos realm name.
-# This should match the realm name in your Kerberos config file.
-kerberosRealm: ""
 
 # Effective only if Kerberos is enabled. Name of the k8s config map containing
 # the kerberos config file.

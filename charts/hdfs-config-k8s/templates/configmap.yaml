@@ -1,0 +1,198 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "hdfs-config-k8s.fullname" . }}
+  labels:
+    app: {{ template "hdfs-config-k8s.name" . }}
+    chart: {{ template "hdfs-config-k8s.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+  core-site.xml: |
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+    {{- if .Values.kerberosEnabled }}
+      <property>
+        <name>hadoop.security.authentication</name>
+        <value>kerberos</value>
+      </property>
+      <!--
+      This is service level RPC authorization, which is separate from HDFS file
+      level ACLs.  This concerns who can talk to HDFS daemons including
+      datanodes talking to namenode.  As part of the authorization, namenode
+      tries to validate that DNS can uniquely traslate the datanode IP to the
+      hostname in the datanode Kerberos principal.  (i.e. The client IP is what
+      Kerberos has authenticated). This does not work well when both namenode
+      and datanodes are using the Kubernetes HostNetwork and namenode is using
+      the StatefulSet. The same cluster node IP can be mapped to two different
+      DNS names. So we disable this. Again this is only service level RPC
+      authorization and does not affect HDFS file level permission ACLs.
+      -->
+      <property>
+        <name>hadoop.security.authorization</name>
+        <value>false</value>
+      </property>
+      <property>
+        <name>hadoop.rpc.protection</name>
+        <value>privacy</value>
+      </property>
+      <property>
+        <name>hadoop.user.group.static.mapping.overrides</name>
+        <value>hdfs=root;</value>
+      </property>
+    {{- end }}
+    {{- range $key, $value := .Values.customHadoopConfig.coreSite }}
+      <property>
+        <name>{{ $key }}</name>
+        <value>{{ $value }}</value>
+      </property>
+    {{- end }}
+    {{- if .Values.namenodeHAEnabled }}
+      <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://hdfs-k8s</value>
+      </property>
+      <property>
+        <name>ha.zookeeper.quorum</name>
+        <value>{{ .Values.zookeeperQuorum }}</value>
+      </property>
+    {{- else }}
+      <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020</value>
+      </property>
+    {{- end }}
+    </configuration>
+  hdfs-site.xml: |
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+    {{- if .Values.kerberosEnabled }}
+      <property>
+        <name>dfs.block.access.token.enable</name>
+        <value>true</value>
+      </property>
+      <property>
+        <name>dfs.encrypt.data.transfer</name>
+        <value>true</value>
+      </property>
+      <property>
+        <name>dfs.namenode.kerberos.principal</name>
+        <value>{{ template "hdfs-principal" . }}</value>
+      </property>
+      {{/*
+      TODO: Check if the https principal is no longer needed in newer Hadoop version.
+      */}}
+      <property>
+        <name>dfs.namenode.kerberos.https.principal</name>
+        <value>{{ template "http-principal" . }}</value>
+      </property>
+      <property>
+        <name>dfs.web.authentication.kerberos.principal</name>
+        <value>{{ template "http-principal" . }}</value>
+      </property>
+      <property>
+        <name>dfs.namenode.keytab.file</name>
+        <value>/etc/security/hdfs.keytab</value>
+      </property>
+      <property>
+        <name>dfs.journalnode.kerberos.principal</name>
+        <value>{{ template "hdfs-principal" . }}</value>
+      </property>
+      <property>
+        <name>dfs.journalnode.kerberos.internal.spnego.principal</name>
+        <value>{{ template "http-principal" . }}</value>
+      </property>
+      <property>
+        <name>dfs.journalnode.keytab.file</name>
+        <value>/etc/security/hdfs.keytab</value>
+      </property>
+      <property>
+        <name>dfs.datanode.kerberos.principal</name>
+        <value>{{ template "hdfs-principal" . }}</value>
+      </property>
+      <property>
+        <name>dfs.datanode.kerberos.https.principal</name>
+        <value>{{ template "http-principal" . }}</value>
+      </property>
+      <property>
+        <name>dfs.datanode.keytab.file</name>
+        <value>/etc/security/hdfs.keytab</value>
+      </property>
+      {{- if .Values.jsvcEnabled }}
+      <property>
+        <name>dfs.datanode.address</name>
+        <value>0.0.0.0:1004</value>
+      </property>
+      <property>
+        <name>dfs.datanode.http.address</name>
+        <value>0.0.0.0:1006</value>
+      </property>
+      {{- end }}
+    {{- end }}
+    {{- range $key, $value := .Values.customHadoopConfig.hdfsSite }}
+      <property>
+        <name>{{ $key }}</name>
+        <value>{{ $value }}</value>
+      </property>
+    {{- end }}
+    {{- if .Values.namenodeHAEnabled }}
+      <property>
+        <name>dfs.nameservices</name>
+        <value>hdfs-k8s</value>
+      </property>
+      <property>
+        <name>dfs.ha.namenodes.hdfs-k8s</name>
+        <value>nn0,nn1</value>
+      </property>
+      <property>
+        <name>dfs.namenode.rpc-address.hdfs-k8s.nn0</name>
+        <value>hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020</value>
+      </property>
+      <property>
+        <name>dfs.namenode.rpc-address.hdfs-k8s.nn1</name>
+        <value>hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:8020</value>
+      </property>
+      <property>
+        <name>dfs.namenode.http-address.hdfs-k8s.nn0</name>
+        <value>hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:50070</value>
+      </property>
+      <property>
+        <name>dfs.namenode.http-address.hdfs-k8s.nn1</name>
+        <value>hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:50070</value>
+      </property>
+      <property>
+        <name>dfs.namenode.shared.edits.dir</name>
+        <value>qjournal://{{ .Values.journalQuorum }}/hdfs-k8s</value>
+      </property>
+      <property>
+        <name>dfs.ha.automatic-failover.enabled</name>
+        <value>true</value>
+      </property>
+      <property>
+        <name>dfs.ha.fencing.methods</name>
+        <value>shell(/bin/true)</value>
+      </property>
+      <property>
+        <name>dfs.journalnode.edits.dir</name>
+        <value>/hadoop/dfs/journal</value>
+      </property>
+      <property>
+        <name>dfs.client.failover.proxy.provider.hdfs-k8s</name>
+        <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+      </property>
+    {{- end }}
+      <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file:///hadoop/dfs/name</value>
+      </property>
+      <property>
+        <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+        <value>false</value>
+      </property>
+      <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>{{ template "datanode-data-dirs" . }}</value>
+      </property>
+    </configuration>

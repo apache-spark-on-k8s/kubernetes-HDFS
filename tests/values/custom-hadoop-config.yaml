@@ -1,0 +1,7 @@
+# Custom hadoop config keys passed to the hdfs configmap as extra keys.
+customHadoopConfig:
+   coreSite:
+     hadoop.http.authentication.type: kerberos
+     hadoop.http.authentication.simple.anonymous.allowed: "false"
+   hdfsSite:
+     dfs.replication: 2

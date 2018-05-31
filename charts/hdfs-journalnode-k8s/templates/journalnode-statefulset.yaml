@@ -1,18 +1,3 @@
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 # A headless service to create DNS records.
 apiVersion: v1
 kind: Service
@@ -76,28 +61,8 @@ spec:
         - name: hdfs-journalnode
           image: uhopper/hadoop-namenode:2.7.2
           env:
-            # The following env vars are listed according to low-to-high precedence order.
-            # i.e. Whoever comes last will override the earlier value of the same variable.
-          {{- if .Values.kerberosEnabled }}
-            - name: CORE_CONF_hadoop_security_authentication
-              value: kerberos
-            - name: CORE_CONF_hadoop_security_authorization
-              value: "true"
-            - name: CORE_CONF_hadoop_rpc_protection
-              value: privacy
-            - name: HDFS_CONF_dfs_journalnode_kerberos_principal
-              value: hdfs/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
-            - name: HDFS_CONF_dfs_journalnode_kerberos_internal_spnego_principal
-              value: HTTP/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
-            - name: HDFS_CONF_dfs_journalnode_keytab_file
-              value: /etc/security/hdfs.keytab
-            {{- end }}
-            {{- range $key, $value := .Values.customHadoopConfig }}
-            - name: {{ $key | quote }}
-              value: {{ $value | quote }}
-            {{- end }}
-            - name: HDFS_CONF_dfs_journalnode_edits_dir
-              value: /hadoop/dfs/journal
+            - name: HADOOP_CUSTOM_CONF_DIR
+              value: /etc/hadoop-custom-conf
           command: ["/entrypoint.sh"]
           args: ["/opt/hadoop-2.7.2/bin/hdfs", "--config", "/etc/hadoop", "journalnode"]
           ports:
@@ -108,6 +73,9 @@ spec:
           volumeMounts:
             - name: editdir
               mountPath: /hadoop/dfs/journal
+            - name: hdfs-config
+              mountPath: /etc/hadoop-custom-conf
+              readOnly: true
            {{- if .Values.kerberosEnabled }}
             - name: kerberos-config
               mountPath: /etc/krb5.conf
@@ -136,8 +104,11 @@ spec:
               mountPath: /kerberos-keytab-copy
       {{- end }}
       restartPolicy: Always
-      {{- if .Values.kerberosEnabled }}
       volumes:
+        - name: hdfs-config
+          configMap:
+            name: {{ .Values.hdfsConfigMap }}
+        {{- if .Values.kerberosEnabled }}
         - name: kerberos-config
           configMap:
             name: {{ .Values.kerberosConfigMap }}
@@ -146,7 +117,7 @@ spec:
             secretName: {{ .Values.kerberosKeytabsSecret }}
         - name: kerberos-keytab-copy
           emptyDir: {}
-      {{- end }}
+        {{- end }}
       {{- if .Values.podSecurityContext.enabled }}
       securityContext:
         runAsUser: {{ .Values.podSecurityContext.runAsUser }}

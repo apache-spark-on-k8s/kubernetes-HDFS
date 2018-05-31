@@ -1,18 +1,3 @@
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 # Deleting a daemonset may need some trick. See
 # https://github.com/kubernetes/kubernetes/issues/33245#issuecomment-261250489
 apiVersion: extensions/v1beta1
@@ -44,32 +29,11 @@ spec:
         - name: datanode
           image: uhopper/hadoop-datanode:2.7.2
           env:
-            # The following env vars are listed according to low-to-high precedence order.
-            # i.e. Whoever comes last will override the earlier value of the same variable.
-            {{- if .Values.kerberosEnabled }}
-            - name: CORE_CONF_hadoop_security_authentication
-              value: kerberos
-            - name: CORE_CONF_hadoop_security_authorization
-              value: "true"
-            - name: CORE_CONF_hadoop_rpc_protection
-              value: privacy
-            - name: HDFS_CONF_dfs_block_access_token_enable
-              value: "true"
-            - name: HDFS_CONF_dfs_encrypt_data_transfer
-              value: "true"
-            - name: HDFS_CONF_dfs_datanode_kerberos_principal
-              value: hdfs/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
-            - name:  HDFS_CONF_dfs_datanode_kerberos_https_principal
-              value: HTTP/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
-            - name: HDFS_CONF_dfs_web_authentication_kerberos_principal
-              value: HTTP/_HOST@{{ required "A valid kerberosRealm entry required!" .Values.kerberosRealm }}
-            - name: HDFS_CONF_dfs_datanode_keytab_file
-              value: /etc/security/hdfs.keytab
-            {{- if .Values.jsvcEnabled }}
-            - name: HDFS_CONF_dfs_datanode_address
-              value: 0.0.0.0:1004
-            - name: HDFS_CONF_dfs_datanode_http_address
-              value: 0.0.0.0:1006
+            - name: HADOOP_CUSTOM_CONF_DIR
+              value: /etc/hadoop-custom-conf
+            - name: MULTIHOMED_NETWORK
+              value: "0"
+            {{- if and .Values.kerberosEnabled .Values.jsvcEnabled }}
             - name: HADOOP_SECURE_DN_USER
               value: root
             - name: JSVC_OUTFILE
@@ -79,46 +43,6 @@ spec:
             - name: JSVC_HOME
               value: /jsvc-home
             {{- end }}
-            {{- end }}
-            {{- range $key, $value := .Values.customHadoopConfig }}
-            - name: {{ $key | quote }}
-              value: {{ $value | quote }}
-            {{- end }}
-            {{- if .Values.namenodeHAEnabled }}
-            - name: CORE_CONF_fs_defaultFS
-              value: hdfs://hdfs-k8s
-            - name: HDFS_CONF_dfs_nameservices
-              value: hdfs-k8s
-            - name: HDFS_CONF_dfs_ha_namenodes_hdfs___k8s
-              value: nn0,nn1
-            - name: HDFS_CONF_dfs_namenode_rpc___address_hdfs___k8s_nn0
-              value: hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020
-            - name: HDFS_CONF_dfs_namenode_rpc___address_hdfs___k8s_nn1
-              value: hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:8020
-            - name: HDFS_CONF_dfs_namenode_http___address_hdfs___k8s_nn0
-              value: hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:50070
-            - name: HDFS_CONF_dfs_namenode_http___address_hdfs___k8s_nn1
-              value: hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:50070
-            {{- else }}
-            - name: CORE_CONF_fs_defaultFS
-              value: hdfs://hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020
-            {{- end }}
-            - name: MULTIHOMED_NETWORK
-              value: "0"
-            # The below uses two loops to make sure the last item does not have comma. It uses index 0
-            # for the last item since that is the only special index that helm template gives us.
-            - name: HDFS_CONF_dfs_datanode_data_dir
-              value: |-
-              {{- range $index, $path := .Values.dataNodeHostPath }}
-                {{- if ne $index 0 }}
-                  /hadoop/dfs/data/{{ $index }},
-                {{- end }}
-              {{- end }}
-              {{- range $index, $path := .Values.dataNodeHostPath }}
-                {{- if eq $index 0 }}
-                  /hadoop/dfs/data/{{ $index }}
-                {{- end }}
-              {{- end }}
           livenessProbe:
             initialDelaySeconds: 30
             httpGet:
@@ -132,6 +56,9 @@ spec:
           securityContext:
             privileged: true
           volumeMounts:
+            - name: hdfs-config
+              mountPath: /etc/hadoop-custom-conf
+              readOnly: true
             {{- range $index, $path := .Values.dataNodeHostPath }}
             - name: hdfs-data-{{ $index }}
               mountPath: /hadoop/dfs/data/{{ $index }}
@@ -149,7 +76,7 @@ spec:
               mountPath: /jsvc-home
             {{- end }}
             {{- end }}
-      {{- if and .Values.kerberosEnabled .Values.jsvcEnabled }}
+      {{- if .Values.kerberosEnabled }}
       initContainers:
         - name: copy-kerberos-keytab
           image: busybox:1.27.1
@@ -166,6 +93,7 @@ spec:
               mountPath: /kerberos-keytabs
             - name: kerberos-keytab-copy
               mountPath: /kerberos-keytab-copy
+        {{- if .Values.jsvcEnabled }}
         - name: copy-jsvc
           # Pull by digest because the image doesn't have tags to pin.
           image: mschlimb/jsvc@sha256:bf20eb9a319e9a2f87473d8da7418d21503a97528b932800b6b8417cd31e30ef
@@ -175,6 +103,7 @@ spec:
           volumeMounts:
             - name: jsvc-home
               mountPath: /jsvc-home
+        {{- end }}
       {{- end }}
       restartPolicy: Always
       volumes:
@@ -183,6 +112,9 @@ spec:
           hostPath:
             path: {{ $path }}
         {{- end }}
+        - name: hdfs-config
+          configMap:
+            name: {{ .Values.hdfsConfigMap }}
         {{- if .Values.kerberosEnabled }}
         - name: kerberos-config
           configMap:

@@ -1,0 +1,43 @@
+# Default values for hdfs-config-k8s.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Custom hadoop config keys passed to the hdfs configmap as extra keys.
+customHadoopConfig:
+   coreSite: {}
+    # Set config key and value pairs, e.g.
+    # hadoop.http.authentication.type: kerberos
+   hdfsSite: {}
+    # Set config key and value pairs, e.g.
+    # dfs.datanode.use.datanode.hostname: "false"
+
+# A list of the local disk directories on cluster nodes that will contain the datanode
+# blocks. These paths will be mounted to the datanode as K8s HostPath volumes.
+# In a command line, the list should be enclosed in '{' and '}'.
+# e.g. --set "dataNodeHostPath={/hdfs-data,/hdfs-data1}"
+dataNodeHostPath:
+  - /hdfs-data
+
+# Whether or not to expect namenodes in the HA setup.
+namenodeHAEnabled: true
+
+# Zookeeper quorum to use for determining which namenode instance is active.
+# Separated by the comma character.
+zookeeperQuorum: zk-0.zk-svc.default.svc.cluster.local:2181,zk-1.zk-svc.default.svc.cluster.local:2181,zk-2.zk-svc.default.svc.cluster.local:2181
+
+# Journal nodes quorum to use for sharing editlogs from an active namenode to
+# a standby namenode. Separated by the semicolon character.
+journalQuorum: hdfs-journalnode-0.hdfs-journalnode.default.svc.cluster.local:8485;hdfs-journalnode-1.hdfs-journalnode.default.svc.cluster.local:8485;hdfs-journalnode-2.hdfs-journalnode.default.svc.cluster.local:8485
+
+# Whether or not Kerberos support is enabled.
+kerberosEnabled: false
+
+# Effective only if Kerberos is enabled. Enable protection of datanodes using
+# the jsvc utility. See the reference doc at
+# https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Secure_DataNode
+jsvcEnabled: true
+
+# Required to be non-empty if Kerberos is enabled. Specify your Kerberos realm name.
+# This should match the realm name in your Kerberos config file.
+kerberosRealm: MYCOMPANY.COM
+
