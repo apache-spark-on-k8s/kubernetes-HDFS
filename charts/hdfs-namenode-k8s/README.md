@@ -141,9 +141,9 @@ See the other chart for `datanodes`.
      ```
 
   4. Launch a journal node quorum. The journal node quorum is needed to
-     synchronize metadata updates from the active namenode to the standby
-     namenode. You would need to provide persistent volumes for journal node
-     quorums. If your quorum is size 3 (default), you need 3 volumes.
+     synchronize metadata updates between active and standby namenodes. You
+     would need to provide persistent volumes for journal node quorums. If your
+     quorum is size 3 (default), you need 3 volumes.
 
      ```
      $ helm install hdfs-journalnode  \
