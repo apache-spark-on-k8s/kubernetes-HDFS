@@ -17,6 +17,6 @@ global:
   zookeeperQuorumSize: 1
   # Disables affinity so multiple member pods can launch on a single minikube
   # node.
-  affinityEnabled: false
+  defaultAffinityEnabled: false
   dataNodeHostPath:
     - /mnt/sda1/hdfs-data
