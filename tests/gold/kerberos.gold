@@ -6,9 +6,9 @@ REVISION: 1
 CHART: hdfs-0.1.0
 USER-SUPPLIED VALUES:
 global:
-  affinityEnabled: false
   dataNodeHostPath:
   - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: false
   kerberosEnabled: true
   kerberosRealm: MYCOMPANY.COM
   zookeeperQuorumSize: 1
@@ -26,9 +26,9 @@ zookeeper:
 
 COMPUTED VALUES:
 global:
-  affinityEnabled: false
   dataNodeHostPath:
   - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: false
   journalnodeQuorumSize: 3
   jsvcEnabled: true
   kerberosConfigFileName: krb5.conf
@@ -42,9 +42,9 @@ global:
   zookeeperQuorumSize: 1
 hdfs-client-k8s:
   global:
-    affinityEnabled: false
     dataNodeHostPath:
     - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: false
     journalnodeQuorumSize: 3
     jsvcEnabled: true
     kerberosConfigFileName: krb5.conf
@@ -61,9 +61,9 @@ hdfs-config-k8s:
     coreSite: {}
     hdfsSite: {}
   global:
-    affinityEnabled: false
     dataNodeHostPath:
     - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: false
     journalnodeQuorumSize: 3
     jsvcEnabled: true
     kerberosConfigFileName: krb5.conf
@@ -77,9 +77,9 @@ hdfs-config-k8s:
     zookeeperQuorumSize: 1
 hdfs-datanode-k8s:
   global:
-    affinityEnabled: false
     dataNodeHostPath:
     - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: false
     journalnodeQuorumSize: 3
     jsvcEnabled: true
     kerberosConfigFileName: krb5.conf
@@ -92,10 +92,11 @@ hdfs-datanode-k8s:
       runAsUser: 0
     zookeeperQuorumSize: 1
 hdfs-journalnode-k8s:
+  affinity: {}
   global:
-    affinityEnabled: false
     dataNodeHostPath:
     - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: false
     journalnodeQuorumSize: 3
     jsvcEnabled: true
     kerberosConfigFileName: krb5.conf
@@ -107,14 +108,16 @@ hdfs-journalnode-k8s:
       fsGroup: 1000
       runAsUser: 0
     zookeeperQuorumSize: 1
+  nodeSelector: {}
   persistence:
     accessMode: ReadWriteOnce
     size: 20Gi
+  tolerations: []
 hdfs-krb5-k8s:
   global:
-    affinityEnabled: false
     dataNodeHostPath:
     - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: false
     journalnodeQuorumSize: 3
     jsvcEnabled: true
     kerberosConfigFileName: krb5.conf
@@ -137,15 +140,16 @@ hdfs-krb5-k8s:
     port: 88
     type: ClusterIP
 hdfs-namenode-k8s:
+  affinity: {}
   customRunScript: |
     #!/bin/bash -x
     echo Write your own script content!
     echo This message will disappear in 10 seconds.
     sleep 10
   global:
-    affinityEnabled: false
     dataNodeHostPath:
     - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: false
     journalnodeQuorumSize: 3
     jsvcEnabled: true
     kerberosConfigFileName: krb5.conf
@@ -158,11 +162,12 @@ hdfs-namenode-k8s:
       runAsUser: 0
     zookeeperQuorumSize: 1
   hostNetworkEnabled: false
-  namenodePinningEnabled: false
   namenodeStartScript: format-and-run.sh
+  nodeSelector: {}
   persistence:
     accessMode: ReadWriteOnce
     size: 100Gi
+  tolerations: []
 tags:
   ha: true
   kerberos: true
@@ -276,9 +281,9 @@ zookeeper:
         timeoutSeconds: 60
       resources: {}
   global:
-    affinityEnabled: false
     dataNodeHostPath:
     - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: false
     journalnodeQuorumSize: 3
     jsvcEnabled: true
     kerberosConfigFileName: krb5.conf
@@ -861,13 +866,6 @@ spec:
           volumeMounts:
             - name: jsvc-home
               mountPath: /jsvc-home
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                - key: my-hdfs-datanode-exclude
-                  operator: DoesNotExist
       restartPolicy: Always
       volumes:
         - name: dn-scripts

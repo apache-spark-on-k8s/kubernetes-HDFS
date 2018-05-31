@@ -14,6 +14,10 @@ function run_test_case () {
     --set "hdfs-simple-namenode-k8s.nameNodeHostPath=/mnt/sda1/hdfs-name"  \
     --set "hdfs-datanode-k8s.dataNodeHostPath={/mnt/sda1/hdfs-data}"
 
+  if [[ "${DRY_RUN_ONLY:-false}" = "true" ]]; then
+    return
+  fi
+
   k8s_single_pod_ready -l app=hdfs-namenode,release=my-hdfs
   k8s_single_pod_ready -l app=hdfs-datanode,release=my-hdfs
   k8s_single_pod_ready -l app=hdfs-client,release=my-hdfs
@@ -34,8 +38,8 @@ function run_test_case () {
 }
 
 function cleanup_test_case() {
-  helm delete --purge my-hdfs
+  helm delete --purge my-hdfs || true
 
-  _NODE=$(kubectl get node --no-headers -o name | cut -d/ -f2)
-  kubectl label nodes $_NODE hdfs-namenode-selector-
+  _NODE=$(kubectl get node --no-headers -o name | cut -d/ -f2) || true
+  kubectl label nodes $_NODE hdfs-namenode-selector- || true
 }

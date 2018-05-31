@@ -8,6 +8,10 @@ function run_test_case () {
     --values ${_TEST_DIR}/values/kerberos.yaml  \
     --set tags.kerberos=true
 
+  if [[ "${DRY_RUN_ONLY:-false}" = "true" ]]; then
+    return
+  fi
+
   # The above helm command launches all components. However, core HDFS
   # componensts such as namenodes and datanodes are blocked by a expected
   # Kerberos configmap and secret. So we create them here.

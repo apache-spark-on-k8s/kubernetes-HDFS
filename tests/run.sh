@@ -51,7 +51,7 @@ function _helm_diff_and_install () {
   fi
   rm "$tmpfile"
   if [[ "${DRY_RUN_ONLY:-false}" = "true" ]]; then
-    exit 0
+    return
   fi
   echo Running: helm install "$@"
   helm install "$@"

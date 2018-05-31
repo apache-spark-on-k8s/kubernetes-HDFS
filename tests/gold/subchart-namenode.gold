@@ -9,9 +9,9 @@ condition:
   subchart:
     namenode: true
 global:
-  affinityEnabled: false
   dataNodeHostPath:
   - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: false
   fullnameOverride: my-hdfs
   zookeeperQuorumSize: 1
 hdfs-namenode-k8s:
@@ -31,9 +31,9 @@ condition:
   subchart:
     namenode: true
 global:
-  affinityEnabled: false
   dataNodeHostPath:
   - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: false
   fullnameOverride: my-hdfs
   journalnodeQuorumSize: 3
   jsvcEnabled: true
@@ -47,15 +47,16 @@ global:
     runAsUser: 0
   zookeeperQuorumSize: 1
 hdfs-namenode-k8s:
+  affinity: {}
   customRunScript: |
     #!/bin/bash -x
     echo Write your own script content!
     echo This message will disappear in 10 seconds.
     sleep 10
   global:
-    affinityEnabled: false
     dataNodeHostPath:
     - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: false
     fullnameOverride: my-hdfs
     journalnodeQuorumSize: 3
     jsvcEnabled: true
@@ -69,11 +70,12 @@ hdfs-namenode-k8s:
       runAsUser: 0
     zookeeperQuorumSize: 1
   hostNetworkEnabled: false
-  namenodePinningEnabled: false
   namenodeStartScript: format-and-run.sh
+  nodeSelector: {}
   persistence:
     accessMode: ReadWriteOnce
     size: 100Gi
+  tolerations: []
 tags:
   ha: false
   kerberos: false

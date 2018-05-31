@@ -9,9 +9,9 @@ condition:
   subchart:
     config: true
 global:
-  affinityEnabled: false
   dataNodeHostPath:
   - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: false
   fullnameOverride: my-hdfs
   zookeeperQuorumSize: 1
 hdfs-namenode-k8s:
@@ -31,9 +31,9 @@ condition:
   subchart:
     config: true
 global:
-  affinityEnabled: false
   dataNodeHostPath:
   - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: false
   fullnameOverride: my-hdfs
   journalnodeQuorumSize: 3
   jsvcEnabled: true
@@ -51,9 +51,9 @@ hdfs-config-k8s:
     coreSite: {}
     hdfsSite: {}
   global:
-    affinityEnabled: false
     dataNodeHostPath:
     - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: false
     fullnameOverride: my-hdfs
     journalnodeQuorumSize: 3
     jsvcEnabled: true

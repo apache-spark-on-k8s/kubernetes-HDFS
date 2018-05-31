@@ -9,9 +9,9 @@ condition:
   subchart:
     journalnode: true
 global:
-  affinityEnabled: false
   dataNodeHostPath:
   - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: false
   fullnameOverride: my-hdfs
   zookeeperQuorumSize: 1
 hdfs-namenode-k8s:
@@ -31,9 +31,9 @@ condition:
   subchart:
     journalnode: true
 global:
-  affinityEnabled: false
   dataNodeHostPath:
   - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: false
   fullnameOverride: my-hdfs
   journalnodeQuorumSize: 3
   jsvcEnabled: true
@@ -47,10 +47,11 @@ global:
     runAsUser: 0
   zookeeperQuorumSize: 1
 hdfs-journalnode-k8s:
+  affinity: {}
   global:
-    affinityEnabled: false
     dataNodeHostPath:
     - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: false
     fullnameOverride: my-hdfs
     journalnodeQuorumSize: 3
     jsvcEnabled: true
@@ -63,9 +64,11 @@ hdfs-journalnode-k8s:
       fsGroup: 1000
       runAsUser: 0
     zookeeperQuorumSize: 1
+  nodeSelector: {}
   persistence:
     accessMode: ReadWriteOnce
     size: 20Gi
+  tolerations: []
 hdfs-namenode-k8s:
   hostNetworkEnabled: false
 tags:

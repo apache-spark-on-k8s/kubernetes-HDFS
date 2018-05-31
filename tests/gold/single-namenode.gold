@@ -18,9 +18,9 @@ tags:
 
 COMPUTED VALUES:
 global:
-  affinityEnabled: true
   dataNodeHostPath:
   - /hdfs-data
+  defaultAffinityEnabled: true
   journalnodeQuorumSize: 3
   jsvcEnabled: true
   kerberosConfigFileName: krb5.conf
@@ -34,9 +34,9 @@ global:
   zookeeperQuorumSize: 3
 hdfs-client-k8s:
   global:
-    affinityEnabled: true
     dataNodeHostPath:
     - /hdfs-data
+    defaultAffinityEnabled: true
     journalnodeQuorumSize: 3
     jsvcEnabled: true
     kerberosConfigFileName: krb5.conf
@@ -53,9 +53,9 @@ hdfs-config-k8s:
     coreSite: {}
     hdfsSite: {}
   global:
-    affinityEnabled: true
     dataNodeHostPath:
     - /hdfs-data
+    defaultAffinityEnabled: true
     journalnodeQuorumSize: 3
     jsvcEnabled: true
     kerberosConfigFileName: krb5.conf
@@ -71,9 +71,9 @@ hdfs-datanode-k8s:
   dataNodeHostPath:
   - /mnt/sda1/hdfs-data
   global:
-    affinityEnabled: true
     dataNodeHostPath:
     - /hdfs-data
+    defaultAffinityEnabled: true
     journalnodeQuorumSize: 3
     jsvcEnabled: true
     kerberosConfigFileName: krb5.conf
@@ -86,10 +86,11 @@ hdfs-datanode-k8s:
       runAsUser: 0
     zookeeperQuorumSize: 3
 hdfs-simple-namenode-k8s:
+  affinity: {}
   global:
-    affinityEnabled: true
     dataNodeHostPath:
     - /hdfs-data
+    defaultAffinityEnabled: true
     journalnodeQuorumSize: 3
     jsvcEnabled: true
     kerberosConfigFileName: krb5.conf
@@ -102,6 +103,8 @@ hdfs-simple-namenode-k8s:
       runAsUser: 0
     zookeeperQuorumSize: 3
   nameNodeHostPath: /mnt/sda1/hdfs-name
+  nodeSelector: {}
+  tolerations: []
 tags:
   ha: false
   kerberos: false
@@ -225,6 +228,13 @@ spec:
         app: hdfs-datanode
         release: my-hdfs
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: my-hdfs-datanode-exclude
+                  operator: DoesNotExist
       hostNetwork: true
       hostPID: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -259,13 +269,6 @@ spec:
               readOnly: true
             - name: hdfs-data-0
               mountPath: /hadoop/dfs/data/0
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                - key: my-hdfs-datanode-exclude
-                  operator: DoesNotExist
       restartPolicy: Always
       volumes:
         - name: dn-scripts
@@ -363,10 +366,6 @@ spec:
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
-      # Pin the pod to a node. You can label your node like below:
-      #   $ kubectl label nodes YOUR-NODE hdfs-namenode-selector=hdfs-namenode-0
-      nodeSelector:
-        hdfs-namenode-selector: hdfs-namenode-0
       restartPolicy: Always
       volumes:
         - name: hdfs-name

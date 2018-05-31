@@ -9,9 +9,9 @@ condition:
   subchart:
     datanode: true
 global:
-  affinityEnabled: false
   dataNodeHostPath:
   - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: false
   fullnameOverride: my-hdfs
   zookeeperQuorumSize: 1
 hdfs-namenode-k8s:
@@ -31,9 +31,9 @@ condition:
   subchart:
     datanode: true
 global:
-  affinityEnabled: false
   dataNodeHostPath:
   - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: false
   fullnameOverride: my-hdfs
   journalnodeQuorumSize: 3
   jsvcEnabled: true
@@ -48,9 +48,9 @@ global:
   zookeeperQuorumSize: 1
 hdfs-datanode-k8s:
   global:
-    affinityEnabled: false
     dataNodeHostPath:
     - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: false
     fullnameOverride: my-hdfs
     journalnodeQuorumSize: 3
     jsvcEnabled: true
@@ -168,13 +168,6 @@ spec:
               readOnly: true
             - name: hdfs-data-0
               mountPath: /hadoop/dfs/data/0
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                - key: my-hdfs-datanode-exclude
-                  operator: DoesNotExist
       restartPolicy: Always
       volumes:
         - name: dn-scripts
