@@ -186,12 +186,12 @@ See the other chart for `datanodes`.
      ```
 
      If also using namenode labels for Kerberos, add
-     the namenodePinningEnabled option:
+     the nodeSelector option:
      ```
      $ helm install -n my-hdfs-namenode  \
          --set kerberosEnabled=true  \
          --set kerberosRealm=MYCOMPANY.COM  \
-         --set namenodePinningEnabled=true \
+         --set nodeSelector.hdfs-namenode-selector=hdfs-namenode \
          hdfs-namenode-k8s
      ```
 

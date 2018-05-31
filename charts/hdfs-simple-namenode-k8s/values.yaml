@@ -23,3 +23,8 @@ nameNodeHostPath: /hdfs-name
 # Name of the k8s config map containing Hadoop config files such as core-site.xml
 # and hdfs-site.xml.
 hdfsConfigMap: hdfs-config
+
+# Node labels and tolerations for pod assignment
+nodeSelector: {}
+tolerations: []
+affinity: {}

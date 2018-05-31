@@ -49,3 +49,17 @@ kerberosKeytabsSecret: hdfs-kerberos-keytabs
 # the jsvc utility. See the reference doc at
 # https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Secure_DataNode
 jsvcEnabled: true
+
+# Whether or not to expect namenodes in the HA setup.
+namenodeHAEnabled: true
+
+# Node labels and tolerations for pod assignment
+nodeSelector: {}
+tolerations: []
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+          - key: hdfs-datanode-exclude
+            operator: DoesNotExist
