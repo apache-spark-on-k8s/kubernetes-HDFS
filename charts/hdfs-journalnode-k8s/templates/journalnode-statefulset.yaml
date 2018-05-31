@@ -79,6 +79,7 @@ spec:
       {{- end }}
       {{- if .Values.tolerations }}
       tolerations:
+      {{- end }}
 {{ toYaml .Values.tolerations | indent 8 }}
       containers:
         - name: hdfs-journalnode
