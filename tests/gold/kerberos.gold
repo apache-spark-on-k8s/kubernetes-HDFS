@@ -971,8 +971,15 @@ spec:
           - containerPort: 8480
             name: http
           volumeMounts:
+            # Mount a subpath of the volume so that the journal subdir would be
+            # a brand new empty dir. This way, we won't get affected by
+            # existing files in the volume top dir.
             - name: editdir
               mountPath: /hadoop/dfs/journal
+              subPath: journal
+            - name: editdir
+              mountPath: /hadoop/dfs/name
+              subPath: name
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
@@ -1127,8 +1134,12 @@ spec:
             - name: nn-scripts
               mountPath: /nn-scripts
               readOnly: true
+            # Mount a subpath of the volume so that the name subdir would be a
+            # brand new empty dir. This way, we won't get affected by existing
+            # files in the volume top dir.
             - name: metadatadir
               mountPath: /hadoop/dfs/name
+              subPath: name
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
