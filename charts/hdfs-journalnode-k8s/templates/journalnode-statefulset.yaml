@@ -101,6 +101,9 @@ spec:
             - name: editdir
               mountPath: /hadoop/dfs/journal
               subPath: journal
+            - name: editdir
+              mountPath: /hadoop/dfs/name
+              subPath: name
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
