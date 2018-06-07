@@ -197,12 +197,12 @@ spec:
             - name: nn-scripts
               mountPath: /nn-scripts
               readOnly: true
-            # Mount the volume on the parent dir of the expected location
-            # /hadoop/dfs/name so that the name subdir would be a brand
-            # new empty dir. This way, we won't get affected by existing files
-            # in the volume.
+            # Mount a subpath of the volume so that the name subdir would be a
+            # brand new empty dir. This way, we won't get affected by existing
+            # files in the volume top dir.
             - name: metadatadir
-              mountPath: /hadoop/dfs
+              mountPath: /hadoop/dfs/name
+              subPath: name
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
