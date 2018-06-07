@@ -95,8 +95,12 @@ spec:
           - containerPort: 8480
             name: http
           volumeMounts:
+            # Mount the volume on the parent dir of the expected location
+            # /hadoop/dfs/journal so that the journal subdir would be a brand
+            # new empty dir. This way, we won't get affected by existing files
+            # in the volume.
             - name: editdir
-              mountPath: /hadoop/dfs/journal
+              mountPath: /hadoop/dfs
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
