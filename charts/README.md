@@ -289,7 +289,28 @@ takes a list in case you want to use multiple disks.
       --set "global.dataNodeHostPath={/mnt/sda1/hdfs-data0,/mnt/sda1/hdfs-data1}"
 ```
 
-### Pinning some K8s cluster nodes to namenodes
+### Using an existing zookeeper quorum
+
+By default, HDFS on K8s pulls in the zookeeper chart in the incubator remote
+repo (https://kubernetes-charts-incubator.storage.googleapis.com/) as a
+dependency and launhces zookeeper daemons. But your K8s cluster already have a
+zookeeper quorum.
+
+It is possible to use the existing zookeeper. We just need set a few options
+in the helm install command line. It should be something like:
+
+```
+  $helm install -n my-hdfs charts/hdfs-k8s  \
+    --set condition.subchart.zookeeper=false  \
+    --set global.zookeeperQuorumOverride=zk-0.zk-svc.default.svc.cluster.local:2181,zk-1.zk-svc.default.svc.cluster.local:2181,zk-2.zk-svc.default.svc.cluster.local:2181
+```
+
+Setting `condition.subchart.zookeeper` to false prevents the uber-chart from
+bringing in zookeeper as sub-chart. And the `global.zookeeperQuorumOverride`
+option specifies the custom address for a zookeeper quorum. Use your
+zookeeper address here.
+
+### Pinning namenodes to specific K8s cluster nodes
 
 Optionally, you can attach labels to some of your k8s cluster nodes so that
 namenodes will always run on those cluster nodes. This can allow your HDFS
@@ -309,7 +330,7 @@ You should add the nodeSelector option to the helm chart command:
      ...
 ```
 
-### Preventing some K8s cluster nodes from launching datanode daemons
+### Excluding datanodes from some K8s cluster nodes
 
 You may want to exclude some K8s cluster nodes from datanodes launch target.
 For instance, some K8s clusters may let the K8s cluster master node launch
@@ -320,7 +341,7 @@ a datanode. To prevent this, label the cluster nodes with
   $ kubectl label node YOUR-CLUSTER-NODE hdfs-datanode-exclude=yes
 ```
 
-### Launching a setup with a non-HA namenode
+### Launching with a non-HA namenode
 
 You may want non-HA namenode since it is the simplest possible setup.
 Note this won't launch zookeepers nor journalnodes.
