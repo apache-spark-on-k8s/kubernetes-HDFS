@@ -12,7 +12,7 @@ function run_test_case () {
     --set tags.simple=true  \
     --set global.namenodeHAEnabled=false  \
     --set "hdfs-simple-namenode-k8s.nameNodeHostPath=/mnt/sda1/hdfs-name"  \
-    --set "hdfs-datanode-k8s.dataNodeHostPath={/mnt/sda1/hdfs-data}"
+    --set "global.dataNodeHostPath={/mnt/sda1/hdfs-data}"
 
   if [[ "${DRY_RUN_ONLY:-false}" = "true" ]]; then
     return

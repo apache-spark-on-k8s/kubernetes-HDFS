@@ -127,6 +127,17 @@ hdfs-journalnode-k8s:
     accessMode: ReadWriteOnce
     size: 20Gi
   tolerations: []
+hdfs-krb5-k8s:
+  image:
+    pullPolicy: IfNotPresent
+    repository: gcavalcante8808/krb5-server
+    tag: latest
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 20Gi
+  service:
+    port: 88
+    type: ClusterIP
 hdfs-namenode-k8s:
   affinity: {}
   customRunScript: |
@@ -156,6 +167,11 @@ hdfs-namenode-k8s:
   persistence:
     accessMode: ReadWriteOnce
     size: 100Gi
+  tolerations: []
+hdfs-simple-namenode-k8s:
+  affinity: {}
+  nameNodeHostPath: /hdfs-name
+  nodeSelector: {}
   tolerations: []
 tags:
   ha: true
