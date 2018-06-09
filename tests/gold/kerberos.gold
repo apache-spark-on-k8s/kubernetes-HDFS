@@ -168,6 +168,11 @@ hdfs-namenode-k8s:
     accessMode: ReadWriteOnce
     size: 100Gi
   tolerations: []
+hdfs-simple-namenode-k8s:
+  affinity: {}
+  nameNodeHostPath: /hdfs-name
+  nodeSelector: {}
+  tolerations: []
 tags:
   ha: true
   kerberos: true

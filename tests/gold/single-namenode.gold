@@ -6,10 +6,9 @@ REVISION: 1
 CHART: hdfs-0.1.0
 USER-SUPPLIED VALUES:
 global:
-  namenodeHAEnabled: false
-hdfs-datanode-k8s:
   dataNodeHostPath:
   - /mnt/sda1/hdfs-data
+  namenodeHAEnabled: false
 hdfs-simple-namenode-k8s:
   nameNodeHostPath: /mnt/sda1/hdfs-name
 tags:
@@ -19,7 +18,7 @@ tags:
 COMPUTED VALUES:
 global:
   dataNodeHostPath:
-  - /hdfs-data
+  - /mnt/sda1/hdfs-data
   defaultAffinityEnabled: true
   journalnodeQuorumSize: 3
   jsvcEnabled: true
@@ -35,7 +34,7 @@ global:
 hdfs-client-k8s:
   global:
     dataNodeHostPath:
-    - /hdfs-data
+    - /mnt/sda1/hdfs-data
     defaultAffinityEnabled: true
     journalnodeQuorumSize: 3
     jsvcEnabled: true
@@ -54,7 +53,7 @@ hdfs-config-k8s:
     hdfsSite: {}
   global:
     dataNodeHostPath:
-    - /hdfs-data
+    - /mnt/sda1/hdfs-data
     defaultAffinityEnabled: true
     journalnodeQuorumSize: 3
     jsvcEnabled: true
@@ -68,11 +67,9 @@ hdfs-config-k8s:
       runAsUser: 0
     zookeeperQuorumSize: 3
 hdfs-datanode-k8s:
-  dataNodeHostPath:
-  - /mnt/sda1/hdfs-data
   global:
     dataNodeHostPath:
-    - /hdfs-data
+    - /mnt/sda1/hdfs-data
     defaultAffinityEnabled: true
     journalnodeQuorumSize: 3
     jsvcEnabled: true
@@ -85,11 +82,43 @@ hdfs-datanode-k8s:
       fsGroup: 1000
       runAsUser: 0
     zookeeperQuorumSize: 3
+hdfs-journalnode-k8s:
+  affinity: {}
+  nodeSelector: {}
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 20Gi
+  tolerations: []
+hdfs-krb5-k8s:
+  image:
+    pullPolicy: IfNotPresent
+    repository: gcavalcante8808/krb5-server
+    tag: latest
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 20Gi
+  service:
+    port: 88
+    type: ClusterIP
+hdfs-namenode-k8s:
+  affinity: {}
+  customRunScript: |
+    #!/bin/bash -x
+    echo Write your own script content!
+    echo This message will disappear in 10 seconds.
+    sleep 10
+  hostNetworkEnabled: true
+  namenodeStartScript: format-and-run.sh
+  nodeSelector: {}
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 100Gi
+  tolerations: []
 hdfs-simple-namenode-k8s:
   affinity: {}
   global:
     dataNodeHostPath:
-    - /hdfs-data
+    - /mnt/sda1/hdfs-data
     defaultAffinityEnabled: true
     journalnodeQuorumSize: 3
     jsvcEnabled: true
@@ -152,7 +181,7 @@ data:
       </property>
       <property>
         <name>dfs.datanode.data.dir</name>
-        <value>/hdfs-data</value>
+        <value>/mnt/sda1/hdfs-data</value>
       </property>
     </configuration>
 ---
@@ -277,7 +306,7 @@ spec:
             defaultMode: 0744
         - name: hdfs-data-0
           hostPath:
-            path: /hdfs-data
+            path: /mnt/sda1/hdfs-data
         - name: hdfs-config
           configMap:
             name: my-hdfs-config
