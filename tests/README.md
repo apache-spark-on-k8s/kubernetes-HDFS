@@ -21,7 +21,7 @@ The integration tests consists of 4 scripts under the `tests` dir:
 
 You can execute these scripts in the listed order to run the integration tests.
 These scripts do not require any command line options for the basic
-functionality. So an example execution would look lile:
+functionality. So an example execution would look like:
 
 ```
    $ tests/setup.sh
@@ -32,12 +32,12 @@ functionality. So an example execution would look lile:
 
 # Travis CI support
 
-We use [Travis CI](https://travis-ci.org/) to run the integration tests.
-See `.travis.yml` under the top directory. We trigger Travis builds against
-new pull requests to this repo.
+The repo uses [Travis CI](https://travis-ci.org/) to run the integration tests.
+See `.travis.yml` under the top directory. Each new pull request will trigger
+a Travis build to test the PR.
 
 You may want to enable Travis in your own fork before sending pull requests.
-You can trigger Travis builds on your branches in your fork.
+You can trigger Travis builds on branches in your fork.
 For details, see https://docs.travis-ci.com/.
    
 # Advanced usage
@@ -102,18 +102,19 @@ can specify to `CASES` env var to cover the test case only:
 
 Before running `helm install` commands, `run.sh` will also conduct dry-run
 and check the expanded K8s resource yaml content from the debug information.
-The yaml content will be compared against the checked-in gold files.
+The repo has gold files checked in, and the expanded yaml content will be
+compared against the gold files.
 
 To ensure your change produces no diff, you can set the `CRASH_ON_DIFF` env
 var.
 
 ```
-   $ CASES=_basic.sh CRASH_ON_DIFF=true tests/run.sh
+   $ DRY_RUN_ONLY=true CRASH_ON_DIFF=true tests/run.sh
 ```
 
 To promote your yaml output to new golds, you can set the `BLESS_DIFF` env
 var.
 
 ```
-   $ CASES=_basic.sh BLESS_DIFF=true tests/run.sh
+   $ DRY_RUN_ONLY=true BLESS_DIFF=true tests/run.sh
 ```
