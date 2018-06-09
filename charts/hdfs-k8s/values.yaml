@@ -118,7 +118,11 @@ hdfs-simple-namenode-k8s:
 ## ------------------------------------------------------------------------------
 ## hdfs-datanode-k8s:
 ## ------------------------------------------------------------------------------
-hdfs-datanode-k8s: {}
+hdfs-datanode-k8s:
+  ## Node labels and tolerations for pod assignment
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
 
 ## ------------------------------------------------------------------------------
 ## hdfs-krb5-k8s:

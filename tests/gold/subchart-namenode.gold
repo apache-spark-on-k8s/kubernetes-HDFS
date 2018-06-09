@@ -50,7 +50,10 @@ hdfs-config-k8s:
   customHadoopConfig:
     coreSite: {}
     hdfsSite: {}
-hdfs-datanode-k8s: {}
+hdfs-datanode-k8s:
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
 hdfs-journalnode-k8s:
   affinity: {}
   nodeSelector: {}

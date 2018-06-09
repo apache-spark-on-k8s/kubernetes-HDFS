@@ -76,6 +76,7 @@ hdfs-config-k8s:
       runAsUser: 0
     zookeeperQuorumSize: 1
 hdfs-datanode-k8s:
+  affinity: {}
   global:
     dataNodeHostPath:
     - /mnt/sda1/hdfs-data
@@ -91,6 +92,8 @@ hdfs-datanode-k8s:
       fsGroup: 1000
       runAsUser: 0
     zookeeperQuorumSize: 1
+  nodeSelector: {}
+  tolerations: []
 hdfs-journalnode-k8s:
   affinity: {}
   global:
