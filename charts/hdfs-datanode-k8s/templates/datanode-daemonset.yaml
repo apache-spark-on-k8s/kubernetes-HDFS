@@ -9,6 +9,10 @@ spec:
     metadata:
       labels:
         name: hdfs-datanode
+      annotations:
+      {{- if .Values.annotations }}
+{{ toYaml .Values.annotations | indent 8 }}
+      {{- end }}
     spec:
       {{- if .Values.affinity }}
       affinity:
