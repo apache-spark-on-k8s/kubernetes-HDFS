@@ -80,12 +80,12 @@ the main chart using:
 
 Zookeeper, journalnodes and namenodes need persistent volumes for storing
 metadata. By default, the helm charts do not set the storage class name for
-dynamically provisioned voluesm. Nor it does use persistent volume selectors for
+dynamically provisioned volumes, nor does it use persistent volume selectors for
 static persistent volumes.
 
 This means it will rely on a provisioner for default storage volume class for
 dynamic volumes. Or if your cluster has statically provisioned volumes, the
-chart will match existing volumes entirely based on on the size requirements. To
+chart will match existing volumes entirely based on the size requirements. To
 override this default behavior, you can specify storage volume classes for
 dynamic volumes, or volume selectors for static volumes. See below for how to
 set these options.
@@ -102,14 +102,14 @@ set these options.
     the `zookeeper.persistence.size` option. You can also override
     the storage class using `zookeeper.persistence.storageClass`.
   - journalnodes: Each of the three journalnodes will need at least 20 GB in
-    the volume. The size be overridden by the
+    the volume. The size can be overridden by the
     `hdfs-journalnode-k8s.persistence.size` option.
     You can also override the storage class or the selector using
     `hdfs-journalnode-k8s.persistence.storageClass`, or
     `hdfs-journalnode-k8s.persistence.selector` respectively. For details, see the
     values.yaml file inside `hdfs-journalnode-k8s` chart dir.
   - kerberos: The single Kerberos server will need at least 20 GB in the volume.
-    The size be overridden by the `hdfs-krb5-k8s.persistence.size` option.
+    The size can be overridden by the `hdfs-krb5-k8s.persistence.size` option.
     You can also override the storage class or the selector using
     `hdfs-krb5-k8s.persistence.storageClass`, or
     `hdfs-krb5-k8s.persistence.selector` respectively. For details, see the
@@ -293,8 +293,8 @@ takes a list in case you want to use multiple disks.
 
 By default, HDFS on K8s pulls in the zookeeper chart in the incubator remote
 repo (https://kubernetes-charts-incubator.storage.googleapis.com/) as a
-dependency and launhces zookeeper daemons. But your K8s cluster already have a
-zookeeper quorum.
+dependency and launhces zookeeper daemons. But your K8s cluster may already
+have a zookeeper quorum.
 
 It is possible to use the existing zookeeper. We just need set a few options
 in the helm install command line. It should be something like:
