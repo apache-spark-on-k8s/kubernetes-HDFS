@@ -68,7 +68,9 @@ function run_test_case () {
   _NN0=$(kubectl get pods -l app=hdfs-namenode,release=my-hdfs -o name |  \
     head -1 |  \
     cut -d/ -f2)
-  kubectl exec $_NN0 -- sh -c "(apt install -y krb5-user > /dev/null)"  \
+  kubectl exec $_NN0 -- sh -c "(apt update > /dev/null)"  \
+    || true
+  kubectl exec $_NN0 -- sh -c "(DEBIAN_FRONTEND=noninteractive apt install -y krb5-user > /dev/null)"  \
     || true
   _run kubectl exec $_NN0 --   \
     kinit -kt /etc/security/hdfs.keytab  \
@@ -87,7 +89,9 @@ function run_test_case () {
   _run kubectl cp $_KDC:/tmp/user1.keytab $_TEST_DIR/tmp/user1.keytab
   _run kubectl cp $_TEST_DIR/tmp/user1.keytab $_CLIENT:/tmp/user1.keytab
 
-  kubectl exec $_CLIENT -- sh -c "(apt install -y krb5-user > /dev/null)"  \
+  kubectl exec $_CLIENT -- sh -c "(apt update > /dev/null)"  \
+    || true
+  kubectl exec $_CLIENT -- sh -c "(DEBIAN_FRONTEND=noninteractive apt install -y krb5-user > /dev/null)"  \
     || true
 
   _run kubectl exec $_CLIENT -- kinit -kt /tmp/user1.keytab user1@MYCOMPANY.COM
