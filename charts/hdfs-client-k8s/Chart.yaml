@@ -1,0 +1,4 @@
+apiVersion: v1
+name: hdfs-client-k8s
+version: 0.1.0
+description: A client for HDFS on Kubernetes.

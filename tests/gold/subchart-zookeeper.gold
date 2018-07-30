@@ -1,0 +1,486 @@
+
+
+
+NAME:   my-hdfs-zookeeper
+REVISION: 1
+CHART: hdfs-0.1.0
+USER-SUPPLIED VALUES:
+condition:
+  subchart:
+    zookeeper: true
+global:
+  dataNodeHostPath:
+  - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: false
+  fullnameOverride: my-hdfs
+  zookeeperQuorumSize: 1
+hdfs-namenode-k8s:
+  hostNetworkEnabled: false
+tags:
+  ha: false
+zookeeper:
+  env:
+    ZK_HEAP_SIZE: 100m
+  fullnameOverride: my-hdfs-zookeeper
+  replicaCount: 1
+  resources:
+    requests:
+      memory: 100m
+
+COMPUTED VALUES:
+condition:
+  subchart:
+    zookeeper: true
+global:
+  dataNodeHostPath:
+  - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: false
+  fullnameOverride: my-hdfs
+  journalnodeQuorumSize: 3
+  jsvcEnabled: true
+  kerberosConfigFileName: krb5.conf
+  kerberosEnabled: false
+  kerberosRealm: MYCOMPANY.COM
+  namenodeHAEnabled: true
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1000
+    runAsUser: 0
+  zookeeperQuorumSize: 1
+hdfs-config-k8s:
+  customHadoopConfig:
+    coreSite: {}
+    hdfsSite: {}
+hdfs-datanode-k8s:
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+hdfs-journalnode-k8s:
+  affinity: {}
+  nodeSelector: {}
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 20Gi
+  tolerations: []
+hdfs-krb5-k8s:
+  image:
+    pullPolicy: IfNotPresent
+    repository: gcavalcante8808/krb5-server
+    tag: latest
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 20Gi
+  service:
+    port: 88
+    type: ClusterIP
+hdfs-namenode-k8s:
+  affinity: {}
+  customRunScript: |
+    #!/bin/bash -x
+    echo Write your own script content!
+    echo This message will disappear in 10 seconds.
+    sleep 10
+  hostNetworkEnabled: false
+  namenodeStartScript: format-and-run.sh
+  nodeSelector: {}
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 100Gi
+  tolerations: []
+hdfs-simple-namenode-k8s:
+  affinity: {}
+  nameNodeHostPath: /hdfs-name
+  nodeSelector: {}
+  tolerations: []
+tags:
+  ha: false
+  kerberos: false
+  simple: false
+zookeeper:
+  affinity: {}
+  env:
+    JMXAUTH: "false"
+    JMXDISABLE: "false"
+    JMXPORT: 1099
+    JMXSSL: "false"
+    ZK_CLIENT_PORT: 2181
+    ZK_ELECTION_PORT: 3888
+    ZK_HEAP_SIZE: 100m
+    ZK_INIT_LIMIT: 5
+    ZK_LOG_LEVEL: INFO
+    ZK_MAX_CLIENT_CNXNS: 60
+    ZK_MAX_SESSION_TIMEOUT: 40000
+    ZK_MIN_SESSION_TIMEOUT: 4000
+    ZK_PURGE_INTERVAL: 0
+    ZK_SERVER_PORT: 2888
+    ZK_SNAP_RETAIN_COUNT: 3
+    ZK_SYNC_LIMIT: 10
+    ZK_TICK_TIME: 2000
+  exporters:
+    jmx:
+      config:
+        lowercaseOutputName: false
+        rules:
+        - name: zookeeper_$2
+          pattern: org.apache.ZooKeeperService<name0=ReplicatedServer_id(\d+)><>(\w+)
+        - labels:
+            replicaId: $2
+          name: zookeeper_$3
+          pattern: org.apache.ZooKeeperService<name0=ReplicatedServer_id(\d+), name1=replica.(\d+)><>(\w+)
+        - labels:
+            memberType: $3
+            replicaId: $2
+          name: zookeeper_$4
+          pattern: org.apache.ZooKeeperService<name0=ReplicatedServer_id(\d+), name1=replica.(\d+),
+            name2=(\w+)><>(\w+)
+        - labels:
+            memberType: $3
+            replicaId: $2
+          name: zookeeper_$4_$5
+          pattern: org.apache.ZooKeeperService<name0=ReplicatedServer_id(\d+), name1=replica.(\d+),
+            name2=(\w+), name3=(\w+)><>(\w+)
+        startDelaySeconds: 30
+      enabled: false
+      env: {}
+      image:
+        pullPolicy: IfNotPresent
+        repository: sscaling/jmx-prometheus-exporter
+        tag: 0.3.0
+      livenessProbe:
+        failureThreshold: 8
+        httpGet:
+          path: /metrics
+          port: jmxxp
+        initialDelaySeconds: 30
+        periodSeconds: 15
+        successThreshold: 1
+        timeoutSeconds: 60
+      path: /metrics
+      ports:
+        jmxxp:
+          containerPort: 9404
+          protocol: TCP
+      readinessProbe:
+        failureThreshold: 8
+        httpGet:
+          path: /metrics
+          port: jmxxp
+        initialDelaySeconds: 30
+        periodSeconds: 15
+        successThreshold: 1
+        timeoutSeconds: 60
+      resources: {}
+    zookeeper:
+      config:
+        logLevel: info
+        resetOnScrape: "true"
+      enabled: false
+      env: {}
+      image:
+        pullPolicy: IfNotPresent
+        repository: josdotso/zookeeper-exporter
+        tag: v1.1.2
+      livenessProbe:
+        failureThreshold: 8
+        httpGet:
+          path: /metrics
+          port: zookeeperxp
+        initialDelaySeconds: 30
+        periodSeconds: 15
+        successThreshold: 1
+        timeoutSeconds: 60
+      path: /metrics
+      ports:
+        zookeeperxp:
+          containerPort: 9141
+          protocol: TCP
+      readinessProbe:
+        failureThreshold: 8
+        httpGet:
+          path: /metrics
+          port: zookeeperxp
+        initialDelaySeconds: 30
+        periodSeconds: 15
+        successThreshold: 1
+        timeoutSeconds: 60
+      resources: {}
+  fullnameOverride: my-hdfs-zookeeper
+  global:
+    dataNodeHostPath:
+    - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: false
+    fullnameOverride: my-hdfs
+    journalnodeQuorumSize: 3
+    jsvcEnabled: true
+    kerberosConfigFileName: krb5.conf
+    kerberosEnabled: false
+    kerberosRealm: MYCOMPANY.COM
+    namenodeHAEnabled: true
+    podSecurityContext:
+      enabled: false
+      fsGroup: 1000
+      runAsUser: 0
+    zookeeperQuorumSize: 1
+  image:
+    pullPolicy: IfNotPresent
+    repository: gcr.io/google_samples/k8szk
+    tag: v3
+  jobs:
+    chroots:
+      activeDeadlineSeconds: 300
+      backoffLimit: 5
+      completions: 1
+      config:
+        create: []
+      enabled: false
+      env: []
+      parallelism: 1
+      resources: {}
+      restartPolicy: Never
+  livenessProbe:
+    exec:
+      command:
+      - zkOk.sh
+    initialDelaySeconds: 20
+  nodeSelector: {}
+  persistence:
+    accessMode: ReadWriteOnce
+    enabled: true
+    size: 5Gi
+  podAnnotations: {}
+  podDisruptionBudget:
+    maxUnavailable: 1
+  podLabels: {}
+  ports:
+    client:
+      containerPort: 2181
+      protocol: TCP
+    election:
+      containerPort: 3888
+      protocol: TCP
+    server:
+      containerPort: 2888
+      protocol: TCP
+  readinessProbe:
+    exec:
+      command:
+      - zkOk.sh
+    initialDelaySeconds: 20
+  replicaCount: 1
+  resources:
+    requests:
+      memory: 100m
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  service:
+    annotations: {}
+    ports:
+      client:
+        port: 2181
+        protocol: TCP
+        targetPort: client
+    type: ClusterIP
+  terminationGracePeriodSeconds: 1800
+  tolerations: []
+  updateStrategy:
+    type: OnDelete
+
+HOOKS:
+MANIFEST:
+
+---
+# Source: hdfs/charts/zookeeper/templates/service-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-hdfs-zookeeper-headless
+  labels:
+    app: zookeeper
+    chart: zookeeper-1.0.0
+    release: my-hdfs-zookeeper
+    heritage: Tiller
+spec:
+  clusterIP: None
+  ports:
+    - name: client
+      port: 2181
+      targetPort: 
+      protocol: TCP
+    - name: election
+      port: 3888
+      targetPort: 
+      protocol: TCP
+    - name: server
+      port: 2888
+      targetPort: 
+      protocol: TCP
+  selector:
+    app: zookeeper
+    release: my-hdfs-zookeeper
+---
+# Source: hdfs/charts/zookeeper/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-hdfs-zookeeper
+  labels:
+    app: zookeeper
+    chart: zookeeper-1.0.0
+    release: my-hdfs-zookeeper
+    heritage: Tiller
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - name: client
+      port: 2181
+      protocol: TCP
+      targetPort: client
+      
+  selector:
+    app: zookeeper
+    release: my-hdfs-zookeeper
+---
+# Source: hdfs/charts/zookeeper/templates/statefulset.yaml
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: my-hdfs-zookeeper
+  labels:
+    app: zookeeper
+    chart: zookeeper-1.0.0
+    release: my-hdfs-zookeeper
+    heritage: Tiller
+    component: server
+spec:
+  serviceName: my-hdfs-zookeeper-headless
+  replicas: 1
+  terminationGracePeriodSeconds: 1800
+  selector:
+    matchLabels:
+      app: zookeeper
+      release: my-hdfs-zookeeper
+      component: server
+  updateStrategy:
+    type: OnDelete
+    
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+        release: my-hdfs-zookeeper
+        component: server
+      annotations:
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        
+      containers:
+
+        - name: zookeeper
+          image: "gcr.io/google_samples/k8szk:v3"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -xec
+            - zkGenConfig.sh && exec zkServer.sh start-foreground
+          ports:
+            - name: client
+              containerPort: 2181
+              protocol: TCP
+              
+            - name: election
+              containerPort: 3888
+              protocol: TCP
+              
+            - name: server
+              containerPort: 2888
+              protocol: TCP
+              
+          livenessProbe:
+            exec:
+              command:
+              - zkOk.sh
+            initialDelaySeconds: 20
+            
+          readinessProbe:
+            exec:
+              command:
+              - zkOk.sh
+            initialDelaySeconds: 20
+            
+          env:
+            - name: ZK_REPLICAS
+              value: "1"
+            - name: JMXAUTH
+              value: "false"
+            - name: JMXDISABLE
+              value: "false"
+            - name: JMXPORT
+              value: "1099"
+            - name: JMXSSL
+              value: "false"
+            - name: ZK_CLIENT_PORT
+              value: "2181"
+            - name: ZK_ELECTION_PORT
+              value: "3888"
+            - name: ZK_HEAP_SIZE
+              value: "100m"
+            - name: ZK_INIT_LIMIT
+              value: "5"
+            - name: ZK_LOG_LEVEL
+              value: "INFO"
+            - name: ZK_MAX_CLIENT_CNXNS
+              value: "60"
+            - name: ZK_MAX_SESSION_TIMEOUT
+              value: "40000"
+            - name: ZK_MIN_SESSION_TIMEOUT
+              value: "4000"
+            - name: ZK_PURGE_INTERVAL
+              value: "0"
+            - name: ZK_SERVER_PORT
+              value: "2888"
+            - name: ZK_SNAP_RETAIN_COUNT
+              value: "3"
+            - name: ZK_SYNC_LIMIT
+              value: "10"
+            - name: ZK_TICK_TIME
+              value: "2000"
+          resources:
+            requests:
+              memory: 100m
+            
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/zookeeper
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "5Gi"
+---
+# Source: hdfs/charts/zookeeper/templates/poddisruptionbudget.yaml
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: my-hdfs-zookeeper
+  labels:
+    app: zookeeper
+    chart: zookeeper-1.0.0
+    release: my-hdfs-zookeeper
+    heritage: Tiller
+    component: server
+spec:
+  selector:
+    matchLabels:
+      app: zookeeper
+      release: my-hdfs-zookeeper
+      component: server
+  maxUnavailable: 1

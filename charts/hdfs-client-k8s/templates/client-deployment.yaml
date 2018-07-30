@@ -2,18 +2,22 @@ apiVersion: apps/v1
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: hdfs-client
+  name: {{ template "hdfs-k8s.client.fullname" . }}
   labels:
-    app: hdfs-client
+    app: {{ template "hdfs-k8s.client.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hdfs-client
+      app: {{ template "hdfs-k8s.client.name" . }}
+      release: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: hdfs-client
+        app: {{ template "hdfs-k8s.client.name" . }}
+        release: {{ .Release.Name }}
     spec:
       containers:
         - name: hdfs-client
@@ -30,19 +34,19 @@ spec:
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
-            {{- if .Values.kerberosEnabled }}
+            {{- if .Values.global.kerberosEnabled }}
             - name: kerberos-config
               mountPath: /etc/krb5.conf
-              subPath: {{ .Values.kerberosConfigFileName }}
+              subPath: {{ .Values.global.kerberosConfigFileName }}
               readOnly: true
             {{- end }}
       restartPolicy: Always
       volumes:
         - name: hdfs-config
           configMap:
-            name: {{ .Values.hdfsConfigMap }}
-        {{- if .Values.kerberosEnabled }}
+            name: {{ template "hdfs-k8s.config.fullname" . }}
+        {{- if .Values.global.kerberosEnabled }}
         - name: kerberos-config
           configMap:
-            name: {{ .Values.kerberosConfigMap }}
+            name: {{ template "krb5-configmap" . }}
         {{- end }}

@@ -2,30 +2,37 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: hdfs-namenode
+  name: {{ template "hdfs-k8s.namenode.fullname" . }}
   labels:
-    app: hdfs-namenode
+    app: {{ template "hdfs-k8s.namenode.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
 spec:
   ports:
   - port: 8020
     name: fs
   clusterIP: None
   selector:
-    app: hdfs-namenode
+    app: {{ template "hdfs-k8s.namenode.name" . }}
+    release: {{ .Release.Name }}
 ---
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
-  name: hdfs-namenode
+  name: {{ template "hdfs-k8s.namenode.fullname" . }}
+  labels:
+    app: {{ template "hdfs-k8s.namenode.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
 spec:
-  serviceName: "hdfs-namenode"
-  # Create a size-1 set. The namenode DNS name will be
-  # hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local
+  serviceName: {{ template "hdfs-k8s.namenode.fullname" . }}
+  # Create a size-1 set.
   replicas: 1
   template:
     metadata:
       labels:
-        app: hdfs-namenode
+        app: {{ template "hdfs-k8s.namenode.name" . }}
+        release: {{ .Release.Name }}
     spec:
       {{- if .Values.affinity }}
       affinity:
@@ -68,4 +75,4 @@ spec:
             path: {{ .Values.nameNodeHostPath }}
         - name: hdfs-config
           configMap:
-            name: {{ .Values.hdfsConfigMap }}
+            name: {{ template "hdfs-k8s.config.fullname" . }}

@@ -2,6 +2,7 @@ sudo: required
 
 env:
   - CASES=_basic.sh
+  - CASES=_basic-subcharts.sh
   - CASES=_kerberos.sh
   - CASES=_single-namenode.sh
 

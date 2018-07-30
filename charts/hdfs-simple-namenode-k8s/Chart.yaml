@@ -1,4 +1,4 @@
 apiVersion: v1
 name: hdfs-simple-namenode-k8s
-version: 0.2.0
-description: Hadoop Distributed File System (HDFS) hosted by Kubernetes.
+version: 0.1.0
+description: Non-HA namenode for HDFS on Kubernetes.

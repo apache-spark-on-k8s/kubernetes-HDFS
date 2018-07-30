@@ -1,0 +1,248 @@
+## ------------------------------------------------------------------------------
+## zookeeper:
+## ------------------------------------------------------------------------------
+zookeeper:
+  ## Configure Zookeeper resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  resources: ~
+
+  ## The JVM heap size to allocate to Zookeeper
+  env:
+    ZK_HEAP_SIZE: 1G
+
+  ## The number of zookeeper server to have in the quorum.
+  replicaCount: 3
+
+## ------------------------------------------------------------------------------
+## hdfs-config-k8s:
+## ------------------------------------------------------------------------------
+hdfs-config-k8s:
+  ## Custom hadoop config keys passed to the hdfs configmap as extra keys.
+  customHadoopConfig:
+     coreSite: {}
+      ## Set config key and value pairs, e.g.
+      # hadoop.http.authentication.type: kerberos
+
+     hdfsSite: {}
+      ## Set config key and value pairs, e.g.
+      # dfs.datanode.use.datanode.hostname: "false"
+
+## ------------------------------------------------------------------------------
+## hdfs-journalnode-k8s:
+## ------------------------------------------------------------------------------
+hdfs-journalnode-k8s:
+  persistence:
+    ## Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+    ## To choose a suitable persistent volume from available static volumes, selectors
+    ## are used.
+    # selector:
+    #   matchLabels:
+    #     volume-type: hdfs-ssd
+    accessMode: ReadWriteOnce
+    size: 20Gi
+
+  ## Node labels and tolerations for pod assignment
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+## ------------------------------------------------------------------------------
+## hdfs-namenode-k8s:
+## ------------------------------------------------------------------------------
+hdfs-namenode-k8s:
+  ## Name of the namenode start script in the config map.
+  namenodeStartScript: format-and-run.sh
+
+  ## A namenode start script that can have user specified content.
+  ## Can be used to conduct ad-hoc operation as specified by a user.
+  ## To use this, also set the namenodeStartScript variable above
+  ## to custom-run.sh.
+  customRunScript: |
+    #!/bin/bash -x
+    echo Write your own script content!
+    echo This message will disappear in 10 seconds.
+    sleep 10
+
+  persistence:
+    ## Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+
+    ## To choose a suitable persistent volume from available static volumes, selectors
+    ## are used.
+    # selector:
+    #   matchLabels:
+    #     volume-type: hdfs-ssd
+
+    accessMode: ReadWriteOnce
+
+    size: 100Gi
+
+  ## Whether or not to use hostNetwork in namenode pods. Disabling this will break
+  ## data locality as namenode will see pod virtual IPs and fails to equate them with
+  ## cluster node physical IPs associated with data nodes.
+  ## We currently disable this only for CI on minikube.
+  hostNetworkEnabled: true
+
+  ## Node labels and tolerations for pod assignment
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+## ------------------------------------------------------------------------------
+## hdfs-simple-namenode-k8s:
+## ------------------------------------------------------------------------------
+hdfs-simple-namenode-k8s:
+  ## Path of the local disk directory on a cluster node that will contain the namenode
+  ## fsimage and edit logs. This will be mounted to the namenode as a k8s HostPath
+  ## volume.
+  nameNodeHostPath: /hdfs-name
+
+  ## Node labels and tolerations for pod assignment
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+## ------------------------------------------------------------------------------
+## hdfs-datanode-k8s:
+## ------------------------------------------------------------------------------
+hdfs-datanode-k8s:
+  ## Node labels and tolerations for pod assignment
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+## ------------------------------------------------------------------------------
+## hdfs-krb5-k8s:
+## ------------------------------------------------------------------------------
+hdfs-krb5-k8s:
+  persistence:
+    ## Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+
+    ## To choose a suitable persistent volume from available static volumes, selectors
+    ## are used.
+    # selector:
+    #   matchLabels:
+    #     volume-type: hdfs-ssd
+
+    accessMode: ReadWriteOnce
+
+    size: 20Gi
+
+  ## We use a 3rd party image built from https://github.com/gcavalcante8808/docker-krb5-server.
+  ## TODO: The pod currently prints out the admin account in plain text.
+  ## Supply an admin account password using a k8s secret.
+  ## TODO: The auto-generated passwords might be weak due to low entropy.
+  ## Increase entropy by running rngd or haveged.
+  ## TODO: Using latest tag is not desirable. The current image does not have specific tags.
+  ## Find a way to fix it.
+  image:
+    repository: gcavalcante8808/krb5-server
+
+    tag: latest
+
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+
+    port: 88
+## ------------------------------------------------------------------------------
+## Global values affecting all sub-charts:
+## ------------------------------------------------------------------------------
+global:
+  ## A list of the local disk directories on cluster nodes that will contain the datanode
+  ## blocks. These paths will be mounted to the datanode as K8s HostPath volumes.
+  ## In a command line, the list should be enclosed in '{' and '}'.
+  ## e.g. --set "dataNodeHostPath={/hdfs-data,/hdfs-data1}"
+  dataNodeHostPath:
+    - /hdfs-data
+
+  ## Parameters for determining which Unix user and group IDs to use in pods.
+  ## Persistent volume permission may need to match these.
+  podSecurityContext:
+    enabled: false
+    runAsUser: 0
+    fsGroup: 1000
+
+  ## Whether or not to expect namenodes in the HA setup.
+  namenodeHAEnabled: true
+
+  ## The number of zookeeper server to have in the quorum.
+  ## This should match zookeeper.replicaCount above. Used only when
+  ## namenodeHAEnabled is set.
+  zookeeperQuorumSize: 3
+
+  ## Override zookeeper quorum address. Zookeeper is used for determining which namenode
+  ## instance is active. Separated by the comma character. Used only when
+  ## namenodeHAEnabled is set.
+  ##
+  # zookeeperQuorumOverride: zk-0.zk-svc.default.svc.cluster.local:2181,zk-1.zk-svc.default.svc.cluster.local:2181,zk-2.zk-svc.default.svc.cluster.local:2181
+
+  ## How many journal nodes to launch as a quorum. Used only when
+  ## namenodeHAEnabled is set.
+  journalnodeQuorumSize: 3
+
+  ## Whether or not to enable default affinity setting.
+  defaultAffinityEnabled: true
+
+  ## Whether or not Kerberos support is enabled.
+  kerberosEnabled: false
+
+  ## Effective only if Kerberos is enabled. Override th name of the k8s
+  ## ConfigMap containing the kerberos config file.
+  ##
+  # kerberosConfigMapOverride: kerberos-config
+
+  ## Effective only if Kerberos is enabled. Name of the kerberos config file inside
+  ## the config map.
+  kerberosConfigFileName: krb5.conf
+
+  ## Effective only if Kerberos is enabled. Override the name of the k8s Secret
+  ## containing the kerberos keytab files of per-host HDFS principals.
+  ## The secret should have multiple data items. Each data item name
+  ## should be formatted as:
+  ##    `HOST-NAME.keytab`
+  ## where HOST-NAME should match the cluster node
+  ## host name that each per-host hdfs principal is associated with.
+  ##
+  # kerberosKeytabsSecretOverride: hdfs-kerberos-keytabs
+
+  ## Required to be non-empty if Kerberos is enabled. Specify your Kerberos realm name.
+  ## This should match the realm name in your Kerberos config file.
+  kerberosRealm: MYCOMPANY.COM
+
+  ## Effective only if Kerberos is enabled. Enable protection of datanodes using
+  ## the jsvc utility. See the reference doc at
+  ## https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Secure_DataNode
+  jsvcEnabled: true
+
+## Tags and conditions for triggering a group of relevant subcharts.
+tags:
+  ## Trigger all subcharts required for high availability. Enabled by default.
+  ha: true
+
+  ## Trigger all subcharts required for using Kerberos. Disabled by default.
+  kerberos: false
+
+  ## Trigger all subcharts required for non-HA setup. Disabled by default.
+  simple: false

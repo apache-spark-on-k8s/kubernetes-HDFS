@@ -1,29 +1,42 @@
 #!/usr/bin/env bash
 
 function run_test_case () {
-  _run helm install krb5-server  \
-    --name my-krb5-server
-  k8s_single_pod_ready -l app=krb5-server
+  _helm_diff_and_install ${_TEST_DIR}/gold/kerberos.gold  \
+    hdfs-k8s  \
+    -n my-hdfs  \
+    --values ${_TEST_DIR}/values/common.yaml  \
+    --values ${_TEST_DIR}/values/kerberos.yaml  \
+    --set tags.kerberos=true
 
-  _KDC=$(kubectl get pod -l app=krb5-server --no-headers -o name | cut -d/ -f2)
+  if [[ "${DRY_RUN_ONLY:-false}" = "true" ]]; then
+    return
+  fi
+
+  # The above helm command launches all components. However, core HDFS
+  # componensts such as namenodes and datanodes are blocked by a expected
+  # Kerberos configmap and secret. So we create them here.
+  k8s_single_pod_ready -l app=hdfs-krb5,release=my-hdfs
+  _KDC=$(kubectl get pod -l app=hdfs-krb5,release=my-hdfs --no-headers  \
+      -o name | cut -d/ -f2)
   _run kubectl cp $_KDC:/etc/krb5.conf $_TEST_DIR/tmp/krb5.conf
-  _run kubectl create configmap kerberos-config  \
+  _run kubectl create configmap my-hdfs-krb5-config  \
     --from-file=$_TEST_DIR/tmp/krb5.conf
 
-  _run helm install zookeeper  \
-    --name my-zk  \
-    --version 0.6.3 \
-    --repo https://kubernetes-charts-incubator.storage.googleapis.com/  \
-    --set servers=1,heap=100m,resources.requests.memory=100m
-  k8s_single_pod_ready -l app=zookeeper
+  _HOSTS=$(kubectl get nodes  \
+    -o=jsonpath='{.items[*].status.addresses[?(@.type == "Hostname")].address}')
+  _HOSTS+=$(kubectl describe configmap my-hdfs-config |  \
+      grep -A 1 -e dfs.namenode.rpc-address.hdfs-k8s  \
+          -e dfs.namenode.shared.edits.dir |  
+      grep "<value>" |
+      sed -e "s/<value>//"  \
+          -e "s/<\/value>//"  \
+          -e "s/:8020//"  \
+          -e "s/qjournal:\/\///"  \
+          -e "s/:8485;/ /g"  \
+          -e "s/:8485\/hdfs-k8s//")
 
-  _SECRET_CMD="kubectl create secret generic hdfs-kerberos-keytabs"
-  _HOSTS="hdfs-journalnode-0.hdfs-journalnode.default.svc.cluster.local  \
-    hdfs-journalnode-1.hdfs-journalnode.default.svc.cluster.local  \
-    hdfs-journalnode-2.hdfs-journalnode.default.svc.cluster.local  \
-    hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local  \
-    hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local  \
-    $(kubectl get node --no-headers -o name | cut -d/ -f2)"
+  echo Adding service principals for hosts $_HOSTS
+  _SECRET_CMD="kubectl create secret generic my-hdfs-krb5-keytabs"
   for _HOST in $_HOSTS; do
     _run kubectl exec $_KDC -- kadmin.local -q  \
       "addprinc -randkey hdfs/$_HOST@MYCOMPANY.COM"
@@ -34,34 +47,17 @@ function run_test_case () {
     _run kubectl cp $_KDC:/tmp/$_HOST.keytab $_TEST_DIR/tmp/$_HOST.keytab
     _SECRET_CMD+=" --from-file=$_TEST_DIR/tmp/$_HOST.keytab"
   done
+  echo Adding a K8s secret containing Kerberos keytab files
   _run $_SECRET_CMD
 
-  _run helm install hdfs-config-k8s  \
-    --name my-hdfs-config  \
-    --set fullnameOverride=hdfs-config  \
-    --set "dataNodeHostPath={/mnt/sda1/hdfs-data}"  \
-    --set zookeeperQuorum=my-zk-zookeeper-0.my-zk-zookeeper-headless.default.svc.cluster.local:2181 \
-    --set kerberosEnabled=true  \
-    --set kerberosRealm=MYCOMPANY.COM
-
-  _run helm install hdfs-journalnode-k8s  \
-    --name my-hdfs-journalnode  \
-    --set kerberosEnabled=true
-  k8s_all_pods_ready 3 -l app=hdfs-journalnode
-
-  # Disables hostNetwork so namenode pods on a single minikube node can avoid
-  # port conflict
-  _run helm install hdfs-namenode-k8s  \
-    --name my-hdfs-namenode  \
-    --set kerberosEnabled=true  \
-    --set hostNetworkEnabled=false
-  k8s_all_pods_ready 2 -l app=hdfs-namenode
-
-  _run helm install hdfs-datanode-k8s  \
-    --name my-hdfs-datanode  \
-    --set kerberosEnabled=true  \
-    --set "dataNodeHostPath={/mnt/sda1/hdfs-data}"
-  k8s_single_pod_ready -l name=hdfs-datanode
+  k8s_single_pod_ready -l app=zookeeper,release=my-hdfs
+  k8s_all_pods_ready 3 -l app=hdfs-journalnode,release=my-hdfs
+  k8s_all_pods_ready 2 -l app=hdfs-namenode,release=my-hdfs
+  k8s_single_pod_ready -l app=hdfs-datanode,release=my-hdfs
+  k8s_single_pod_ready -l app=hdfs-client,release=my-hdfs
+  _CLIENT=$(kubectl get pods -l app=hdfs-client,release=my-hdfs -o name |  \
+      cut -d/ -f 2)
+  echo Found client pod: $_CLIENT
 
   echo All pods:
   kubectl get pods
@@ -69,25 +65,22 @@ function run_test_case () {
   echo All persistent volumes:
   kubectl get pv
 
-  _NN0=hdfs-namenode-0
-  kubectl exec $_NN0 -- sh -c "(apt install -y krb5-user > /dev/null)"  \
+  _NN0=$(kubectl get pods -l app=hdfs-namenode,release=my-hdfs -o name |  \
+    head -1 |  \
+    cut -d/ -f2)
+  kubectl exec $_NN0 -- sh -c "(apt update > /dev/null)"  \
+    || true
+  kubectl exec $_NN0 -- sh -c "(DEBIAN_FRONTEND=noninteractive apt install -y krb5-user > /dev/null)"  \
     || true
   _run kubectl exec $_NN0 --   \
     kinit -kt /etc/security/hdfs.keytab  \
-    hdfs/hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local@MYCOMPANY.COM
+    hdfs/my-hdfs-namenode-0.my-hdfs-namenode.default.svc.cluster.local@MYCOMPANY.COM
   _run kubectl exec $_NN0 -- hdfs dfsadmin -report
   _run kubectl exec $_NN0 -- hdfs haadmin -getServiceState nn0
   _run kubectl exec $_NN0 -- hdfs haadmin -getServiceState nn1
   _run kubectl exec $_NN0 -- hadoop fs -rm -r -f /tmp
   _run kubectl exec $_NN0 -- hadoop fs -mkdir /tmp
   _run kubectl exec $_NN0 -- hadoop fs -chmod 0777 /tmp
-
-  _run helm install hdfs-client  \
-    --name my-hdfs-client  \
-    --set kerberosEnabled=true
-  k8s_single_pod_ready -l app=hdfs-client
-  _CLIENT=$(kubectl get pods -l app=hdfs-client -o name| cut -d/ -f 2)
-  echo Found client pod $_CLIENT
 
   _run kubectl exec $_KDC -- kadmin.local -q  \
     "addprinc -randkey user1@MYCOMPANY.COM"
@@ -96,7 +89,9 @@ function run_test_case () {
   _run kubectl cp $_KDC:/tmp/user1.keytab $_TEST_DIR/tmp/user1.keytab
   _run kubectl cp $_TEST_DIR/tmp/user1.keytab $_CLIENT:/tmp/user1.keytab
 
-  kubectl exec $_CLIENT -- sh -c "(apt install -y krb5-user > /dev/null)"  \
+  kubectl exec $_CLIENT -- sh -c "(apt update > /dev/null)"  \
+    || true
+  kubectl exec $_CLIENT -- sh -c "(DEBIAN_FRONTEND=noninteractive apt install -y krb5-user > /dev/null)"  \
     || true
 
   _run kubectl exec $_CLIENT -- kinit -kt /tmp/user1.keytab user1@MYCOMPANY.COM
@@ -107,16 +102,7 @@ function run_test_case () {
 }
 
 function cleanup_test_case() {
-  kubectl delete configmap kerberos-config || true
-  kubectl delete secret hdfs-kerberos-keytabs || true
-  local charts="my-hdfs-client  \
-    my-hdfs-datanode  \
-    my-hdfs-namenode  \
-    my-hdfs-journalnode  \
-    my-hdfs-config  \
-    my-zk  \
-    my-krb5-server"
-  for chart in $charts; do
-    helm delete --purge $chart || true
-  done
+  kubectl delete configmap my-hdfs-krb5-config || true
+  kubectl delete secret my-hdfs-krb5-keytabs || true
+  helm delete --purge my-hdfs || true
 }

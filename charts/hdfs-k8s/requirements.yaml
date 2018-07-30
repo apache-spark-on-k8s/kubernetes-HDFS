@@ -1,0 +1,59 @@
+dependencies:
+  - name: zookeeper
+    version: "1.0.0"
+    repository: https://kubernetes-charts-incubator.storage.googleapis.com/
+    condition: condition.subchart.zookeeper
+    tags:
+      - ha
+      - kerberos
+  - name: hdfs-config-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-config-k8s"
+    condition: condition.subchart.config
+    tags:
+      - ha
+      - kerberos
+      - simple
+  - name: hdfs-krb5-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-krb5-k8s"
+    condition: condition.subchart.kerberos
+    tags:
+      - kerberos
+  - name: hdfs-journalnode-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-journalnode-k8s"
+    condition: condition.subchart.journalnode
+    tags:
+      - ha
+      - kerberos
+  - name: hdfs-namenode-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-namenode-k8s"
+    condition: condition.subchart.namenode
+    tags:
+      - ha
+      - kerberos
+  # Non-HA namenode. Disabled by default
+  - name: hdfs-simple-namenode-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-simple-namenode-k8s"
+    condition: condition.subchart.simple-namenode
+    tags:
+      - simple
+  - name: hdfs-datanode-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-datanode-k8s"
+    condition: condition.subchart.datanode
+    tags:
+      - ha
+      - kerberos
+      - simple
+  - name: hdfs-client-k8s
+    version: "0.1.0"
+    repository: "file://../hdfs-client-k8s"
+    condition: condition.subchart.client
+    tags:
+      - ha
+      - kerberos
+      - simple

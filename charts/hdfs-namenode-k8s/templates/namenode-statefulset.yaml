@@ -2,9 +2,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: hdfs-namenode
+  name: {{ template "hdfs-k8s.namenode.fullname" . }}
   labels:
-    app: hdfs-namenode
+    app: {{ template "hdfs-k8s.namenode.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
   annotations:
     # TODO: Deprecated. Replace tolerate-unready-endpoints with
     # v1.Service.PublishNotReadyAddresses.
@@ -17,24 +19,35 @@ spec:
     name: http
   clusterIP: None
   selector:
-    app: hdfs-namenode
+    app: {{ template "hdfs-k8s.namenode.name" . }}
+    release: {{ .Release.Name }}
 ---
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
-  name: hdfs-namenode
+  name: {{ template "hdfs-k8s.namenode.fullname" . }}
+  labels:
+    app: {{ template "hdfs-k8s.namenode.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
 spec:
   selector:
     matchLabels:
-      app: hdfs-namenode
+      app: {{ template "hdfs-k8s.namenode.name" . }}
+      release: {{ .Release.Name }}
   minAvailable: 1
 ---
-# Provides a number of namenode start scripts that meet different needs.
+# Provides namenode helper scripts. Most of them are start scripts
+# that meet different needs.
 # TODO: Support upgrade of metadata in case a new Hadoop version requires it.
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: hdfs-namenode-start-scripts
+  name: {{ template "hdfs-k8s.namenode.fullname" . }}-scripts
+  labels:
+    app: {{ template "hdfs-k8s.namenode.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
 data:
   # A bootstrap script which will start namenode daemons after conducting
   # optional metadata initialization steps. The metadata initialization
@@ -49,18 +62,40 @@ data:
   # For standby namenode, the initialization steps will simply receieve
   # the first batch of metadata updates from the journal node.
   format-and-run.sh: |
-    #!/bin/bash -x
+    #!/usr/bin/env bash
+    # Exit on error. Append "|| true" if you expect an error.
+    set -o errexit
+    # Exit on error inside any functions or subshells.
+    set -o errtrace
+    # Do not allow use of undefined vars. Use ${VAR:-} to use an undefined VAR
+    set -o nounset
+    # Catch an error in command pipes. e.g. mysqldump fails (but gzip succeeds)
+    # in `mysqldump |gzip`
+    set -o pipefail
+    # Turn on traces, useful while debugging.
+    set -o xtrace
+
     _HDFS_BIN=$HADOOP_PREFIX/bin/hdfs
-    if [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-0 ]]
-    then
-      $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -format  \
-          -nonInteractive hdfs-k8s || exit 1
-      $_HDFS_BIN --config $HADOOP_CONF_DIR zkfc -formatZK  \
-          -nonInteractive || exit 1
-    elif [[ ! -d /hadoop/dfs/name/current && "$MY_POD" = hdfs-namenode-1 ]]
-    then
-      $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -bootstrapStandby  \
-          -nonInteractive || exit 1
+    _METADATA_DIR=/hadoop/dfs/name/current
+    if [[ "$MY_POD" = "$NAMENODE_POD_0" ]]; then
+      if [[ ! -d $_METADATA_DIR ]]; then
+          $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -format  \
+              -nonInteractive hdfs-k8s ||
+              (rm -rf $_METADATA_DIR; exit 1)
+      fi
+      _ZKFC_FORMATTED=/hadoop/dfs/name/current/.hdfs-k8s-zkfc-formatted
+      if [[ ! -f $_ZKFC_FORMATTED ]]; then
+        _OUT=$($_HDFS_BIN --config $HADOOP_CONF_DIR zkfc -formatZK -nonInteractive 2>&1)
+        # zkfc masks fatal exceptions and returns exit code 0
+        (echo $_OUT | grep -q "FATAL") && exit 1
+        touch $_ZKFC_FORMATTED
+      fi
+    elif [[ "$MY_POD" = "$NAMENODE_POD_1" ]]; then
+      if [[ ! -d $_METADATA_DIR ]]; then
+        $_HDFS_BIN --config $HADOOP_CONF_DIR namenode -bootstrapStandby  \
+            -nonInteractive ||  \
+            (rm -rf $_METADATA_DIR; exit 1)
+      fi
     fi
     $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR start zkfc
     $_HDFS_BIN --config $HADOOP_CONF_DIR namenode
@@ -68,8 +103,8 @@ data:
   # A start script that will just hang indefinitely. A user can then get
   # inside the pod and debug. Or a user can conduct a custom manual operations.
   do-nothing.sh: |
-    #!/bin/bash -x
-    /usr/bin/tail -f /var/log/dmesg
+    #!/usr/bin/env bash
+    tail -f /var/log/dmesg
 
   # A start script that has user specified content. Can be used to conduct
   # ad-hoc operation as specified by a user.
@@ -78,17 +113,19 @@ data:
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
-  name: hdfs-namenode
+  name: {{ template "hdfs-k8s.namenode.fullname" . }}
+  labels:
+    app: {{ template "hdfs-k8s.namenode.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
 spec:
-  serviceName: "hdfs-namenode"
-  # Create a size-2 set. The namenode DNS names will be
-  # hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local
-  # and hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local
+  serviceName: {{ template "hdfs-k8s.namenode.fullname" . }}
   replicas: 2
   template:
     metadata:
       labels:
-        app: hdfs-namenode
+        app: {{ template "hdfs-k8s.namenode.name" . }}
+        release: {{ .Release.Name }}
     spec:
       {{- if .Values.hostNetworkEnabled }}
       # Use hostNetwork so datanodes connect to namenode without going through an overlay network
@@ -105,6 +142,21 @@ spec:
       {{- if .Values.affinity }}
       affinity:
 {{ toYaml .Values.affinity | indent 8 }}
+      {{- else if .Values.global.defaultAffinityEnabled }}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                      - {{ template "hdfs-k8s.namenode.name" . }}
+                  - key: "release"
+                    operator: In
+                    values:
+                      - {{ .Release.Name }}
+              topologyKey: "kubernetes.io/hostname"
       {{- end }}
       {{- if .Values.nodeSelector }}
       nodeSelector:
@@ -128,34 +180,42 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: NAMENODE_POD_0
+              value: {{ template "namenode-pod-0" . }}
+            - name: NAMENODE_POD_1
+              value: {{ template "namenode-pod-1" . }}
           command: ['/bin/sh', '-c']
           # The start script is provided by a config map.
           args:
-            - /entrypoint.sh "/nn-start/{{ .Values.namenodeStartScript }}"
+            - /entrypoint.sh "/nn-scripts/{{ .Values.namenodeStartScript }}"
           ports:
           - containerPort: 8020
             name: fs
           - containerPort: 50070
             name: http
           volumeMounts:
+            - name: nn-scripts
+              mountPath: /nn-scripts
+              readOnly: true
+            # Mount a subpath of the volume so that the name subdir would be a
+            # brand new empty dir. This way, we won't get affected by existing
+            # files in the volume top dir.
             - name: metadatadir
               mountPath: /hadoop/dfs/name
-            - name: nn-start
-              mountPath: /nn-start
-              readOnly: true
+              subPath: name
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
-            {{- if .Values.kerberosEnabled }}
+            {{- if .Values.global.kerberosEnabled }}
             - name: kerberos-config
               mountPath: /etc/krb5.conf
-              subPath: {{ .Values.kerberosConfigFileName }}
+              subPath: {{ .Values.global.kerberosConfigFileName }}
               readOnly: true
             - name: kerberos-keytab-copy
               mountPath: /etc/security/
               readOnly: true
             {{- end }}
-      {{- if .Values.kerberosEnabled }}
+      {{- if .Values.global.kerberosEnabled }}
       initContainers:
         - name: copy-kerberos-keytab
           image: busybox:1.27.1
@@ -179,33 +239,45 @@ spec:
       {{- end }}
       restartPolicy: Always
       volumes:
-        - name: nn-start
+        - name: nn-scripts
           configMap:
-            name: hdfs-namenode-start-scripts
+            name: {{ template "hdfs-k8s.namenode.fullname" . }}-scripts
             defaultMode: 0744
         - name: hdfs-config
           configMap:
-            name: {{ .Values.hdfsConfigMap }}
-        {{- if .Values.kerberosEnabled }}
+            name: {{ template "hdfs-k8s.config.fullname" . }}
+        {{- if .Values.global.kerberosEnabled }}
         - name: kerberos-config
           configMap:
-            name: {{ .Values.kerberosConfigMap }}
+            name: {{ template "krb5-configmap" . }}
         - name: kerberos-keytabs
           secret:
-            secretName: {{ .Values.kerberosKeytabsSecret }}
+            secretName: {{ template "krb5-keytabs-secret" . }}
         - name: kerberos-keytab-copy
           emptyDir: {}
         {{- end }}
-      {{- if .Values.podSecurityContext.enabled }}
+      {{- if .Values.global.podSecurityContext.enabled }}
       securityContext:
-        runAsUser: {{ .Values.podSecurityContext.runAsUser }}
-        fsGroup: {{ .Values.podSecurityContext.fsGroup }}
+        runAsUser: {{ .Values.global.podSecurityContext.runAsUser }}
+        fsGroup: {{ .Values.global.podSecurityContext.fsGroup }}
       {{- end }}
   volumeClaimTemplates:
-  - metadata:
-      name: metadatadir
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: {{ .Values.metadataVolumeSize }}
+    - metadata:
+        name: metadatadir
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | quote }}
+      {{- if .Values.persistence.storageClass }}
+        {{- if (eq "-" .Values.persistence.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ .Values.persistence.storageClass }}"
+        {{- end }}
+      {{- end }}
+      {{- if .Values.persistence.selector }}
+        selector:
+{{ toYaml .Values.persistence.selector | indent 10 }}
+      {{- end }}

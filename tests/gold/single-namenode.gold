@@ -1,0 +1,408 @@
+
+
+
+NAME:   my-hdfs
+REVISION: 1
+CHART: hdfs-0.1.0
+USER-SUPPLIED VALUES:
+global:
+  dataNodeHostPath:
+  - /mnt/sda1/hdfs-data
+  namenodeHAEnabled: false
+hdfs-simple-namenode-k8s:
+  nameNodeHostPath: /mnt/sda1/hdfs-name
+tags:
+  ha: false
+  simple: true
+
+COMPUTED VALUES:
+global:
+  dataNodeHostPath:
+  - /mnt/sda1/hdfs-data
+  defaultAffinityEnabled: true
+  journalnodeQuorumSize: 3
+  jsvcEnabled: true
+  kerberosConfigFileName: krb5.conf
+  kerberosEnabled: false
+  kerberosRealm: MYCOMPANY.COM
+  namenodeHAEnabled: false
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1000
+    runAsUser: 0
+  zookeeperQuorumSize: 3
+hdfs-client-k8s:
+  global:
+    dataNodeHostPath:
+    - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: true
+    journalnodeQuorumSize: 3
+    jsvcEnabled: true
+    kerberosConfigFileName: krb5.conf
+    kerberosEnabled: false
+    kerberosRealm: MYCOMPANY.COM
+    namenodeHAEnabled: false
+    podSecurityContext:
+      enabled: false
+      fsGroup: 1000
+      runAsUser: 0
+    zookeeperQuorumSize: 3
+hdfs-config-k8s:
+  customHadoopConfig:
+    coreSite: {}
+    hdfsSite: {}
+  global:
+    dataNodeHostPath:
+    - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: true
+    journalnodeQuorumSize: 3
+    jsvcEnabled: true
+    kerberosConfigFileName: krb5.conf
+    kerberosEnabled: false
+    kerberosRealm: MYCOMPANY.COM
+    namenodeHAEnabled: false
+    podSecurityContext:
+      enabled: false
+      fsGroup: 1000
+      runAsUser: 0
+    zookeeperQuorumSize: 3
+hdfs-datanode-k8s:
+  affinity: {}
+  global:
+    dataNodeHostPath:
+    - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: true
+    journalnodeQuorumSize: 3
+    jsvcEnabled: true
+    kerberosConfigFileName: krb5.conf
+    kerberosEnabled: false
+    kerberosRealm: MYCOMPANY.COM
+    namenodeHAEnabled: false
+    podSecurityContext:
+      enabled: false
+      fsGroup: 1000
+      runAsUser: 0
+    zookeeperQuorumSize: 3
+  nodeSelector: {}
+  tolerations: []
+hdfs-journalnode-k8s:
+  affinity: {}
+  nodeSelector: {}
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 20Gi
+  tolerations: []
+hdfs-krb5-k8s:
+  image:
+    pullPolicy: IfNotPresent
+    repository: gcavalcante8808/krb5-server
+    tag: latest
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 20Gi
+  service:
+    port: 88
+    type: ClusterIP
+hdfs-namenode-k8s:
+  affinity: {}
+  customRunScript: |
+    #!/bin/bash -x
+    echo Write your own script content!
+    echo This message will disappear in 10 seconds.
+    sleep 10
+  hostNetworkEnabled: true
+  namenodeStartScript: format-and-run.sh
+  nodeSelector: {}
+  persistence:
+    accessMode: ReadWriteOnce
+    size: 100Gi
+  tolerations: []
+hdfs-simple-namenode-k8s:
+  affinity: {}
+  global:
+    dataNodeHostPath:
+    - /mnt/sda1/hdfs-data
+    defaultAffinityEnabled: true
+    journalnodeQuorumSize: 3
+    jsvcEnabled: true
+    kerberosConfigFileName: krb5.conf
+    kerberosEnabled: false
+    kerberosRealm: MYCOMPANY.COM
+    namenodeHAEnabled: false
+    podSecurityContext:
+      enabled: false
+      fsGroup: 1000
+      runAsUser: 0
+    zookeeperQuorumSize: 3
+  nameNodeHostPath: /mnt/sda1/hdfs-name
+  nodeSelector: {}
+  tolerations: []
+tags:
+  ha: false
+  kerberos: false
+  simple: true
+zookeeper:
+  env:
+    ZK_HEAP_SIZE: 1G
+  replicaCount: 3
+  resources: null
+
+HOOKS:
+MANIFEST:
+
+---
+# Source: hdfs/charts/hdfs-config-k8s/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-hdfs-config
+  labels:
+    app: hdfs-client
+    chart: hdfs-config-k8s-0.1.0
+    release: my-hdfs
+data:
+  core-site.xml: |
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+      <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://my-hdfs-namenode-0.my-hdfs-namenode.default.svc.cluster.local:8020</value>
+      </property>
+    </configuration>
+  hdfs-site.xml: |
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+      <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file:///hadoop/dfs/name</value>
+      </property>
+      <property>
+        <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+        <value>false</value>
+      </property>
+      <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>/mnt/sda1/hdfs-data</value>
+      </property>
+    </configuration>
+---
+# Source: hdfs/charts/hdfs-datanode-k8s/templates/datanode-daemonset.yaml
+# Provides datanode helper scripts.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-hdfs-datanode-scripts
+  labels:
+    app: hdfs-datanode
+    chart: hdfs-datanode-k8s-0.1.0
+    release: my-hdfs
+data:
+  check-status.sh: |
+    #!/usr/bin/env bash
+    # Exit on error. Append "|| true" if you expect an error.
+    set -o errexit
+    # Exit on error inside any functions or subshells.
+    set -o errtrace
+    # Do not allow use of undefined vars. Use ${VAR:-} to use an undefined VAR
+    set -o nounset
+    # Catch an error in command pipes. e.g. mysqldump fails (but gzip succeeds)
+    # in `mysqldump |gzip`
+    set -o pipefail
+    # Turn on traces, useful while debugging.
+    set -o xtrace
+
+    # Check if datanode registered with the namenode and got non-null cluster ID.
+    _PORTS="50075 1006"
+    _URL_PATH="jmx?qry=Hadoop:service=DataNode,name=DataNodeInfo"
+    _CLUSTER_ID=""
+    for _PORT in $_PORTS; do
+      _CLUSTER_ID+=$(curl -s http://localhost:${_PORT}/$_URL_PATH |  \
+          grep ClusterId) || true
+    done
+    echo $_CLUSTER_ID | grep -q -v null
+---
+# Source: hdfs/charts/hdfs-simple-namenode-k8s/templates/namenode-statefulset.yaml
+# A headless service to create DNS records.
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-hdfs-namenode
+  labels:
+    app: hdfs-namenode
+    chart: hdfs-simple-namenode-k8s-0.1.0
+    release: my-hdfs
+spec:
+  ports:
+  - port: 8020
+    name: fs
+  clusterIP: None
+  selector:
+    app: hdfs-namenode
+    release: my-hdfs
+---
+# Source: hdfs/charts/hdfs-datanode-k8s/templates/datanode-daemonset.yaml
+# Deleting a daemonset may need some trick. See
+# https://github.com/kubernetes/kubernetes/issues/33245#issuecomment-261250489
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: my-hdfs-datanode
+  labels:
+    app: hdfs-datanode
+    chart: hdfs-datanode-k8s-0.1.0
+    release: my-hdfs
+spec:
+  template:
+    metadata:
+      labels:
+        app: hdfs-datanode
+        release: my-hdfs
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: my-hdfs-datanode-exclude
+                  operator: DoesNotExist
+      hostNetwork: true
+      hostPID: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: datanode
+          image: uhopper/hadoop-datanode:2.7.2
+          env:
+            - name: HADOOP_CUSTOM_CONF_DIR
+              value: /etc/hadoop-custom-conf
+            - name: MULTIHOMED_NETWORK
+              value: "0"
+          livenessProbe:
+            exec:
+              command:
+                - /dn-scripts/check-status.sh
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            exec:
+              command:
+                - /dn-scripts/check-status.sh
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: dn-scripts
+              mountPath: /dn-scripts
+              readOnly: true
+            - name: hdfs-config
+              mountPath: /etc/hadoop-custom-conf
+              readOnly: true
+            - name: hdfs-data-0
+              mountPath: /hadoop/dfs/data/0
+      restartPolicy: Always
+      volumes:
+        - name: dn-scripts
+          configMap:
+            name: my-hdfs-datanode-scripts
+            defaultMode: 0744
+        - name: hdfs-data-0
+          hostPath:
+            path: /mnt/sda1/hdfs-data
+        - name: hdfs-config
+          configMap:
+            name: my-hdfs-config
+---
+# Source: hdfs/charts/hdfs-client-k8s/templates/client-deployment.yaml
+apiVersion: apps/v1
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: my-hdfs-client
+  labels:
+    app: hdfs-client
+    chart: hdfs-client-k8s-0.1.0
+    release: my-hdfs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hdfs-client
+      release: my-hdfs
+  template:
+    metadata:
+      labels:
+        app: hdfs-client
+        release: my-hdfs
+    spec:
+      containers:
+        - name: hdfs-client
+          image: uhopper/hadoop:2.7.2
+          env:
+            - name: HADOOP_CUSTOM_CONF_DIR
+              value: /etc/hadoop-custom-conf
+            - name: MULTIHOMED_NETWORK
+              value: "0"
+          command: ['/bin/sh', '-c']
+          args:
+            - /entrypoint.sh /usr/bin/tail -f /var/log/dmesg
+          volumeMounts:
+            - name: hdfs-config
+              mountPath: /etc/hadoop-custom-conf
+              readOnly: true
+      restartPolicy: Always
+      volumes:
+        - name: hdfs-config
+          configMap:
+            name: my-hdfs-config
+---
+# Source: hdfs/charts/hdfs-simple-namenode-k8s/templates/namenode-statefulset.yaml
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: my-hdfs-namenode
+  labels:
+    app: hdfs-namenode
+    chart: hdfs-simple-namenode-k8s-0.1.0
+    release: my-hdfs
+spec:
+  serviceName: my-hdfs-namenode
+  # Create a size-1 set.
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: hdfs-namenode
+        release: my-hdfs
+    spec:
+      # Use hostNetwork so datanodes connect to namenode without going through an overlay network
+      # like weave. Otherwise, namenode fails to see physical IP address of datanodes.
+      hostNetwork: true
+      hostPID: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: hdfs-namenode
+          image: uhopper/hadoop-namenode:2.7.2
+          env:
+            - name: HADOOP_CUSTOM_CONF_DIR
+              value: /etc/hadoop-custom-conf
+            - name: CLUSTER_NAME
+              value: hdfs-k8s
+          ports:
+          - containerPort: 8020
+            name: fs
+          volumeMounts:
+            - name: hdfs-name
+              mountPath: /hadoop/dfs/name
+            - name: hdfs-config
+              mountPath: /etc/hadoop-custom-conf
+              readOnly: true
+      restartPolicy: Always
+      volumes:
+        - name: hdfs-name
+          hostPath:
+            path: /mnt/sda1/hdfs-name
+        - name: hdfs-config
+          configMap:
+            name: my-hdfs-config

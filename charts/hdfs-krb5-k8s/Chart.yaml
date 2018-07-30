@@ -1,0 +1,4 @@
+apiVersion: v1
+name: hdfs-krb5-k8s
+version: 0.1.0
+description: Kerberos server that can be used for HDFS on Kubernetes.

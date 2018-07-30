@@ -1,18 +1,17 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "hdfs-config-k8s.fullname" . }}
+  name: {{ template "hdfs-k8s.config.fullname" . }}
   labels:
-    app: {{ template "hdfs-config-k8s.name" . }}
-    chart: {{ template "hdfs-config-k8s.chart" . }}
+    app: {{ template "hdfs-k8s.client.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
 data:
   core-site.xml: |
     <?xml version="1.0"?>
     <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
     <configuration>
-    {{- if .Values.kerberosEnabled }}
+    {{- if .Values.global.kerberosEnabled }}
       <property>
         <name>hadoop.security.authentication</name>
         <value>kerberos</value>
@@ -48,19 +47,19 @@ data:
         <value>{{ $value }}</value>
       </property>
     {{- end }}
-    {{- if .Values.namenodeHAEnabled }}
+    {{- if .Values.global.namenodeHAEnabled }}
       <property>
         <name>fs.defaultFS</name>
         <value>hdfs://hdfs-k8s</value>
       </property>
       <property>
         <name>ha.zookeeper.quorum</name>
-        <value>{{ .Values.zookeeperQuorum }}</value>
+        <value>{{ template "zookeeper-quorum" . }}</value>
       </property>
     {{- else }}
       <property>
         <name>fs.defaultFS</name>
-        <value>hdfs://hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020</value>
+        <value>hdfs://{{ template "namenode-svc-0" . }}:8020</value>
       </property>
     {{- end }}
     </configuration>
@@ -68,7 +67,7 @@ data:
     <?xml version="1.0"?>
     <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
     <configuration>
-    {{- if .Values.kerberosEnabled }}
+    {{- if .Values.global.kerberosEnabled }}
       <property>
         <name>dfs.block.access.token.enable</name>
         <value>true</value>
@@ -120,7 +119,7 @@ data:
         <name>dfs.datanode.keytab.file</name>
         <value>/etc/security/hdfs.keytab</value>
       </property>
-      {{- if .Values.jsvcEnabled }}
+      {{- if .Values.global.jsvcEnabled }}
       <property>
         <name>dfs.datanode.address</name>
         <value>0.0.0.0:1004</value>
@@ -137,7 +136,7 @@ data:
         <value>{{ $value }}</value>
       </property>
     {{- end }}
-    {{- if .Values.namenodeHAEnabled }}
+    {{- if .Values.global.namenodeHAEnabled }}
       <property>
         <name>dfs.nameservices</name>
         <value>hdfs-k8s</value>
@@ -148,23 +147,23 @@ data:
       </property>
       <property>
         <name>dfs.namenode.rpc-address.hdfs-k8s.nn0</name>
-        <value>hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:8020</value>
+        <value>{{ template "namenode-svc-0" . }}:8020</value>
       </property>
       <property>
         <name>dfs.namenode.rpc-address.hdfs-k8s.nn1</name>
-        <value>hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:8020</value>
+        <value>{{ template "namenode-svc-1" . }}:8020</value>
       </property>
       <property>
         <name>dfs.namenode.http-address.hdfs-k8s.nn0</name>
-        <value>hdfs-namenode-0.hdfs-namenode.default.svc.cluster.local:50070</value>
+        <value>{{ template "namenode-svc-0" . }}:50070</value>
       </property>
       <property>
         <name>dfs.namenode.http-address.hdfs-k8s.nn1</name>
-        <value>hdfs-namenode-1.hdfs-namenode.default.svc.cluster.local:50070</value>
+        <value>{{ template "namenode-svc-1" . }}:50070</value>
       </property>
       <property>
         <name>dfs.namenode.shared.edits.dir</name>
-        <value>qjournal://{{ .Values.journalQuorum }}/hdfs-k8s</value>
+        <value>qjournal://{{ template "journalnode-quorum" . }}/hdfs-k8s</value>
       </property>
       <property>
         <name>dfs.ha.automatic-failover.enabled</name>
@@ -193,6 +192,6 @@ data:
       </property>
       <property>
         <name>dfs.datanode.data.dir</name>
-        <value>{{ template "datanode-data-dirs" . }}</value>
+        <value>{{ join "," .Values.global.dataNodeHostPath }}</value>
       </property>
     </configuration>
