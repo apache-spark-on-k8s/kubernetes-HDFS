@@ -126,6 +126,10 @@ spec:
       labels:
         app: {{ template "hdfs-k8s.namenode.name" . }}
         release: {{ .Release.Name }}
+      {{- if .Values.podAnnotations }}
+      annotations:
+{{ toYaml .Values.podAnnotations | indent 8 }}
+      {{- end }}
     spec:
       {{- if .Values.hostNetworkEnabled }}
       # Use hostNetwork so datanodes connect to namenode without going through an overlay network
