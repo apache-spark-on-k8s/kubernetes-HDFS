@@ -192,6 +192,6 @@ data:
       </property>
       <property>
         <name>dfs.datanode.data.dir</name>
-        <value>{{ join "," .Values.global.dataNodeHostPath }}</value>
+        <value>{{ template "datanode-data-dirs" . }}</value>
       </property>
     </configuration>

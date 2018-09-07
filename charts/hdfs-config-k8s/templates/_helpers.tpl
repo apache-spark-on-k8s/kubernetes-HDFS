@@ -51,12 +51,12 @@ last item does not have comma. It uses index 0 for the last item since that is
 the only special index that helm template gives us.
 */}}
 {{- define "datanode-data-dirs" -}}
-{{- range $index, $path := .Values.dataNodeHostPath -}}
+{{- range $index, $path := .Values.global.dataNodeHostPath -}}
   {{- if ne $index 0 -}}
     /hadoop/dfs/data/{{ $index }},
   {{- end -}}
 {{- end -}}
-{{- range $index, $path := .Values.dataNodeHostPath -}}
+{{- range $index, $path := .Values.global.dataNodeHostPath -}}
   {{- if eq $index 0 -}}
     /hadoop/dfs/data/{{ $index }}
   {{- end -}}
