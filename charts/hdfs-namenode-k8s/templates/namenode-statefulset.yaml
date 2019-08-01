@@ -197,6 +197,8 @@ spec:
             name: fs
           - containerPort: 50070
             name: http
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
           volumeMounts:
             - name: nn-scripts
               mountPath: /nn-scripts

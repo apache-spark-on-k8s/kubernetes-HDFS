@@ -66,6 +66,8 @@ spec:
           ports:
           - containerPort: 8020
             name: fs
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
           volumeMounts:
             - name: hdfs-name
               mountPath: /hadoop/dfs/name

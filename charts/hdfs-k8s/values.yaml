@@ -48,6 +48,16 @@ hdfs-journalnode-k8s:
     accessMode: ReadWriteOnce
     size: 20Gi
 
+  resources: {}  
+    ## Optionally specify how much CPU and memory (RAM) each container needs.
+    ##
+    # limits:
+    #  cpu: 1
+    #  memory: 512Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi    
+
   ## Node labels and tolerations for pod assignment
   nodeSelector: {}
   tolerations: []
@@ -89,6 +99,16 @@ hdfs-namenode-k8s:
     accessMode: ReadWriteOnce
 
     size: 100Gi
+    
+  resources: {}  
+    ## Optionally specify how much CPU and memory (RAM) each container needs.
+    ##
+    # limits:
+    #  cpu: 1
+    #  memory: 512Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi    
 
   ## Whether or not to use hostNetwork in namenode pods. Disabling this will break
   ## data locality as namenode will see pod virtual IPs and fails to equate them with
@@ -110,6 +130,16 @@ hdfs-simple-namenode-k8s:
   ## volume.
   nameNodeHostPath: /hdfs-name
 
+  resources: {}
+    ## Optionally specify how much CPU and memory (RAM) each container needs.
+    ##
+    # limits:
+    #  cpu: 1
+    #  memory: 512Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+
   ## Node labels and tolerations for pod assignment
   nodeSelector: {}
   tolerations: []
@@ -119,6 +149,17 @@ hdfs-simple-namenode-k8s:
 ## hdfs-datanode-k8s:
 ## ------------------------------------------------------------------------------
 hdfs-datanode-k8s:
+  resources: {}
+    ## Optionally specify how much CPU and memory (RAM) each container needs.
+    ##
+    # limits:
+    #  cpu: 1
+    #  memory: 512Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+
+
   ## Node labels and tolerations for pod assignment
   nodeSelector: {}
   tolerations: []

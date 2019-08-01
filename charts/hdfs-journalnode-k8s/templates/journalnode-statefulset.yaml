@@ -98,6 +98,8 @@ spec:
             name: jn
           - containerPort: 8480
             name: http
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
           volumeMounts:
             # Mount a subpath of the volume so that the journal subdir would be
             # a brand new empty dir. This way, we won't get affected by

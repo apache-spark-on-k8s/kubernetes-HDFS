@@ -108,6 +108,8 @@ spec:
             periodSeconds: 30
           securityContext:
             privileged: true
+          resources:
+{{ toYaml .Values.resources | indent 12 }} 
           volumeMounts:
             - name: dn-scripts
               mountPath: /dn-scripts
