@@ -91,6 +91,9 @@ spec:
           env:
             - name: HADOOP_CUSTOM_CONF_DIR
               value: /etc/hadoop-custom-conf
+{{- if .Values.env }}
+{{ toYaml .Values.env | indent 12 }}
+{{- end }}              
           command: ["/entrypoint.sh"]
           args: ["/opt/hadoop-2.7.2/bin/hdfs", "--config", "/etc/hadoop", "journalnode"]
           ports:

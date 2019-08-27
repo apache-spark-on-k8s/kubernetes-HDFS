@@ -94,6 +94,9 @@ spec:
             - name: JSVC_HOME
               value: /jsvc-home
             {{- end }}
+{{- if .Values.env }}
+{{ toYaml .Values.env | indent 12 }}
+{{- end }}            
           livenessProbe:
             exec:
               command:

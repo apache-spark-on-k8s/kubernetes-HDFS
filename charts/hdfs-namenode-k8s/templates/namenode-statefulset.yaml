@@ -188,6 +188,9 @@ spec:
               value: {{ template "namenode-pod-0" . }}
             - name: NAMENODE_POD_1
               value: {{ template "namenode-pod-1" . }}
+{{- if .Values.env }}
+{{ toYaml .Values.env | indent 12 }}
+{{- end }}              
           command: ['/bin/sh', '-c']
           # The start script is provided by a config map.
           args:

@@ -4,7 +4,7 @@
 zookeeper:
   ## Configure Zookeeper resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-  resources: ~
+  resources: {}
 
   ## The JVM heap size to allocate to Zookeeper
   env:
@@ -58,6 +58,10 @@ hdfs-journalnode-k8s:
     #  cpu: 100m
     #  memory: 128Mi    
 
+  env: []
+    ## Optional environment variables
+
+
   ## Node labels and tolerations for pod assignment
   nodeSelector: {}
   tolerations: []
@@ -110,6 +114,9 @@ hdfs-namenode-k8s:
     #  cpu: 100m
     #  memory: 128Mi    
 
+  env: []
+    ## Optional environment variables
+
   ## Whether or not to use hostNetwork in namenode pods. Disabling this will break
   ## data locality as namenode will see pod virtual IPs and fails to equate them with
   ## cluster node physical IPs associated with data nodes.
@@ -140,6 +147,9 @@ hdfs-simple-namenode-k8s:
     #  cpu: 100m
     #  memory: 128Mi
 
+  env: []
+    ## Optional environment variables
+
   ## Node labels and tolerations for pod assignment
   nodeSelector: {}
   tolerations: []
@@ -159,6 +169,8 @@ hdfs-datanode-k8s:
     #  cpu: 100m
     #  memory: 128Mi
 
+  env: []
+    ## Optional environment variables
 
   ## Node labels and tolerations for pod assignment
   nodeSelector: {}
