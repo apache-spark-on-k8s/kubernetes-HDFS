@@ -94,6 +94,9 @@ spec:
             - name: JSVC_HOME
               value: /jsvc-home
             {{- end }}
+{{- if .Values.env }}
+{{ toYaml .Values.env | indent 12 }}
+{{- end }}            
           livenessProbe:
             exec:
               command:
@@ -108,6 +111,8 @@ spec:
             periodSeconds: 30
           securityContext:
             privileged: true
+          resources:
+{{ toYaml .Values.resources | indent 12 }} 
           volumeMounts:
             - name: dn-scripts
               mountPath: /dn-scripts

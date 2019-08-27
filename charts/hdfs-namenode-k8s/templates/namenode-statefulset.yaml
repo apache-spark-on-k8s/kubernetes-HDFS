@@ -188,6 +188,9 @@ spec:
               value: {{ template "namenode-pod-0" . }}
             - name: NAMENODE_POD_1
               value: {{ template "namenode-pod-1" . }}
+{{- if .Values.env }}
+{{ toYaml .Values.env | indent 12 }}
+{{- end }}              
           command: ['/bin/sh', '-c']
           # The start script is provided by a config map.
           args:
@@ -197,6 +200,8 @@ spec:
             name: fs
           - containerPort: 50070
             name: http
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
           volumeMounts:
             - name: nn-scripts
               mountPath: /nn-scripts
