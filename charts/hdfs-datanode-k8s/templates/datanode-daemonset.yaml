@@ -32,10 +32,36 @@ data:
     done
     echo $_CLUSTER_ID | grep -q -v null
 ---
+{{- if .Values.persistence.enabled }}
+# Required to generate StatefulSet pod names.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "hdfs-k8s.datanode.fullname" . }}
+  labels:
+    app: {{ template "hdfs-k8s.datanode.name" . }}
+    chart: {{ template "hdfs-k8s.subchart" . }}
+    release: {{ .Release.Name }}
+  annotations:
+    # TODO: Deprecated. Replace tolerate-unready-endpoints with
+    # v1.Service.PublishNotReadyAddresses.
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  clusterIP: None
+  selector:
+    app: {{ template "hdfs-k8s.datanode.name" . }}
+    release: {{ .Release.Name }}
+{{- end }}
+---
+{{- if .Values.persistence.enabled }}
+apiVersion: apps/v1beta1
+kind: StatefulSet
+{{- else }}
 # Deleting a daemonset may need some trick. See
 # https://github.com/kubernetes/kubernetes/issues/33245#issuecomment-261250489
 apiVersion: extensions/v1beta1
 kind: DaemonSet
+{{- end }}
 metadata:
   name: {{ template "hdfs-k8s.datanode.fullname" . }}
   labels:
@@ -43,6 +69,10 @@ metadata:
     chart: {{ template "hdfs-k8s.subchart" . }}
     release: {{ .Release.Name }}
 spec:
+  {{- if .Values.persistence.enabled }}
+  serviceName: {{ template "hdfs-k8s.datanode.fullname" . }}
+  replicas: {{ .Values.persistence.replicas }}
+  {{- end }}
   template:
     metadata:
       labels:
@@ -115,9 +145,14 @@ spec:
             - name: hdfs-config
               mountPath: /etc/hadoop-custom-conf
               readOnly: true
+            {{- if .Values.persistence.enabled }}
+            - name: hdfs-data-0
+              mountPath: /hadoop/dfs/data/0
+            {{- else }}
             {{- range $index, $path := .Values.global.dataNodeHostPath }}
             - name: hdfs-data-{{ $index }}
               mountPath: /hadoop/dfs/data/{{ $index }}
+            {{- end }}
             {{- end }}
             {{- if .Values.global.kerberosEnabled }}
             - name: kerberos-config
@@ -167,10 +202,12 @@ spec:
           configMap:
             name: {{ template "hdfs-k8s.datanode.fullname" . }}-scripts
             defaultMode: 0744
+        {{- if not .Values.persistence.enabled }}
         {{- range $index, $path := .Values.global.dataNodeHostPath }}
         - name: hdfs-data-{{ $index }}
           hostPath:
             path: {{ $path }}
+        {{- end }}
         {{- end }}
         - name: hdfs-config
           configMap:
@@ -189,3 +226,25 @@ spec:
           emptyDir: {}
         {{- end }}
         {{- end }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: hdfs-data-0
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | quote }}
+      {{- if .Values.persistence.storageClass }}
+        {{- if (eq "-" .Values.persistence.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ .Values.persistence.storageClass }}"
+        {{- end }}
+      {{- end }}
+      {{- if .Values.persistence.selector }}
+        selector:
+{{ toYaml .Values.persistence.selector | indent 10 }}
+      {{- end }}
+  {{- end }}

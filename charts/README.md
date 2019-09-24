@@ -26,7 +26,8 @@ HDFS on K8s supports the following features:
     file data. File data should also survive datanode crash or restart. HDFS on
     K8s stores the file data on the local disks of the K8s cluster nodes using
     K8s HostPath volumes. (We plan to switch to a better mechanism, K8s
-    persistent local volumes)
+    persistent local volumes).
+    HDFS on K8s supports storing file data on persistent volumes as well.
   - Kerberos: Vanilla HDFS is not secure. Intruders can easily write custom
     client code, put a fake user name in requests and steal data. Production
     HDFS often secure itself using Kerberos. HDFS on K8s supports Kerberos.
@@ -366,6 +367,36 @@ node when the pod restarts.
       --set tags.simple=true  \
       --set global.namenodeHAEnabled=false  \
       --set hdfs-simple-namenode-k8s.nodeSelector.hdfs-namenode-selector=hdfs-namenode-0
+```
+
+### Using persistent volumes for datanodes
+
+You can store file data on persistent volumes instead of hostPath volumes.
+In this case, datanode pods are managed by StatefulSet instead of DaemonSet.
+
+To install the chart in this mode, run
+
+```
+  $ helm install -n my-hdfs charts/hdfs-k8s  \
+      --set hdfs-datanode-k8s.persistence.enabled=true
+```
+
+By default, 2 datanodes are created with 100Gi volume each.
+
+You can customize datanode number. For example, to create 3 datanodes, run
+
+```
+  $ helm install -n my-hdfs charts/hdfs-k8s  \
+      --set hdfs-datanode-k8s.persistence.enabled=true \
+      --set hdfs-datanode-k8s.persistence.replicas=3
+```
+
+You can also customize other persistence properties by analogy with namenodes, for example
+
+```
+  $ helm install -n my-hdfs charts/hdfs-k8s  \
+      --set hdfs-datanode-k8s.persistence.enabled=true \
+      --set hdfs-datanode-k8s.persistence.size=200Gi
 ```
 
 # Security
