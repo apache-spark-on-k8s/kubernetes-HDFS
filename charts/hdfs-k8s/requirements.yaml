@@ -1,7 +1,7 @@
 dependencies:
   - name: zookeeper
     version: "2.1.1"
-    repository: https://kubernetes-charts-incubator.storage.googleapis.com/
+    repository: https://charts.helm.sh/incubator
     condition: condition.subchart.zookeeper
     tags:
       - ha
