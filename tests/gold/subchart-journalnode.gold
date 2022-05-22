@@ -149,7 +149,7 @@ spec:
     release: my-hdfs-journalnode
 ---
 # Source: hdfs/charts/hdfs-journalnode-k8s/templates/journalnode-statefulset.yaml
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: my-hdfs-journalnode

@@ -783,7 +783,7 @@ spec:
 # Source: hdfs/charts/hdfs-datanode-k8s/templates/datanode-daemonset.yaml
 # Deleting a daemonset may need some trick. See
 # https://github.com/kubernetes/kubernetes/issues/33245#issuecomment-261250489
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: my-hdfs-datanode
@@ -899,7 +899,6 @@ spec:
 ---
 # Source: hdfs/charts/hdfs-client-k8s/templates/client-deployment.yaml
 apiVersion: apps/v1
-apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: my-hdfs-client
@@ -948,7 +947,7 @@ spec:
             name: my-hdfs-krb5-config
 ---
 # Source: hdfs/charts/hdfs-journalnode-k8s/templates/journalnode-statefulset.yaml
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: my-hdfs-journalnode
@@ -1038,7 +1037,7 @@ spec:
             storage: "20Gi"
 ---
 # Source: hdfs/charts/hdfs-krb5-k8s/templates/statefulset.yaml
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: my-hdfs-krb5
@@ -1093,7 +1092,7 @@ spec:
             storage: "20Gi"
 ---
 # Source: hdfs/charts/hdfs-namenode-k8s/templates/namenode-statefulset.yaml
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: my-hdfs-namenode
@@ -1202,7 +1201,7 @@ spec:
             storage: "100Gi"
 ---
 # Source: hdfs/charts/zookeeper/templates/statefulset.yaml
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: my-hdfs-zookeeper
